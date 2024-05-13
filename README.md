@@ -1,0 +1,242 @@
+# Multimodal head and neck cancer dataset
+This repository contains code for exploring the multimodal head and neck cancer dataset HANCOCK and for
+training Machine Learning models to predict outcomes and treatment choices. We also provide strategies for 
+multimodal data handling, feature extraction, and generating train/test dataset splits. 
+
+
+## Table of contents
+* [Environment and installation](#environment-and-installation)
+* [Dataset](#dataset)
+* [Multimodal feature extraction](#multimodal-feature-extraction)
+* [Generating data splits](#generating-data-splits)
+* [Outcome prediction](#outcome-prediction)
+* [Adjuvant treatment prediction](#adjuvant-treatment-prediction)
+* [Adjuvant treatment prediction using histology images](#adjuvant-treatment-prediction-using-histology-images)
+* [How to cite](#how-to-cite)
+
+
+## Environment and installation
+To set up the environment, first clone this repository to your local machine and create directories for storing
+extracted features and results:
+```
+git clone https://github.com/ankilab/HANCOCK_MultimodalDataset.git
+cd HANCOCK_MultimodalDataset
+mkdir features
+mkdir results
+```
+Next, set up an Anaconda environment and install the required Python packages:
+```
+conda create -n hancock_multimodal python=3.9
+conda activate hancock_multimodal
+pip install -r requirements.txt
+```
+
+## Dataset
+The dataset can be explored and downloaded at https://hancock.research.fau.eu/ or downloaded directly
+at FAUDataCloud: __TODO: Link!__
+
+The dataset is structured in ZIP archives. If all archives are downloaded and unzipped, the dataset is
+structured as follows:
+
+```
+Hancock_Dataset
+|
+├── StructuredData
+|   ├── blood_data.json
+|   ├── blood_data_reference_ranges.json
+|   ├── clinical_data.json
+|   └── pathological_data.json
+|
+├── TextData
+|   ├── histories
+|   ├── histories_english
+|   ├── icd_codes
+|   ├── ops_codes
+|   ├── reports
+|   ├── reports_english
+|   ├── surgery_descriptions
+|   └── surgery_descriptions_english
+|
+├── DataSplits_DataDictionaries
+|   ├── DataDictionary_blood.csv
+|   ├── DataDictionary_clinical.csv
+|   ├── DataDictionary_pathological.csv
+|   ├── dataset_split_in.json
+|   ├── dataset_split_out.json
+|   ├── dataset_split_Oropharynx.json
+|   └── dataset_split_treatment_outcome.json
+|
+├── TMA_CellDensityMeasurements
+|   └── TMA_celldensity_measurements.csv
+|
+├── TMA_InvasionFront
+├── TMA_TumorCenter
+├── TMA_Maps
+├── WSI_LymphNode
+├── WSI_PrimaryTumor_Annotations
+└── WSI_PrimaryTumor_[Site]
+```
+
+However, it is sufficient to download the following folders for reproducing most results from our paper:
+`StructuredData`, `TextData`, `DataSplits_DataDictionaries`, `TMA_CellDensityMeasurements`.
+
+To reproduce our results of adjuvant treatment prediction using TMA image data and deep learning, it is also required
+to download Tissue Microarrays (TMAs): `TMA_TumorCenter` and `TMA_Maps`.
+
+
+### Data exploration
+We provide a jupyter notebook `exploring_tabular_data.ipynb` for visualizing the structured 
+(clinical, pathological, and blood) data.
+The jupyter notebook `survival_analysis.ipynb` can be used to reproduce Kaplan-Meier curves.
+You might need to adjust the path `data_dir` which should point to the directory that contains 
+the structured data (JSON files).
+
+To visualize which modalities are available for how many out of the 763 patients, run the following script:
+```
+cd data_exploration
+python plot_available_data.py path/to/Hancock_Dataset ../results
+```
+![2D representation of multimodal features using UMAP](./images/available_data.svg)
+
+
+## Multimodal feature extraction
+Run `create_multimodal_patient_vectors.py` to extract multimodal patient vectors, i.e. features:
+```
+cd feature_extraction
+python create_multimodal_patient_vectors.py 
+    path/to/TextData/icd_codes 
+    path/to/StructuredData 
+    path/to/TMA_celldensity_measurements.csv
+    ../features
+```
+
+After running this script, a 2D representation of the multimodal patient vectors can be visualized using the
+jupyter notebook `umap_visualization.ipynb` in the `data_exploration` folder.
+
+![2D representation of multimodal features using UMAP](./images/umap_plots.svg)
+
+
+## Generating data splits
+We implemented a genetic algorithm to find different data splits, where the data is split into a training and a test set.
+You can directly use the data splits provided in our dataset, in "DataSplits_DataDictionaries".
+
+Alternatively, if you would like to run the genetic algorithm to reproduce these splits, you can
+use the code in the folder "data_spliting" in this repository to create the dataset splits.
+Run the following code to create different data splits: Run `genetic_algorithm` to generate a split where the test dataset 
+contains either in-distribution data or out-of-distribution data using `--in` or `--out`, respectively.
+A dataset split by primary tumor site can be generated using `split_by_tumor_site.py`.
+All cases with the specified site are assigned to the test dataset and the remaining cases
+are assigned to the training dataset.
+Running `split_by_treatment_outcome.py` assigns cases to the test dataset where no adjuvant
+treatment was used but an event occurred, including recurrence, metastasis, progress, or death.
+The remaining cases are assigned to the training dataset.
+
+```
+cd genetic_algorithm_dataset_split
+
+python genetic_algorithm.py ../features ../results in_distribution_test_dataset --in
+python genetic_algorithm.py ../features ../results out_of_distribution_test_dataset --out
+python split_by_tumor_site.py path/to/StructuredData ../results -s Oropharynx
+python split_by_treatment_outcome.py ../features ../results
+```
+
+## Outcome prediction
+Run `outcome_prediction.py` to reproduce results of training a Machine Learning classifier
+on the multimodal patient vectors to predict recurrence and survival status.
+The classifier is trained on the different data splits.
+
+```
+cd multimodal_machine_learning
+python outcome_prediction.py path/to/DataSplits_DataDictionaries ../features ../results recurrence
+```
+
+## Adjuvant treatment prediction
+Run `adjuvant_treatment_prediction.py` to reproduce results of training a Machine Learning classifier
+to predict whether an adjuvant treatment is used.
+```
+cd multimodal_machine_learning
+python adjuvant_treatment_prediction.py path/to/DataSplits_DataDictionaries ../data ../results
+```
+
+
+## Adjuvant treatment prediction using histology images
+
+We used the open-source histology software [QuPath](https://qupath.github.io/) for analyzing TMAs. 
+The folder `qupath_scripts` contains code that can executed in QuPath's script editor. 
+You can run the following scripts for all TMAs at once by selecting "Run for project" in the script editor.
+For more information about scripting in QuPath, check the [documentation](https://qupath.readthedocs.io/en/stable/docs/scripting/overview.html).
+
+**Step 1: Creating a QuPath project**
+
+Create one QuPath project for each immunohistochemistry marker. For example, create a project
+"project_TMA_TumorCenter_CD3" and import all files in the folder "TMA_TumorCenter/CD3". It is important that 
+you set "rotate image" to 180 degrees in the import dialog!
+
+**Step 2: TMA dearraying**
+
+Run `dearray_tma.groovy` to create a grid of 6 columns x 12 rows for locating the TMA cores within the image.
+Next, you can run `check_tma_grid_size.groovy` to check for any incorrect grid sizes. You might need to manually
+adjust some grids. For learning more about TMA dearraying, we recommend reading 
+[this guide](https://github.com/qupath/qupath/wiki/TMA-CD3-analysis).
+
+**Step 3: Extracting tiles**
+
+Run `import_tma_map.groovy` to import the TMA maps. When prompted, select the folder "TMA_Maps" provided in the dataset.
+This step is important as it maps each tissue core to the correct patient ID. The patient ID can then be found as 
+"Case ID" in QuPath.
+
+Next, run `export_centertiles_from_tma_cores.groovy` to extract one tile from the center of each TMA core. The images
+are saved as PNG files to the directory `path/to/your_qupath_project/tiles`. Each tile's filename is built as follows:
+`<patient_id>_core<core_index>_tile.png`
+
+
+**Step 4: Extracting image features**
+
+To extract features from images (TMA core tiles), run `extract_tma_image_features.py`.
+This step is only required if you would like to reproduce our results from adjuvant treatment prediction using deep learning.
+We use [deeptexture](https://github.com/dakomura/deep_texture_histology) for feature extraction. This package requires
+Python version <= 3.8.15. Therefore, we recommend to run this script in another environment.
+```
+conda create -n deeptexture_env python=3.8.15
+conda activate deeptexture_env
+pip install deeptexture tqdm opencv-python
+
+cd feature_extraction
+python extract_tma_image_features.py path/to/QuPathProjectsDirectory ../features
+```
+
+**Optional step 5: Counting immune cells**
+
+Copy the pixel classifier from this repository to your project:
+```
+cd path/to/your_qupath_project/classifiers
+mkdir pixel_classifiers
+cp qupath_scripts/tissueDetection.json pixel_classifiers
+``` 
+Next, run `detect_tissue_in_tma_cores.groovy`. Alternatively, you can define your own pixel classifier for tissue detection. 
+ 
+Optional: To improve the subsequent counting of positive cells, you can manually remove possible artifacts from the 
+resulting detection objects, for example using the brush tool while holding down the `ALT` key.
+
+Run `tma_measure_positive_cells.groovy`. This script first makes sure that the grid labels and object hierarchy
+are correct, in case the objects were manually adjusted (e.g. for artifact removal). Next, it runs QuPath's
+plugin for positive cell detection and imports TMA maps to match cores to patient IDs. Finally, the cell counts
+and other measurements are exported as CSV files to the directory `path/to/your_qupath_project/tma_measurements`.
+Hint: The QuPath script will prompt you to select the directory containing the TMA maps. To avoid the prompt showing 
+for every single TMA, you can set the variable `tma_map_dir` in the script.
+
+Next, run `summarize_tma_measurements.py` to create a single file by merging all TMA measurement files created in
+"Step 4: Counting immune cells". Alternatively, you can also use the file "TMA_celldensity_measurements.csv" 
+which we provide in the dataset.
+
+**Step 6: Training and testing a deep neural network**
+
+Run `adjuvant_treatment_prediction_convnet.py` to reproduce results of training a Convolutional Neural Network
+to predict whether an adjuvant treatment is used:
+```
+cd multimodal_machine_learning
+python adjuvant_treatment_prediction_convnet.py ../data ../results
+```
+
+# How to cite
+__TO DO__

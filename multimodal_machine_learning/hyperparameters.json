@@ -1,0 +1,15 @@
+{
+    "dtr_embedding_dim": 256,
+    "exclude_patho_and_cellcount": false,
+    "exclude_multimodal_patient_vectors": false,
+    "tiles_per_patient": 2,
+    "input_shape": [66, 64, 1],
+    "num_conv_blocks": 5,
+    "initial_filters": 16,
+    "constant_filters": true,
+    "dense_units": 64,
+    "norm": null,
+    "dropout": true,
+    "learning_rate": 1e-4,
+    "epochs": 80
+}
