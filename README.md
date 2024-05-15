@@ -1,21 +1,24 @@
 # Multimodal head and neck cancer dataset
+
+[Website](https://hancock.research.fau.eu/) | [Dataset download](https://hancock.research.fau.eu/download) | [Cite](#reference)
+
 This repository contains code for exploring the multimodal head and neck cancer dataset HANCOCK and for
 training Machine Learning models to predict outcomes and treatment choices. We also provide strategies for 
 multimodal data handling, feature extraction, and generating train/test dataset splits. 
 
 
 ## Table of contents
-* [Environment and installation](#environment-and-installation)
+* [Setup](#setup)
 * [Dataset](#dataset)
 * [Multimodal feature extraction](#multimodal-feature-extraction)
 * [Generating data splits](#generating-data-splits)
 * [Outcome prediction](#outcome-prediction)
 * [Adjuvant treatment prediction](#adjuvant-treatment-prediction)
 * [Adjuvant treatment prediction using histology images](#adjuvant-treatment-prediction-using-histology-images)
-* [How to cite](#how-to-cite)
+* [Reference](#reference)
 
 
-## Environment and installation
+## Setup
 To set up the environment, first clone this repository to your local machine and create directories for storing
 extracted features and results:
 ```
@@ -31,9 +34,13 @@ conda activate hancock_multimodal
 pip install -r requirements.txt
 ```
 
+Our code was tested on Windows. For running the code described the section 
+[Adjuvant treatment prediction using histology images](#adjuvant-treatment-prediction-using-histology-images),
+TensorFlow 2.16 is used (see `requirements.txt`). Furthermore, [QuPath](https://qupath.github.io/) needs to be installed 
+for the analysis of histology data.
+
 ## Dataset
-The dataset can be explored and downloaded at https://hancock.research.fau.eu/ or downloaded directly
-at FAUDataCloud: __TODO: Link!__
+The dataset can be explored and downloaded at our project website: https://hancock.research.fau.eu/
 
 The dataset is structured in ZIP archives. If all archives are downloaded and unzipped, the dataset is
 structured as follows:
@@ -80,8 +87,9 @@ Hancock_Dataset
 However, it is sufficient to download the following folders for reproducing most results from our paper:
 `StructuredData`, `TextData`, `DataSplits_DataDictionaries`, `TMA_CellDensityMeasurements`.
 
-To reproduce our results of adjuvant treatment prediction using TMA image data and deep learning, it is also required
-to download Tissue Microarrays (TMAs): `TMA_TumorCenter` and `TMA_Maps`.
+To reproduce our results described in section 
+[Adjuvant treatment prediction using histology images](#adjuvant-treatment-prediction-using-histology-images), 
+it is also required to download Tissue Microarrays (TMAs): `TMA_TumorCenter` and `TMA_Maps`.
 
 
 ### Data exploration
@@ -100,7 +108,19 @@ python plot_available_data.py path/to/Hancock_Dataset ../results
 
 
 ## Multimodal feature extraction
-Run `create_multimodal_patient_vectors.py` to extract multimodal patient vectors, i.e. features:
+
+To better understand the multimodal data, we extracted features from different modalities and concatenated them to
+vectors, termed multimodal patient vectors. These vectors were used for the following:
+* For visualizing the data in 2D
+* For generating train/test data splits
+* For training Machine Learning models
+
+Features are extracted from demographical, pathological, and blood data (structured data), ICD codes (text data), 
+and intratumoral density of CD3- and CD8-positive cells that was computed from TMAs (image data).
+
+![Creating multimodal patient vectors](./images/patient_vectors.svg)
+
+Run `create_multimodal_patient_vectors.py` to extract features and create multimodal patient vectors:
 ```
 cd feature_extraction
 python create_multimodal_patient_vectors.py 
@@ -238,5 +258,5 @@ cd multimodal_machine_learning
 python adjuvant_treatment_prediction_convnet.py ../data ../results
 ```
 
-# How to cite
+# Reference
 __TO DO__

@@ -42,8 +42,6 @@ def get_icd_vectors(icd_directory):
     # Create dataframe
     df = pd.DataFrame({"patient_id": pd.Series(ids, dtype=str), "icd_code": pd.Series(codes, dtype=str)})
 
-    # TODO: Fillna / missing cases?
-
     cv = CountVectorizer(ngram_range=(1, 1), min_df=3)
     bow = cv.fit_transform(df.icd_code)
 
