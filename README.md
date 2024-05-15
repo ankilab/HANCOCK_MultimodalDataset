@@ -123,10 +123,11 @@ and intratumoral density of CD3- and CD8-positive cells that was computed from T
 Run `create_multimodal_patient_vectors.py` to extract features and create multimodal patient vectors:
 ```
 cd feature_extraction
+
 python create_multimodal_patient_vectors.py 
-    path/to/TextData/icd_codes 
-    path/to/StructuredData 
-    path/to/TMA_celldensity_measurements.csv
+    path/to/Hancock_Dataset/TextData/icd_codes 
+    path/to/Hancock_Dataset/StructuredData 
+    path/to/Hancock_Dataset/TMA_CellDensityMeasurements/TMA_celldensity_measurements.csv
     ../features
 ```
 
@@ -141,7 +142,7 @@ We implemented a genetic algorithm to find different data splits, where the data
 You can directly use the data splits provided in our dataset, in "DataSplits_DataDictionaries".
 
 Alternatively, if you would like to run the genetic algorithm to reproduce these splits, you can
-use the code in the folder "data_spliting" in this repository to create the dataset splits.
+use the code in the folder [data_splitting](data_splitting) to create the dataset splits.
 Run the following code to create different data splits: Run `genetic_algorithm` to generate a split where the test dataset 
 contains either in-distribution data or out-of-distribution data using `--in` or `--out`, respectively.
 A dataset split by primary tumor site can be generated using `split_by_tumor_site.py`.
@@ -152,11 +153,11 @@ treatment was used but an event occurred, including recurrence, metastasis, prog
 The remaining cases are assigned to the training dataset.
 
 ```
-cd genetic_algorithm_dataset_split
+cd data_splitting
 
 python genetic_algorithm.py ../features ../results in_distribution_test_dataset --in
 python genetic_algorithm.py ../features ../results out_of_distribution_test_dataset --out
-python split_by_tumor_site.py path/to/StructuredData ../results -s Oropharynx
+python split_by_tumor_site.py path/to/Hancock_Dataset/StructuredData ../results -s Oropharynx
 python split_by_treatment_outcome.py ../features ../results
 ```
 
@@ -167,7 +168,7 @@ The classifier is trained on the different data splits.
 
 ```
 cd multimodal_machine_learning
-python outcome_prediction.py path/to/DataSplits_DataDictionaries ../features ../results recurrence
+python outcome_prediction.py path/to/Hancock_Dataset/DataSplits_DataDictionaries ../features ../results recurrence
 ```
 
 ## Adjuvant treatment prediction
@@ -175,22 +176,24 @@ Run `adjuvant_treatment_prediction.py` to reproduce results of training a Machin
 to predict whether an adjuvant treatment is used.
 ```
 cd multimodal_machine_learning
-python adjuvant_treatment_prediction.py path/to/DataSplits_DataDictionaries ../data ../results
+python adjuvant_treatment_prediction.py path/to/Hancock_Dataset/DataSplits_DataDictionaries ../data ../results
 ```
 
 
 ## Adjuvant treatment prediction using histology images
 
-We used the open-source histology software [QuPath](https://qupath.github.io/) for analyzing TMAs. 
-The folder `qupath_scripts` contains code that can executed in QuPath's script editor. 
+We used the open-source histology software QuPath for analyzing TMAs. 
+The folder [qupath_scripts](qupath_scripts) contains code that can executed in QuPath's script editor. 
 You can run the following scripts for all TMAs at once by selecting "Run for project" in the script editor.
 For more information about scripting in QuPath, check the [documentation](https://qupath.readthedocs.io/en/stable/docs/scripting/overview.html).
 
 **Step 1: Creating a QuPath project**
 
 Create one QuPath project for each immunohistochemistry marker. For example, create a project
-"project_TMA_TumorCenter_CD3" and import all files in the folder "TMA_TumorCenter/CD3". It is important that 
-you set "rotate image" to 180 degrees in the import dialog!
+"project_TMA_TumorCenter_CD3" and import all files in the folder "TMA_TumorCenter/CD3". 
+
+> [!IMPORTANT]
+> Set "rotate image" to 180 degrees for all TMAs in QuPath's import dialog.
 
 **Step 2: TMA dearraying**
 
@@ -201,7 +204,10 @@ adjust some grids. For learning more about TMA dearraying, we recommend reading
 
 **Step 3: Extracting tiles**
 
-Run `import_tma_map.groovy` to import the TMA maps. When prompted, select the folder "TMA_Maps" provided in the dataset.
+> [!NOTE]
+> Each TMA contains tissue cores of several patients. In QuPath, TMA maps must be imported to assign patient IDs to tissue cores.
+
+Run `import_tma_map.groovy` to import the TMA maps. When prompted, select the folder "TMA_Maps" provided in our dataset.
 This step is important as it maps each tissue core to the correct patient ID. The patient ID can then be found as 
 "Case ID" in QuPath.
 
