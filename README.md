@@ -190,10 +190,19 @@ For more information about scripting in QuPath, check the [documentation](https:
 **Step 1: Creating a QuPath project**
 
 Create one QuPath project for each immunohistochemistry marker. For example, create a project
-"project_TMA_TumorCenter_CD3" and import all files in the folder "TMA_TumorCenter/CD3". 
-
-> [!IMPORTANT]
-> Set "rotate image" to 180 degrees for all TMAs in QuPath's import dialog.
+"TMA_CD3" and import all files in the folder "Hancock_Dataset/TMA_TumorCenter/CD3". 
+This results in the following directory structure:
+```
+QuPathProjectsDirectory
+├── TMA_CD3
+├── TMA_CD8
+├── TMA_CD56
+├── TMA_CD68
+├── TMA_CD163
+├── TMA_HE
+├── TMA_MHC1
+└── TMA_PDL1
+```
 
 **Step 2: TMA dearraying**
 
@@ -208,8 +217,7 @@ adjust some grids. For learning more about TMA dearraying, we recommend reading
 > Each TMA contains tissue cores of several patients. In QuPath, TMA maps must be imported to assign patient IDs to tissue cores.
 
 Run `import_tma_map.groovy` to import the TMA maps. When prompted, select the folder "TMA_Maps" provided in our dataset.
-This step is important as it maps each tissue core to the correct patient ID. The patient ID can then be found as 
-"Case ID" in QuPath.
+The patient ID can then be found as "Case ID" in QuPath.
 
 Next, run `export_centertiles_from_tma_cores.groovy` to extract one tile from the center of each TMA core. The images
 are saved as PNG files to the directory `path/to/your_qupath_project/tiles`. Each tile's filename is built as follows:
@@ -219,7 +227,6 @@ are saved as PNG files to the directory `path/to/your_qupath_project/tiles`. Eac
 **Step 4: Extracting image features**
 
 To extract features from images (TMA core tiles), run `extract_tma_image_features.py`.
-This step is only required if you would like to reproduce our results from adjuvant treatment prediction using deep learning.
 We use [deeptexture](https://github.com/dakomura/deep_texture_histology) for feature extraction. This package requires
 Python version <= 3.8.15. Therefore, we recommend to run this script in another environment.
 ```
@@ -231,7 +238,10 @@ cd feature_extraction
 python extract_tma_image_features.py path/to/QuPathProjectsDirectory ../features
 ```
 
-**Optional step 5: Counting immune cells**
+**Optional: Counting immune cells**
+
+The intratumoral density of CD3- and CD8-positive cells was already computed and is provided in the dataset folder
+"TMA_CellDensityMeasurements". However, if you would like to reproduce these measurements, you can perform the folowing steps:
 
 Copy the pixel classifier from this repository to your project:
 ```
@@ -239,10 +249,10 @@ cd path/to/your_qupath_project/classifiers
 mkdir pixel_classifiers
 cp qupath_scripts/tissueDetection.json pixel_classifiers
 ``` 
-Next, run `detect_tissue_in_tma_cores.groovy`. Alternatively, you can define your own pixel classifier for tissue detection. 
+Next, run `detect_tissue_in_tma_cores.groovy`. 
  
-Optional: To improve the subsequent counting of positive cells, you can manually remove possible artifacts from the 
-resulting detection objects, for example using the brush tool while holding down the `ALT` key.
+To improve the subsequent counting of positive cells, you can manually remove possible artifacts from the 
+resulting detection objects, for example using the brush tool while holding down the `ALT` key. However, this is optional.
 
 Run `tma_measure_positive_cells.groovy`. This script first makes sure that the grid labels and object hierarchy
 are correct, in case the objects were manually adjusted (e.g. for artifact removal). Next, it runs QuPath's
@@ -251,11 +261,9 @@ and other measurements are exported as CSV files to the directory `path/to/your_
 Hint: The QuPath script will prompt you to select the directory containing the TMA maps. To avoid the prompt showing 
 for every single TMA, you can set the variable `tma_map_dir` in the script.
 
-Next, run `summarize_tma_measurements.py` to create a single file by merging all TMA measurement files created in
-"Step 4: Counting immune cells". Alternatively, you can also use the file "TMA_celldensity_measurements.csv" 
-which we provide in the dataset.
+Next, run `summarize_tma_measurements.py` to create a single file by merging all TMA measurement files from step 4.
 
-**Step 6: Training and testing a deep neural network**
+**Step 5: Training and testing a deep neural network**
 
 Run `adjuvant_treatment_prediction_convnet.py` to reproduce results of training a Convolutional Neural Network
 to predict whether an adjuvant treatment is used:
