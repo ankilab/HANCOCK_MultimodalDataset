@@ -269,7 +269,7 @@ Run `adjuvant_treatment_prediction_convnet.py` to reproduce results of training 
 to predict whether an adjuvant treatment is used:
 ```
 cd multimodal_machine_learning
-python adjuvant_treatment_prediction_convnet.py ../data ../results
+python adjuvant_treatment_prediction_convnet.py ../features ../results
 ```
 
 # Reference
