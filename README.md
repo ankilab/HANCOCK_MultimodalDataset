@@ -164,22 +164,29 @@ python split_by_treatment_outcome.py ../features ../results
 ## Outcome prediction
 Run `outcome_prediction.py` to reproduce results of training a Machine Learning classifier
 on the multimodal patient vectors to predict recurrence and survival status.
-The classifier is trained on the different data splits.
+The classifier is trained five times on the different data splits. Plots of the data splits (2D representation)
+and of Receiver-Operating Characteristic (ROC) curves are saved to the results directory.
 
 ```
 cd multimodal_machine_learning
 python outcome_prediction.py path/to/Hancock_Dataset/DataSplits_DataDictionaries ../features ../results recurrence
+python outcome_prediction.py path/to/Hancock_Dataset/DataSplits_DataDictionaries ../features ../results survival_status
 ```
+
+![](./images/roc_testsets_recurrence.svg)![](./images/roc_testsets_survival_status.svg)
 
 ## Adjuvant treatment prediction
 Run `adjuvant_treatment_prediction.py` to reproduce results of training a Machine Learning classifier
-to predict whether an adjuvant treatment is used.
+to predict the treatment choice, i.e. whether an adjuvant treatment is needed. This script trains models on single modalities and on the multimodal data using 10-fold cross-validation. Finally, the multimodal model is trained on the full training dataset. Its predictions for the test data are explained
+using [shap](https://github.com/shap/shap) values and a summary plot. 
+Kaplan-Meier curves (overall and recurrence-free survival) are plotted for cases grouped by predictions.
+
 ```
 cd multimodal_machine_learning
 python adjuvant_treatment_prediction.py path/to/Hancock_Dataset/DataSplits_DataDictionaries ../data ../results
 ```
 
-![ROC curve of multimodal model](./images/roc_treatment_Multimodal.svg) 
+![ROC curve of multimodal model](./images/roc_treatment_Multimodal.svg)
 
 ![Overall survival grouped by predictions](./images/adjuvant_treatment_prediction_os.svg)
 

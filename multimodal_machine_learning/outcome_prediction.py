@@ -64,6 +64,8 @@ if __name__ == "__main__":
 
     for i in range(len(data_split_paths)):
 
+        print(f"Training and testing models on {data_split_labels[i]} data...")
+
         assert_text = f"{data_split_paths[i]} does not exist. Please run genetic_algorithm.py or " \
                       f"split_by_tumor_site.py to generate the corresponding split"
         assert os.path.exists(data_split_paths[i]), assert_text
@@ -127,7 +129,6 @@ if __name__ == "__main__":
             # Plot dataset split in 2D
             plt.figure(figsize=(1.75, 1.75))
             palette = {"training": "lightgrey", "test": sns.color_palette("Set2")[i]}
-            # ax = sns.scatterplot(umap_split, x="UMAP 1", y="UMAP 2", hue="dataset", palette=palette, s=2)
             ax = sns.scatterplot(umap_split[umap_split.dataset=="training"], x="UMAP 1", y="UMAP 2", hue="dataset", palette=palette, s=2)
             ax = sns.scatterplot(umap_split[umap_split.dataset=="test"], x="UMAP 1", y="UMAP 2", hue="dataset", palette=palette, s=2)
             plt.title(data_split_labels[i])
@@ -143,143 +144,10 @@ if __name__ == "__main__":
             plt.savefig(results_dir/f"umap_split_{data_split_labels[i]}.svg", bbox_inches="tight")
             plt.close()
 
-
-            # # Plot dataset split in 2D
-            # plt.figure(figsize=(1.75, 1.75))
-            # palette = {"training": "lightgrey", "test": sns.color_palette("Set2")[i]}
-            # ax = sns.scatterplot(umap_split, x="UMAP 1", y="UMAP 2", hue="dataset", palette=palette, s=1.5)
-            # plt.title(data_split_labels[i])
-            # ax.set_aspect("equal")
-            # plt.legend()
-            # sns.despine()
-            # plt.xticks([])
-            # plt.yticks([])
-            # plt.legend(bbox_to_anchor=(1.02, 1), loc="upper left", borderaxespad=0, frameon=False, fontsize=6)
-            # plt.xlabel("UMAP 1", fontsize=6)
-            # plt.ylabel("UMAP 2", fontsize=6)
-            # plt.tight_layout()
-            # plt.savefig(f"umap_split_{data_split_labels[i]}.svg", bbox_inches="tight")
-            # plt.close()
-            #
-            #
-            #
-            # plt.figure(figsize=(1.75, 1.75))
-            # palette = {"training": "lightgrey", "test": sns.color_palette("Set2")[i]}
-            # ax = sns.scatterplot(umap_split, x="UMAP 1", y="UMAP 2", hue="dataset", palette=palette, s=1, edgecolor=None)
-            # plt.title(data_split_labels[i])
-            # ax.set_aspect("equal")
-            # plt.legend()
-            # sns.despine()
-            # plt.xticks([])
-            # plt.yticks([])
-            # plt.legend(bbox_to_anchor=(1.02, 1), loc="upper left", borderaxespad=0, frameon=False, fontsize=6)
-            # plt.xlabel("UMAP 1", fontsize=6)
-            # plt.ylabel("UMAP 2", fontsize=6)
-            # plt.tight_layout()
-            # plt.savefig(f"umap_split_{data_split_labels[i]}_lightgray.svg", bbox_inches="tight")
-            # plt.close()
-            #
-            # sns.set_style(rc={'axes.facecolor': 'lightgray'})
-            # plt.figure(figsize=(1.75, 1.75))
-            # palette = {"training": "white", "test": sns.color_palette("Set2")[i]}
-            # ax = sns.scatterplot(umap_split, x="UMAP 1", y="UMAP 2", hue="dataset", palette=palette, s=2, edgecolor="black")
-            # plt.title(data_split_labels[i])
-            # ax.set_aspect("equal")
-            # plt.legend()
-            # sns.despine()
-            # plt.xticks([])
-            # plt.yticks([])
-            # plt.legend(bbox_to_anchor=(1.02, 1), loc="upper left", borderaxespad=0, frameon=False, fontsize=6)
-            # plt.xlabel("UMAP 1", fontsize=6)
-            # plt.ylabel("UMAP 2", fontsize=6)
-            # plt.tight_layout()
-            # plt.savefig(f"umap_split_{data_split_labels[i]}_graybackground.svg", bbox_inches="tight")
-            # plt.close()
-            # sns.set_style(rc={'axes.facecolor': 'white'})
-            #
-            #
-            # plt.figure(figsize=(1.75, 1.75))
-            # palette = {"training": "white", "test": sns.color_palette("Set2")[i]}
-            # ax = sns.scatterplot(umap_split, x="UMAP 1", y="UMAP 2", hue="dataset", palette=palette, s=2, edgecolor="black")
-            # plt.title(data_split_labels[i])
-            # ax.set_aspect("equal")
-            # plt.legend()
-            # sns.despine()
-            # plt.xticks([])
-            # plt.yticks([])
-            # plt.legend(bbox_to_anchor=(1.02, 1), loc="upper left", borderaxespad=0, frameon=False, fontsize=6)
-            # plt.xlabel("UMAP 1", fontsize=6)
-            # plt.ylabel("UMAP 2", fontsize=6)
-            # plt.tight_layout()
-            # plt.savefig(f"umap_split_{data_split_labels[i]}_whitepoints.svg", bbox_inches="tight")
-            # plt.close()
-            #
-            #
-            #
-            # umap_split_coords = umap_split[["UMAP 1", "UMAP 2"]].to_numpy()
-            # hull = ConvexHull(umap_split_coords)
-            #
-            # plt.figure(figsize=(1.75, 1.75))
-            # plt.fill(umap_split_coords[hull.vertices, 0], umap_split_coords[hull.vertices, 1], 'k', alpha=0.15)
-            # ax = sns.scatterplot(umap_split[umap_split.dataset == "test"], x="UMAP 1", y="UMAP 2",
-            #                      color=sns.color_palette("Set2")[i], edgecolor="black", s=4)
-            # plt.title(data_split_labels[i])
-            # ax.set_aspect("equal")
-            # plt.legend()
-            # sns.despine()
-            # plt.xticks([])
-            # plt.yticks([])
-            # plt.legend(bbox_to_anchor=(1.02, 1), loc="upper left", borderaxespad=0, frameon=False, fontsize=6)
-            # plt.xlabel("UMAP 1", fontsize=6)
-            # plt.ylabel("UMAP 2", fontsize=6)
-            # plt.tight_layout()
-            # plt.savefig(f"umap_split_{data_split_labels[i]}_greyhull.svg", bbox_inches="tight")
-            # plt.close()
-            #
-            #
-            # plt.figure(figsize=(1.75, 1.75))
-            # plt.fill(umap_split_coords[hull.vertices, 0], umap_split_coords[hull.vertices, 1], 'k', alpha=0.15)
-            # ax = sns.scatterplot(umap_split[umap_split.dataset == "test"], x="UMAP 1", y="UMAP 2",
-            #                      color=sns.color_palette("Set2")[i], edgecolor="white", s=6)
-            # plt.title(data_split_labels[i])
-            # ax.set_aspect("equal")
-            # plt.legend()
-            # sns.despine()
-            # plt.xticks([])
-            # plt.yticks([])
-            # plt.legend(bbox_to_anchor=(1.02, 1), loc="upper left", borderaxespad=0, frameon=False, fontsize=6)
-            # plt.xlabel("UMAP 1", fontsize=6)
-            # plt.ylabel("UMAP 2", fontsize=6)
-            # plt.tight_layout()
-            # plt.savefig(f"umap_split_{data_split_labels[i]}_greyhull2.svg", bbox_inches="tight")
-            # plt.close()
-            #
-            #
-            #
-            # plt.figure(figsize=(1.75, 1.75))
-            # plt.fill(umap_split_coords[hull.vertices, 0], umap_split_coords[hull.vertices, 1], "w")
-            # ax = sns.scatterplot(umap_split[umap_split.dataset == "test"], x="UMAP 1", y="UMAP 2",
-            #                      color=sns.color_palette("Set2")[i], edgecolor="white", s=4)
-            # plt.title(data_split_labels[i])
-            # ax.set_aspect("equal")
-            # ax.set_facecolor("lightgrey")
-            # plt.legend()
-            # sns.despine()
-            # plt.xticks([])
-            # plt.yticks([])
-            # plt.legend(bbox_to_anchor=(1.02, 1), loc="upper left", borderaxespad=0, frameon=False, fontsize=6)
-            # plt.xlabel("UMAP 1", fontsize=6)
-            # plt.ylabel("UMAP 2", fontsize=6)
-            # plt.tight_layout()
-            # plt.savefig(f"umap_split_{data_split_labels[i]}_whitehull.svg", bbox_inches="tight")
-            # plt.close()
-
-
     # Plot ROC curve
     colors = sns.color_palette("Set2")
     plt.figure(figsize=(2.2, 1.75))
     for i in range(len(auc_list)):
-        # ax = plt.plot(x_linspace, tpr_list[i], linewidth=1, color=colors[i], label=f"{i+1}) AUC = {auc_list[i]:.2f}")
         mean_tpr = np.mean(tpr_list[i], axis=0)
         std_tpr = np.std(tpr_list[i], axis=0)
         tpr_upper = np.minimum(mean_tpr + std_tpr, 1)
@@ -289,7 +157,6 @@ if __name__ == "__main__":
         plt.plot(x_linspace, mean_tpr, linewidth=0.8, color=colors[i],
                  label=f"AUC = {np.mean(auc_list[i]):.2f}$\pm${np.std(auc_list[i]):.2f}")
         plt.fill_between(mean_fpr, tpr_lower, tpr_upper, color=colors[i], alpha=0.5, lw=0)
-        # plt.fill_between(mean_fpr, tpr_lower, tpr_upper, label="$\pm$ std. dev.", color=colors[i], alpha=0.5, lw=0)
 
     plt.plot([0, 1], [0, 1], "--", color="black", linewidth=1, label="Random")
     plt.xticks(np.arange(0, 1.2, 0.5))
@@ -302,3 +169,5 @@ if __name__ == "__main__":
     plt.tight_layout()
     plt.savefig(results_dir/f"roc_testsets_{target}.svg", bbox_inches="tight")
     plt.close()
+
+    print(f"Done. Saved results to {results_dir}")
