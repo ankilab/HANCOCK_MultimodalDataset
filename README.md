@@ -179,6 +179,10 @@ cd multimodal_machine_learning
 python adjuvant_treatment_prediction.py path/to/Hancock_Dataset/DataSplits_DataDictionaries ../data ../results
 ```
 
+![ROC curve of multimodal model](./images/roc_treatment_Multimodal.svg) 
+
+![Overall survival grouped by predictions](./images/adjuvant_treatment_prediction_os.svg)
+
 
 ## Adjuvant treatment prediction using histology images
 
