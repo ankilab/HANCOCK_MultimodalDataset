@@ -21,13 +21,19 @@ def cross_validation(dataframe, random_state, k, plot_name=None):
 
     Parameters
     ----------
-    dataframe :
+    dataframe : Pandas dataframe
+
     random_state :
+
+    k :
+
+    plot_name :
 
     Returns
     -------
 
     """
+
     tpr_list = []
     auc_list = []
     x_linspace = np.linspace(0, 1, 100)
@@ -65,7 +71,7 @@ def cross_validation(dataframe, random_state, k, plot_name=None):
 
         # Get SHAP values
         svs = shap.TreeExplainer(model).shap_values(X_val)
-        shap_values.append(svs[1])  # svs[1] -> class = 1 (adjuvant treatment)
+        shap_values.append(svs[:, :, 1])  # class = 1 (adjuvant treatment yes)
         val_index_list.append(val_idx)
         features_per_fold.append(preprocessor.get_feature_names_out())
 
@@ -92,11 +98,11 @@ def cross_validation(dataframe, random_state, k, plot_name=None):
             # Find index of missing category
             missing_idx = list(feature_names).index(m)
             # Insert zeros for missing category
-            shap_values[i] = np.insert(shap_values[i], missing_idx, 0, axis=0)
+            shap_values[i] = np.insert(shap_values[i], missing_idx, 0, axis=1)
 
     all_val_folds_idx = [idx for idx_fold in val_index_list for idx in idx_fold]
     shap.summary_plot(
-        shap_values=np.array(shap_values),
+        shap_values=np.concatenate(shap_values),
         features=dataframe_reindex.reindex(all_val_folds_idx),
         feature_names=feature_names,
         max_display=12,
@@ -278,13 +284,19 @@ if __name__ == "__main__":
     df_test = target_test.merge(df, on="patient_id", how="inner")
 
     # Train classifier on multimodal data with 10-fold CV
+    print("Running k-fold cross-validation for multimodal data...")
     roc_multimodal, auc_multimodal, shap_values_multimodal = cross_validation(df_train, rng, k=10, plot_name="multimodal")
 
     # Train classifiers on single modalities with 10-fold CV
+    print("Running k-fold cross-validation for clinical data...")
     roc_clinical, auc_clinical, _ = cross_validation(df_train[["target"] + list(clinical.columns)], rng, k=10)
+    print("Running k-fold cross-validation for pathological data...")
     roc_patho, auc_patho, _ = cross_validation(df_train[["target"] + list(patho.columns)], rng, k=10)
+    print("Running k-fold cross-validation for blood data...")
     roc_blood, auc_blood, _ = cross_validation(df_train[["target"] + list(blood.columns)], rng, k=10)
+    print("Running k-fold cross-validation for cell density data...")
     roc_tma, auc_tma, _ = cross_validation(df_train[["target"] + list(cell_density.columns)], rng, k=10)
+    print("Running k-fold cross-validation for text data...")
     roc_icd, auc_icd, _ = cross_validation(df_train[["target"] + list(icd.columns)], rng, k=10)
 
     # Plot average ROC curves with AUC scores
@@ -318,4 +330,6 @@ if __name__ == "__main__":
         plt.close()
 
     # Train classifier once on multimodal data, show survival curves and bar plot
+    print("Training and testing the final multimodal model...")
     training_and_testing(df_train, df_test, rng)
+    print(f"Done. Saved results to {results_dir}")
