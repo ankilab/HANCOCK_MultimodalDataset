@@ -3,3 +3,4 @@ seaborn==0.13.2
 pandas==2.2.2
 numpy==1.26.4
 pathlib==1.0.1
+lifelines==0.28.0
