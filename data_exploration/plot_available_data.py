@@ -97,6 +97,7 @@ class HancockAvailableDataPlotter:
         self._blood = dataFrameReaderFactory.make_data_frame_reader(
             'Blood', self._blood_path).return_data()
         self._merged = None
+        
         rcParams.update({"font.size": 6})
         rcParams["svg.fonttype"] = "none"
 
@@ -203,6 +204,10 @@ class HancockAvailableDataPlotter:
 
         return clinical_count, patho_count, blood_count
 
+    def get_merged_data_frame(self) -> pd.DataFrame:
+        if self._merged is None:
+            pass
+        return self._merged.copy()
 
 if __name__ == '__main__':
     parser = ArgumentParser()
@@ -230,18 +235,18 @@ if __name__ == '__main__':
     tma_cd3_z, tma_cd3_inv = load_measurements(
         measurement_file=root_dir/args.path_celldensity, tma_name="TMA CD3")
 
-    # # Text data
-    # report = get_file_count(root_dir/args.path_reports, "Surgery report")
+    # Text data
+    report = get_file_count(root_dir/args.path_reports, "Surgery report")
 
-    # # Merge
-    # merged = clinical_count
-    # for df in [patho_count, blood_count, report, tma_cd3_z, tma_cd3_inv, prim_count, lk_count]:
-    #     merged = merged.merge(df, on="patient_id", how="outer")
+    # Merge
+    merged = clinical_count
+    for df in [patho_count, blood_count, report, tma_cd3_z, tma_cd3_inv, prim_count, lk_count]:
+        merged = merged.merge(df, on="patient_id", how="outer")
 
-    # merged = merged.sort_values(by="patient_id").reset_index(drop=True)
-    # merged[merged.columns[1:]] = (merged[merged.columns[1:]] >= 1).astype(int)
+    merged = merged.sort_values(by="patient_id").reset_index(drop=True)
+    merged[merged.columns[1:]] = (merged[merged.columns[1:]] >= 1).astype(int)
 
-    # # Lymph node slides are only available for patients with positive lymph nodes
+    # Lymph node slides are only available for patients with positive lymph nodes
     # merged = merged.merge(
     #     patho[["patient_id", "number_of_positive_lymph_nodes"]].fillna(0), on="patient_id")
     # merged["WSI Lymph node"] = merged.apply(
@@ -249,6 +254,9 @@ if __name__ == '__main__':
     #         x["WSI Lymph node"] == 0) else x["WSI Lymph node"],
     #     axis=1)
     # merged = merged.drop("number_of_positive_lymph_nodes", axis=1)
+    
+    
+    
 
     # # Plot
     # merged_plot = merged[merged.columns[1:]]
