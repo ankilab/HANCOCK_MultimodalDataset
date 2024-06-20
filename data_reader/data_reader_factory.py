@@ -1,11 +1,12 @@
-from data_reader.data_reader import (
+from pathlib import Path
+import sys
+sys.path.append(Path(__file__).parent)
+from data_reader import (
     DataFrameReader,
     PathologicalDataFrameReader,
     ClinicalDataFrameReader,
     BloodDataFrameReader
 )
-from pathlib import Path
-
 
 class DataFrameReaderFactory:
     """The DataReaderFactory class creates the appropriate DataReader object based on the 
@@ -14,7 +15,7 @@ class DataFrameReaderFactory:
     def __init__(self):
         pass
         
-    def make_data_reader(self, data_type:str = 'NA', data_dir:Path = Path(__file__)) -> DataFrameReader:
+    def make_data_frame_reader(self, data_type:str = 'NA', data_dir:Path = Path(__file__)) -> DataFrameReader:
         if data_type == 'Pathological':
             return PathologicalDataFrameReader(data_dir)
         elif data_type == 'Clinical':

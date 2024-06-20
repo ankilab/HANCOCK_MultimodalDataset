@@ -48,6 +48,7 @@ class TabularDataFrameReader(DataFrameReader):
         if self._data is None:
             self._data = pd.read_json(
                 self._data_dir, orient="records", dtype={"patient_id": str})
+        return self._data
 
     def __init__(self, data_dir: Path):
         super().__init__(data_dir)
