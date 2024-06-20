@@ -1,5 +1,5 @@
 from pathlib import Path
-from data_reader.data_reader import (
+from .data_reader import (
     DataFrameReader,
     PathologicalDataFrameReader,
     ClinicalDataFrameReader,

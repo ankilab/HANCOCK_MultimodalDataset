@@ -8,8 +8,11 @@ from matplotlib import rcParams
 import seaborn as sns
 from argparse import ArgumentParser
 from pathlib import Path
+import sys
 
-import numpy as np
+# Add root directory to system path to import DataFrameReaderFactory
+sys.path.append(str(Path(__file__).parents[1]))
+from data_reader import DataFrameReaderFactory
 
 
 def get_file_count(file_dir, slide_type, subdirs=False):
@@ -83,46 +86,17 @@ class HancockAvailableDataPlotter:
         - TextData
             - reports
     """
-    @property
-    def clinical(self) -> pd.DataFrame:
-        """Returns the clinical data from the structured data file, defined
-        in the parser.
-
-        Returns:
-            pd.DataFrame: The clinical data as a pandas dataframe.
-        """
-        if self._clinical is None:
-            self._clinical = pd.read_json(
-                self._clinical_path, orient="records", dtype={"patient_id": str})
-        return self._clinical
-    
-    @property
-    def patho(self) -> pd.DataFrame:
-        """Returns the pathological data from the structured data file, defined
-        in the parser.
-
-        Returns:
-            pd.DataFrame: The pathological data as a pandas dataframe.
-        """
-        if self._patho is None:
-            self._patho = pd.read_json(
-                self._patho_path, orient="records", dtype={"patient_id": str})
-        return self._patho
-    
-    @property
-    def blood(self) -> pd.DataFrame:
-        if self._blood is None:
-            self._blood = pd.read_json(
-                self._blood_path, orient="records", dtype={"patient_id": str})
-        return self._blood
-
     def __init__(self, parser: ArgumentParser):
-        self._merged = None
-        self._clinical = None
-        self._patho = None
-        self._blood = None
         self._add_parser_args(parser)
         self._create_absolute_paths(parser)
+        dataFrameReaderFactory = DataFrameReaderFactory()
+        self._clinical = dataFrameReaderFactory.make_data_frame_reader(
+            'Clinical', self._clinical_path).return_data()
+        self._patho = dataFrameReaderFactory.make_data_frame_reader(
+            'Pathological', self._patho_path).return_data()
+        self._blood = dataFrameReaderFactory.make_data_frame_reader(
+            'Blood', self._blood_path).return_data()
+        self._merged = None
         rcParams.update({"font.size": 6})
         rcParams["svg.fonttype"] = "none"
 
@@ -217,13 +191,14 @@ class HancockAvailableDataPlotter:
             tuple[pd.DataFrame, pd.DataFrame, pd.DataFrame]: The tabular data
             as dataframes for clinical, pathological and blood data.
         """
-        clinical_count = self.clinical["patient_id"].value_counts().reset_index()
+        clinical_count = self._clinical["patient_id"].value_counts(
+        ).reset_index()
         clinical_count.columns = ["patient_id", "Clinical data"]
 
-        patho_count = self.patho["patient_id"].value_counts().reset_index()
+        patho_count = self._patho["patient_id"].value_counts().reset_index()
         patho_count.columns = ["patient_id", "Pathological data"]
 
-        blood_count = self.blood["patient_id"].value_counts().reset_index()
+        blood_count = self._blood["patient_id"].value_counts().reset_index()
         blood_count.columns = ["patient_id", "Blood data"]
 
         return clinical_count, patho_count, blood_count
@@ -244,17 +219,16 @@ if __name__ == '__main__':
 
     # Structured data
     [clinical_count, patho_count, blood_count] = plotter.get_tabular_data_count()
-    
 
-    # prim_count = get_file_count(
-    # # Image data
-    #     root_dir/args.dir_wsi_primarytumor, "WSI Primary tumor", subdirs=True)
-    # lk_count = get_file_count(
-    #     root_dir/args.dir_wsi_lymphnode, "WSI Lymph node")
+    prim_count = get_file_count(
+    # Image data
+        root_dir/args.dir_wsi_primarytumor, "WSI Primary tumor", subdirs=True)
+    lk_count = get_file_count(
+        root_dir/args.dir_wsi_lymphnode, "WSI Lymph node")
 
-    # # TMA data (only CD3 considered, as example)
-    # tma_cd3_z, tma_cd3_inv = load_measurements(
-    #     measurement_file=root_dir/args.path_celldensity, tma_name="TMA CD3")
+    # TMA data (only CD3 considered, as example)
+    tma_cd3_z, tma_cd3_inv = load_measurements(
+        measurement_file=root_dir/args.path_celldensity, tma_name="TMA CD3")
 
     # # Text data
     # report = get_file_count(root_dir/args.path_reports, "Surgery report")
