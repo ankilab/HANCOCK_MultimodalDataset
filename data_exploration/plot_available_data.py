@@ -9,6 +9,8 @@ import seaborn as sns
 from argparse import ArgumentParser
 from pathlib import Path
 
+import numpy as np
+
 
 def get_file_count(file_dir, slide_type, subdirs=False):
     if subdirs:
@@ -28,9 +30,12 @@ def get_file_count(file_dir, slide_type, subdirs=False):
                 patient_id = re.search(r"[0-9]{3}", f).group()
                 file_list.append({
                     "patient_id": patient_id,
-                    "file": file_dir/f
+                    "file": file_dir / f
                 })
-    slide_df = pd.DataFrame(file_list)
+    if (file_list == []):
+        slide_df = pd.DataFrame(columns=["patient_id", "file"])
+    else:
+        slide_df = pd.DataFrame(file_list)
     count = slide_df["patient_id"].value_counts().reset_index()
     count.columns = ["patient_id", slide_type]
     return count
@@ -48,7 +53,8 @@ def load_measurements(measurement_file, tma_name):
     data = data.drop(nan_idx)
 
     # Extract location
-    data["location"] = data["Image"].str.extract(r"(TumorCenter|InvasionFront)")
+    data["location"] = data["Image"].str.extract(
+        r"(TumorCenter|InvasionFront)")
 
     tma_z = data[data["location"] == "TumorCenter"]
     tma_inv = data[data["location"] == "InvasionFront"]
@@ -61,138 +67,253 @@ def load_measurements(measurement_file, tma_name):
     return count_z, count_inv
 
 
+class HancockAvailableDataPlotter:
+    """Plots the available data from the hancock dataset.
+
+    Default directory structure is:
+    - dataset_dir
+        - StructuredData
+            - clinical_data.json
+            - pathological_data.json
+            - blood_data.json
+        - WSI_PrimaryTumor
+        - WSI_LymphNode
+        - TMA_CellDensityMeasurements
+            - TMA_celldensity_measurements.csv
+        - TextData
+            - reports
+    """
+    @property
+    def clinical(self) -> pd.DataFrame:
+        """Returns the clinical data from the structured data file, defined
+        in the parser.
+
+        Returns:
+            pd.DataFrame: The clinical data as a pandas dataframe.
+        """
+        if self._clinical is None:
+            self._clinical = pd.read_json(
+                self._clinical_path, orient="records", dtype={"patient_id": str})
+        return self._clinical
+    
+    @property
+    def patho(self) -> pd.DataFrame:
+        """Returns the pathological data from the structured data file, defined
+        in the parser.
+
+        Returns:
+            pd.DataFrame: The pathological data as a pandas dataframe.
+        """
+        if self._patho is None:
+            self._patho = pd.read_json(
+                self._patho_path, orient="records", dtype={"patient_id": str})
+        return self._patho
+    
+    @property
+    def blood(self) -> pd.DataFrame:
+        if self._blood is None:
+            self._blood = pd.read_json(
+                self._blood_path, orient="records", dtype={"patient_id": str})
+        return self._blood
+
+    def __init__(self, parser: ArgumentParser):
+        self._merged = None
+        self._clinical = None
+        self._patho = None
+        self._blood = None
+        self._add_parser_args(parser)
+        self._create_absolute_paths(parser)
+        rcParams.update({"font.size": 6})
+        rcParams["svg.fonttype"] = "none"
+
+    def _add_parser_args(self, parser: ArgumentParser) -> None:
+        """Functions adds the available arguments to the parser. The arguments
+
+        Args:
+            parser (ArgumentParser): The parser to which the arguments are added.
+        """
+        parser.add_argument("--dataset_dir", type=str,
+                            help="Root directory of dataset", nargs="?",
+                            default=Path(__file__).parents[2] / 'Hancock_Dataset')
+        parser.add_argument("--results_dir", type=str,
+                            help="Directory where plot will be saved", nargs="?",
+                            default=Path(__file__).parents[1] / 'results')
+        parser.add_argument(
+            "--path_clinical",
+            type=str,
+            help="Relative path of clinical data file in the specified dataset_dir",
+            default="StructuredData/clinical_data.json",
+            nargs="?"
+        )
+        parser.add_argument(
+            "--path_patho",
+            type=str,
+            help="Relative path of pathological data file in the specified dataset_dir",
+            default="StructuredData/pathological_data.json",
+            nargs="?"
+        )
+        parser.add_argument(
+            "--path_blood",
+            type=str,
+            help="Relative path of blood data file in the specified dataset_dir",
+            default="StructuredData/blood_data.json",
+            nargs="?"
+        )
+        parser.add_argument(
+            "--dir_wsi_primarytumor",
+            type=str,
+            help="Relative path to the WSI_PrimaryTumor directory in the specified dataset_dir",
+            default="WSI_PrimaryTumor",
+            nargs="?"
+        )
+        parser.add_argument(
+            "--dir_wsi_lymphnode",
+            type=str,
+            help="Relative path to the WSI_LymphNode directory in the specified dataset_dir",
+            default="WSI_LymphNode",
+            nargs="?"
+        )
+        parser.add_argument(
+            "--path_celldensity",
+            type=str,
+            help="Relative path to the cell density measurements file in the specified dataset_dir",
+            default="TMA_CellDensityMeasurements/TMA_celldensity_measurements.csv",
+            nargs="?"
+        )
+        parser.add_argument(
+            "--path_reports",
+            type=str,
+            help="Relative path to the directory containing surgery reports in the specified dataset_dir",
+            default="TextData/reports/",
+            nargs="?"
+        )
+
+    def _create_absolute_paths(self, parser: ArgumentParser) -> None:
+        """Creates the absolute paths from the relative paths specified in 
+        the parser.
+
+        Args:
+            parser (ArgumentParser): The parser with the relative paths 
+            as arguemnts.
+        """
+        args = parser.parse_args()
+        root_dir = args.dataset_dir
+        self._clinical_path = root_dir / args.path_clinical
+        self._patho_path = root_dir / args.path_patho
+        self._blood_path = root_dir / args.path_blood
+        self._prim_path = root_dir / args.dir_wsi_primarytumor
+        self._lk_path = root_dir / args.dir_wsi_lymphnode
+        self._cell_density_path = root_dir / args.path_celldensity
+        self._report_path = root_dir / args.path_reports
+        self._result_path = args.results_dir
+
+    def get_tabular_data_count(self) -> tuple[pd.DataFrame, pd.DataFrame, pd.DataFrame]:
+        """Returns the tabular data from the structured data files. 
+        Reads them from the directory specified in the parser and retains 
+        only two columns. The first column is the patient_id and the second 
+        the number of available records for that patient. 
+
+        Returns:
+            tuple[pd.DataFrame, pd.DataFrame, pd.DataFrame]: The tabular data
+            as dataframes for clinical, pathological and blood data.
+        """
+        clinical_count = self.clinical["patient_id"].value_counts().reset_index()
+        clinical_count.columns = ["patient_id", "Clinical data"]
+
+        patho_count = self.patho["patient_id"].value_counts().reset_index()
+        patho_count.columns = ["patient_id", "Pathological data"]
+
+        blood_count = self.blood["patient_id"].value_counts().reset_index()
+        blood_count.columns = ["patient_id", "Blood data"]
+
+        return clinical_count, patho_count, blood_count
+
+
 if __name__ == '__main__':
     parser = ArgumentParser()
-    parser.add_argument("dataset_dir", type=str, help="Root directory of dataset")
-    parser.add_argument("results_dir", type=str, help="Directory where plot will be saved")
-    parser.add_argument(
-        "--path_clinical",
-        type=str,
-        help="Relative path of clinical data file in the specified dataset_dir",
-        default="StructuredData/clinical_data.json",
-        nargs="?"
-    )
-    parser.add_argument(
-        "--path_patho",
-        type=str,
-        help="Relative path of pathological data file in the specified dataset_dir",
-        default="StructuredData/pathological_data.json",
-        nargs="?"
-    )
-    parser.add_argument(
-        "--path_blood",
-        type=str,
-        help="Relative path of blood data file in the specified dataset_dir",
-        default="StructuredData/blood_data.json",
-        nargs="?"
-    )
-    parser.add_argument(
-        "--dir_wsi_primarytumor",
-        type=str,
-        help="Relative path to the WSI_PrimaryTumor directory in the specified dataset_dir",
-        default="WSI_PrimaryTumor",
-        nargs="?"
-    )
-    parser.add_argument(
-        "--dir_wsi_lymphnode",
-        type=str,
-        help="Relative path to the WSI_LymphNode directory in the specified dataset_dir",
-        default="WSI_LymphNode",
-        nargs="?"
-    )
-    parser.add_argument(
-        "--path_celldensity",
-        type=str,
-        help="Relative path to the cell density measurements file in the specified dataset_dir",
-        default="TMA_CellDensityMeasurements/TMA_celldensity_measurements.csv",
-        nargs="?"
-    )
-    parser.add_argument(
-        "--path_reports",
-        type=str,
-        help="Relative path to the directory containing surgery reports in the specified dataset_dir",
-        default="TextData/reports/",
-        nargs="?"
-    )
+    plotter = HancockAvailableDataPlotter(parser)
     args = parser.parse_args()
-    rootdir = Path(args.dataset_dir)
+    root_dir = Path(args.dataset_dir)
 
     rcParams.update({"font.size": 6})
     rcParams["svg.fonttype"] = "none"
 
-    clinical_path = rootdir/args.path_clinical
-    patho_path = rootdir/args.path_patho
-    blood_path = rootdir/args.path_blood
+    clinical_path = root_dir/args.path_clinical
+    patho_path = root_dir/args.path_patho
+    blood_path = root_dir/args.path_blood
 
     # Structured data
-    clinical = pd.read_json(clinical_path, orient="records", dtype={"patient_id": str})
-    clinical_count = clinical["patient_id"].value_counts().reset_index()
-    clinical_count.columns = ["patient_id", "Clinical data"]
+    [clinical_count, patho_count, blood_count] = plotter.get_tabular_data_count()
+    
 
-    patho = pd.read_json(patho_path, orient="records", dtype={"patient_id": str})
-    patho_count = patho["patient_id"].value_counts().reset_index()
-    patho_count.columns = ["patient_id", "Pathological data"]
+    # prim_count = get_file_count(
+    # # Image data
+    #     root_dir/args.dir_wsi_primarytumor, "WSI Primary tumor", subdirs=True)
+    # lk_count = get_file_count(
+    #     root_dir/args.dir_wsi_lymphnode, "WSI Lymph node")
 
-    blood = pd.read_json(blood_path, orient="records", dtype={"patient_id": str})
-    blood_count = blood["patient_id"].value_counts().reset_index()
-    blood_count.columns = ["patient_id", "Blood data"]
+    # # TMA data (only CD3 considered, as example)
+    # tma_cd3_z, tma_cd3_inv = load_measurements(
+    #     measurement_file=root_dir/args.path_celldensity, tma_name="TMA CD3")
 
-    # Image data
-    prim_count = get_file_count(rootdir/args.dir_wsi_primarytumor, "WSI Primary tumor", subdirs=True)
-    lk_count = get_file_count(rootdir/args.dir_wsi_lymphnode, "WSI Lymph node")
+    # # Text data
+    # report = get_file_count(root_dir/args.path_reports, "Surgery report")
 
-    # TMA data (only CD3 considered, as example)
-    tma_cd3_z, tma_cd3_inv = load_measurements(measurement_file=rootdir/args.path_celldensity, tma_name="TMA CD3")
+    # # Merge
+    # merged = clinical_count
+    # for df in [patho_count, blood_count, report, tma_cd3_z, tma_cd3_inv, prim_count, lk_count]:
+    #     merged = merged.merge(df, on="patient_id", how="outer")
 
-    # Text data
-    report = get_file_count(rootdir/args.path_reports, "Surgery report")
+    # merged = merged.sort_values(by="patient_id").reset_index(drop=True)
+    # merged[merged.columns[1:]] = (merged[merged.columns[1:]] >= 1).astype(int)
 
-    # Merge
-    merged = clinical_count
-    for df in [patho_count, blood_count, report, tma_cd3_z, tma_cd3_inv, prim_count, lk_count]:
-        merged = merged.merge(df, on="patient_id", how="outer")
+    # # Lymph node slides are only available for patients with positive lymph nodes
+    # merged = merged.merge(
+    #     patho[["patient_id", "number_of_positive_lymph_nodes"]].fillna(0), on="patient_id")
+    # merged["WSI Lymph node"] = merged.apply(
+    #     lambda x: 2 if (x["number_of_positive_lymph_nodes"] == 0) & (
+    #         x["WSI Lymph node"] == 0) else x["WSI Lymph node"],
+    #     axis=1)
+    # merged = merged.drop("number_of_positive_lymph_nodes", axis=1)
 
-    merged = merged.sort_values(by="patient_id").reset_index(drop=True)
-    merged[merged.columns[1:]] = (merged[merged.columns[1:]] >= 1).astype(int)
+    # # Plot
+    # merged_plot = merged[merged.columns[1:]]
+    # avail_sorted = merged_plot.sort_values(
+    #     by=list(reversed(merged_plot.columns)), ascending=True)
+    # avail_sorted = avail_sorted.T
 
-    # Lymph node slides are only available for patients with positive lymph nodes
-    merged = merged.merge(patho[["patient_id", "number_of_positive_lymph_nodes"]].fillna(0), on="patient_id")
-    merged["WSI Lymph node"] = merged.apply(
-        lambda x: 2 if (x["number_of_positive_lymph_nodes"] == 0) & (x["WSI Lymph node"] == 0) else x["WSI Lymph node"],
-        axis=1)
-    merged = merged.drop("number_of_positive_lymph_nodes", axis=1)
+    # plt.figure(figsize=(6, 2))
+    # ax = sns.heatmap(avail_sorted, cmap=[sns.color_palette("Dark2")[
+    #     1], sns.color_palette("Set2")[0], (1, 1, 1)], cbar=False)
+    # plt.xticks([1, 100, 200, 300, 400, 500, 600, 700, 763])
+    # ax.set_xticklabels([1, 100, 200, 300, 400, 500, 600, 700, 763])
+    # plt.tight_layout()
+    # ax.hlines(list(range(0, 11)), *ax.get_xlim(), colors="white")
 
-    # Plot
-    merged_plot = merged[merged.columns[1:]]
-    avail_sorted = merged_plot.sort_values(by=list(reversed(merged_plot.columns)), ascending=True)
-    avail_sorted = avail_sorted.T
+    # myColors = [sns.color_palette("Set2")[0], sns.color_palette("Dark2")[
+    #     1], (1, 1, 1)]
+    # cmap = LinearSegmentedColormap.from_list("Custom", myColors, len(myColors))
 
-    plt.figure(figsize=(6, 2))
-    ax = sns.heatmap(avail_sorted, cmap=[sns.color_palette("Dark2")[1], sns.color_palette("Set2")[0], (1, 1, 1)], cbar=False)
-    plt.xticks([1, 100, 200, 300, 400, 500, 600, 700, 763])
-    ax.set_xticklabels([1, 100, 200, 300, 400, 500, 600, 700, 763])
-    plt.tight_layout()
-    ax.hlines(list(range(0, 11)), *ax.get_xlim(), colors="white")
+    # legend_handles = [Patch(facecolor=sns.color_palette("Set2")[0], label="Available"),
+    #                   Patch(facecolor=sns.color_palette("Dark2")[1], label="Not available")]
+    # plt.legend(handles=legend_handles, loc='center left',
+    #            bbox_to_anchor=(1, 0.5), frameon=False)
+    # sns.despine(bottom=False, left=True, offset=5)
+    # plt.tight_layout()
+    # plt.savefig(Path(args.results_dir) /
+    #             "available_data.svg", bbox_inches="tight")
+    # plt.savefig(Path(args.results_dir)/"available_data.png",
+    #             bbox_inches="tight", dpi=300)
+    # plt.show()
 
-    myColors = [sns.color_palette("Set2")[0], sns.color_palette("Dark2")[1], (1, 1, 1)]
-    cmap = LinearSegmentedColormap.from_list("Custom", myColors, len(myColors))
-
-    legend_handles = [Patch(facecolor=sns.color_palette("Set2")[0], label="Available"),
-                      Patch(facecolor=sns.color_palette("Dark2")[1], label="Not available")]
-    plt.legend(handles=legend_handles, loc='center left', bbox_to_anchor=(1, 0.5), frameon=False)
-    sns.despine(bottom=False, left=True, offset=5)
-    plt.tight_layout()
-    plt.savefig(Path(args.results_dir)/"available_data.svg", bbox_inches="tight")
-    plt.savefig(Path(args.results_dir)/"available_data.png", bbox_inches="tight", dpi=300)
-    plt.show()
-
-    # Find patients that don't cover all modalities
-    patients_missing_data = merged[
-        (merged["WSI Primary tumor"] == 0)  # & (all_counts['HE Slides LYM'] == 0))
-        | (merged["Clinical data"] == 0)
-        | (merged["Pathological data"] == 0)
-        | (merged["Blood data"] == 0)
-        | (merged["Surgery report"] == 0)
-        ]
-    print(f'Patients with missing data: {len(patients_missing_data)}\n')
-    print(patients_missing_data)
+    # # Find patients that don't cover all modalities
+    # patients_missing_data = merged[
+    #     # & (all_counts['HE Slides LYM'] == 0))
+    #     (merged["WSI Primary tumor"] == 0)
+    #     | (merged["Clinical data"] == 0)
+    #     | (merged["Pathological data"] == 0)
+    #     | (merged["Blood data"] == 0)
+    #     | (merged["Surgery report"] == 0)
+    # ]
+    # print(f'Patients with missing data: {len(patients_missing_data)}\n')
+    # print(patients_missing_data)
