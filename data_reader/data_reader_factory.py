@@ -1,7 +1,5 @@
 from pathlib import Path
-import sys
-sys.path.append(Path(__file__).parent)
-from data_reader import (
+from data_reader.data_reader import (
     DataFrameReader,
     PathologicalDataFrameReader,
     ClinicalDataFrameReader,
