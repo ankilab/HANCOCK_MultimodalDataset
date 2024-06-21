@@ -5,7 +5,8 @@ from .data_reader import (
     ClinicalDataFrameReader,
     BloodDataFrameReader,
     WSIPrimaryTumorDataFrameReader,
-    WSILymphNodeDataFrameReader
+    WSILymphNodeDataFrameReader,
+    TMACellDensityDataFrameReader
 )
 
 
@@ -31,7 +32,7 @@ class DataFrameReaderFactory:
         elif data_type == 'WSI_LymphNode':
             return WSILymphNodeDataFrameReader(data_dir)
         elif data_type == 'TMA_CellDensityMeasurement':
-            return DataFrameReader(data_dir)
+            return TMACellDensityDataFrameReader(data_dir)
         elif data_type == 'TextData_reports':
             return DataFrameReader(data_dir)
         else:

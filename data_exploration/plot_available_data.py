@@ -1,3 +1,4 @@
+from data_reader import DataFrameReaderFactory
 import os
 import re
 import pandas as pd
@@ -12,7 +13,6 @@ import sys
 
 # Add root directory to system path to import DataFrameReaderFactory
 sys.path.append(str(Path(__file__).parents[1]))
-from data_reader import DataFrameReaderFactory
 
 
 def get_file_count(file_dir, slide_type, subdirs=False):
@@ -86,10 +86,11 @@ class HancockAvailableDataPlotter:
         - TextData
             - reports
     """
+
     def __init__(self, parser: ArgumentParser):
         self._add_parser_args(parser)
         self._create_absolute_paths(parser)
-        
+
         dataFrameReaderFactory = DataFrameReaderFactory()
         self._clinicalDataFrameReader = dataFrameReaderFactory.make_data_frame_reader(
             'Clinical', self._clinical_path)
@@ -97,9 +98,20 @@ class HancockAvailableDataPlotter:
             'Pathological', self._patho_path)
         self._bloodDataFrameReader = dataFrameReaderFactory.make_data_frame_reader(
             'Blood', self._blood_path)
+
+        self._wsiPrimaryTumorDataFrameReader = dataFrameReaderFactory.make_data_frame_reader(
+            'WSI_PrimaryTumor', self._prim_path
+        )
+        self._wSILymphNodeDataFrameReader = dataFrameReaderFactory.make_data_frame_reader(
+            'WSI_LymphNode', self._lk_path
+        )
+        self._tmaCellDensityDataFrameReader = dataFrameReaderFactory.make_data_frame_reader(
+            'TMA_CellDensityMeasurement', self._cell_density_path
+        )
         
+
         self._merged = None
-        
+
         rcParams.update({"font.size": 6})
         rcParams["svg.fonttype"] = "none"
 
@@ -200,10 +212,11 @@ class HancockAvailableDataPlotter:
 
         return clinical_count, patho_count, blood_count
 
-    def get_merged_data_frame(self) -> pd.DataFrame:
+    def get_available_data_frame(self) -> pd.DataFrame:
         if self._merged is None:
             pass
         return self._merged.copy()
+
 
 if __name__ == '__main__':
     parser = ArgumentParser()
@@ -222,7 +235,7 @@ if __name__ == '__main__':
     [clinical_count, patho_count, blood_count] = plotter.get_tabular_data_count()
 
     prim_count = get_file_count(
-    # Image data
+        # Image data
         root_dir/args.dir_wsi_primarytumor, "WSI Primary tumor", subdirs=True)
     lk_count = get_file_count(
         root_dir/args.dir_wsi_lymphnode, "WSI Lymph node")
@@ -250,9 +263,6 @@ if __name__ == '__main__':
     #         x["WSI Lymph node"] == 0) else x["WSI Lymph node"],
     #     axis=1)
     # merged = merged.drop("number_of_positive_lymph_nodes", axis=1)
-    
-    
-    
 
     # # Plot
     # merged_plot = merged[merged.columns[1:]]

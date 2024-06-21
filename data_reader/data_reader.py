@@ -9,6 +9,14 @@ class DataFrameReader:
     All individual DataFrameReader's should inherit from this class and implement
     the return_data method.
     """
+    @property
+    def data(self) -> pd.DataFrame:
+        """The getter for the data property. The data property should be 
+        implemented by the inheriting classes.
+        """
+        if self._data is None:
+            self._data = pd.DataFrame(columns=['patient_id', 'data'])
+        return self._data.copy()
 
     def __init__(self, data_dir: Path = Path(__file__)):
         """The DataReader class reads the HANCOCK data from the directory. It
@@ -38,6 +46,25 @@ class DataFrameReader:
         """
         return pd.DataFrame(columns=['patient_id', 'data'])
 
+    def return_data_count(self, columns: list[str] = ['patient_id', 'data']):
+        """Returns a pandas data frame only with the count of rows we have 
+        for the first column. The second given column will be used as the 
+        column name for the count.
+
+        Args:
+            columns (list[str], optional): The names of the columns of the output 
+            data frame. First one is the value that will be counted, second 
+            one will be used as the column name for the count. 
+            Defaults to ['patient_id', 'data'].
+
+        Returns:
+            pd.DataFrame: The data frame with the count of the first column.
+        """
+        data = self.data
+        data_count = data[columns[0]].value_counts().reset_index()
+        data_count.columns = columns
+        return data_count
+
 
 class TabularDataFrameReader(DataFrameReader):
     """The DataFrameReader for the tabular structured data, clinical, 
@@ -63,28 +90,6 @@ class TabularDataFrameReader(DataFrameReader):
             pd.DataFrame: _description_
         """
         return self.data
-
-    def return_data_count(
-            self, columns: list[str] = ['patient_id', 'data type']) -> pd.DataFrame:
-        """Returns a pandas data frame only with the count of rows we have 
-        for the first column. The second given column will be used as the 
-        column name for the count.
-
-        Args:
-            columns (list[str], optional): The name of the columns that 
-            should be used for the data frame. The first one is the one 
-            we create the count for. The second one will be used to name 
-            the count column. Make sure that len(columns) == 2. 
-            Defaults to ['patient_id', 'data type'].
-
-        Returns:
-            pd.DataFrame: The data frame with the count of the first column 
-            labeled with the second column name.
-        """
-        data = self.data
-        data_count = data[columns[0]].value_counts().reset_index()
-        data_count.columns = columns
-        return data_count
 
 
 class FileRelationDataFrameReader(DataFrameReader):
@@ -261,3 +266,31 @@ class TMACellDensityDataFrameReader(TabularDataFrameReader):
     def __init__(self, data_dir: Path = Path(__file__), tma_name: str = 'TMA CD3'):
         super().__init__(data_dir)
         self._tma_name = tma_name
+
+    def return_data_count(self, columns: list[str] = ['Case ID', 'Image']):
+        """Returns the count of the Case ID in the data frame (or the first column if 
+        you change that) and analyses the 'Image' column (or the second column if 
+        you change that) if it includes the location (either TumorCenter InvasionCenter) 
+        in the value of each row. The count of both is returned in a pandas data frame
+        with the columns 'patient_id', self._tma_name + ' tumor center' 
+        and self._tma_name + ' invasion center'.
+
+        Args:
+            columns (list[str], optional): _description_. Defaults to ['Case ID', 
+            'location', 'Image'].
+        """
+        data = self.data
+        data = data[~(data['Missing'] == True) & ~data[columns[0]].isna()]
+        data['location'] = data[columns[1]].str.extract(
+            r"(TumorCenter|InvasionFront)"
+        )
+        tma_z = data[data['location'] == 'TumorCenter']
+        tma_inv = data[data['location'] == 'InvasionFront']
+        count_z = tma_z[columns[0]].value_counts().reset_index()
+        count_inv = tma_inv[columns[0]].value_counts().reset_index()
+        count_z.columns = ["patient_id", self._tma_name + " tumor center"]
+        count_inv.columns = ["patient_id", self._tma_name + " invasion front"]
+        complete_count = pd.merge(
+            count_z, count_inv, on="patient_id", how="outer")
+        
+        return complete_count
