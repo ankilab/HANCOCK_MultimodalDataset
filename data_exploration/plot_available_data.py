@@ -1,4 +1,3 @@
-from data_reader import DataFrameReaderFactory
 import os
 import re
 import pandas as pd
@@ -13,61 +12,7 @@ import sys
 
 # Add root directory to system path to import DataFrameReaderFactory
 sys.path.append(str(Path(__file__).parents[1]))
-
-
-def get_file_count(file_dir, slide_type, subdirs=False):
-    if subdirs:
-        file_list = []
-        for subdir in os.listdir(file_dir):
-            if os.path.isdir(file_dir/subdir):
-                for f in os.listdir(file_dir/subdir):
-                    patient_id = re.search(r"[0-9]{3}", f).group()
-                    file_list.append({
-                        "patient_id": patient_id,
-                        "file": file_dir/subdir/f
-                    })
-    else:
-        file_list = []
-        for f in os.listdir(file_dir):
-            if not os.path.isdir(file_dir/f):
-                patient_id = re.search(r"[0-9]{3}", f).group()
-                file_list.append({
-                    "patient_id": patient_id,
-                    "file": file_dir / f
-                })
-    if (file_list == []):
-        slide_df = pd.DataFrame(columns=["patient_id", "file"])
-    else:
-        slide_df = pd.DataFrame(file_list)
-    count = slide_df["patient_id"].value_counts().reset_index()
-    count.columns = ["patient_id", slide_type]
-    return count
-
-
-def load_measurements(measurement_file, tma_name):
-    data = pd.read_csv(measurement_file, dtype={"Case ID": str})
-
-    # drop missing cores
-    missing_idx = data[data["Missing"] == True].index
-    data = data.drop(missing_idx)
-
-    # drop cores with no Case ID
-    nan_idx = data[data["Case ID"].isna()].index
-    data = data.drop(nan_idx)
-
-    # Extract location
-    data["location"] = data["Image"].str.extract(
-        r"(TumorCenter|InvasionFront)")
-
-    tma_z = data[data["location"] == "TumorCenter"]
-    tma_inv = data[data["location"] == "InvasionFront"]
-
-    count_z = tma_z["Case ID"].value_counts().reset_index()
-    count_inv = tma_inv["Case ID"].value_counts().reset_index()
-
-    count_z.columns = ["patient_id", tma_name + " tumor center"]
-    count_inv.columns = ["patient_id", tma_name + " invasion front"]
-    return count_z, count_inv
+from data_reader import DataFrameReaderFactory
 
 
 class HancockAvailableDataPlotter:
@@ -86,11 +31,23 @@ class HancockAvailableDataPlotter:
         - TextData
             - reports
     """
+    @property
+    def merged(self) -> pd.DataFrame:
+        if self._merged is None:
+            self._merged = self._get_available_data()
+        return self._merged.copy()
 
     def __init__(self, parser: ArgumentParser):
         self._add_parser_args(parser)
         self._create_absolute_paths(parser)
+        self._create_data_reader()
 
+        self._merged = None
+
+        rcParams.update({"font.size": 6})
+        rcParams["svg.fonttype"] = "none"
+
+    def _create_data_reader(self):
         dataFrameReaderFactory = DataFrameReaderFactory()
         self._clinicalDataFrameReader = dataFrameReaderFactory.make_data_frame_reader(
             'Clinical', self._clinical_path)
@@ -108,12 +65,9 @@ class HancockAvailableDataPlotter:
         self._tmaCellDensityDataFrameReader = dataFrameReaderFactory.make_data_frame_reader(
             'TMA_CellDensityMeasurement', self._cell_density_path
         )
-        
-
-        self._merged = None
-
-        rcParams.update({"font.size": 6})
-        rcParams["svg.fonttype"] = "none"
+        self._textDataReportsDataFrameReader = dataFrameReaderFactory.make_data_frame_reader(
+            'TextData_reports', self._report_path
+        )
 
     def _add_parser_args(self, parser: ArgumentParser) -> None:
         """Functions adds the available arguments to the parser. The arguments
@@ -196,6 +150,102 @@ class HancockAvailableDataPlotter:
         self._report_path = root_dir / args.path_reports
         self._result_path = args.results_dir
 
+    def _get_available_data(self) -> pd.DataFrame:
+        merged = self._merge_data()
+        merged.sort_values(by='patient_id').reset_index(
+            drop=True, inplace=True)
+        merged[merged.columns[1:]] = (
+            merged[merged.columns[1:]] >= 1).astype(int)
+        merged = self._modify_lymph_node_data(merged)
+
+        return merged
+
+    def _merge_data(self):
+        df_list = []
+        merged = self._clinicalDataFrameReader.return_data_count()
+        df_list.append(self._pathoDataFrameReader.return_data_count())
+        df_list.append(self._bloodDataFrameReader.return_data_count())
+        df_list.append(
+            self._textDataReportsDataFrameReader.return_data_count())
+        df_list.append(self._tmaCellDensityDataFrameReader.return_data_count())
+        df_list.append(
+            self._wsiPrimaryTumorDataFrameReader.return_data_count())
+        df_list.append(self._wSILymphNodeDataFrameReader.return_data_count())
+        for df in df_list:
+            merged = pd.merge(merged, df, on='patient_id', how='outer')
+
+        merged.sort_values(by='patient_id').reset_index(
+            drop=True, inplace=True)
+
+        return merged
+
+    def _modify_lymph_node_data(self, merged: pd.DataFrame) -> pd.DataFrame:
+        """Sets all WSI Lymph node values to 2 if the patient has no positive
+        lymph nodes.
+
+        Args:
+            merged (pd.DataFrame): Data frame with column 'patient_id' and
+            'WSI Lymph node'.
+
+        Returns:
+            pd.DataFrame: copy of merged data frame with modified 'WSI Lymph node' 
+            column.
+        """
+        patho = self._pathoDataFrameReader.return_data()
+        merged_copy = pd.merge(merged, patho[[
+                               'patient_id', 'number_of_positive_lymph_nodes']]
+                               .fillna(0), on='patient_id')
+        merged_copy['WSI Lymph node'] = merged_copy.apply(
+            lambda x: 2 if (x['number_of_positive_lymph_nodes'] == 0) & (
+                x['WSI Lymph node'] == 0) else x['WSI Lymph node'], axis=1
+        )
+        merged_copy.drop('number_of_positive_lymph_nodes', axis=1, inplace=True)
+        
+        return merged_copy
+
+    def plot_available_data(self) -> None:
+        merged = self.merged
+        merged_plot = merged[merged.columns[1:]]
+        avail_sorted = merged_plot.sort_values(
+            by=list(reversed(merged_plot.columns)), ascending=True)
+        avail_sorted = avail_sorted.T
+
+        plt.figure(figsize=(6, 2))
+        ax = sns.heatmap(avail_sorted, cmap=[sns.color_palette("Dark2")[
+            1], sns.color_palette("Set2")[0], (1, 1, 1)], cbar=False)
+        plt.xticks([1, 100, 200, 300, 400, 500, 600, 700, 763])
+        ax.set_xticklabels([1, 100, 200, 300, 400, 500, 600, 700, 763])
+        plt.tight_layout()
+        ax.hlines(list(range(0, 11)), *ax.get_xlim(), colors="white")
+
+        myColors = [sns.color_palette("Set2")[0], sns.color_palette("Dark2")[
+            1], (1, 1, 1)]
+        cmap = LinearSegmentedColormap.from_list("Custom", myColors, len(myColors))
+
+        legend_handles = [Patch(facecolor=sns.color_palette("Set2")[0], label="Available"),
+                        Patch(facecolor=sns.color_palette("Dark2")[1], label="Not available")]
+        plt.legend(handles=legend_handles, loc='center left',
+                bbox_to_anchor=(1, 0.5), frameon=False)
+        sns.despine(bottom=False, left=True, offset=5)
+        plt.tight_layout()
+        plt.savefig(self._result_path /
+                    "available_data.svg", bbox_inches="tight")
+        plt.savefig(self._result_path /"available_data.png",
+                    bbox_inches="tight", dpi=300)
+        plt.show()
+        
+    def print_missing_data(self) -> None:
+        patients_missing_data = self.merged[
+            # & (all_counts['HE Slides LYM'] == 0))
+            (self.merged["Clinical data"] == 0)
+            | (self.merged["Pathological data"] == 0)
+            | (self.merged["Blood data"] == 0)
+            | (self.merged["Surgery report"] == 0)
+            # | (self.merged["WSI Primary tumor"] == 0)
+        ]
+        print(f'Patients with missing data: {len(patients_missing_data)}\n')
+        print(patients_missing_data)
+    
     def get_tabular_data_count(self) -> tuple[pd.DataFrame, pd.DataFrame, pd.DataFrame]:
         """Returns the tabular data from the structured data files. 
         Reads them from the directory specified in the parser and retains 
@@ -204,7 +254,7 @@ class HancockAvailableDataPlotter:
 
         Returns:
             tuple[pd.DataFrame, pd.DataFrame, pd.DataFrame]: The tabular data
-            as dataframes for clinical, pathological and blood data.
+            as data frames for clinical, pathological and blood data.
         """
         clinical_count = self._clinicalDataFrameReader.return_data_count()
         patho_count = self._pathoDataFrameReader.return_data_count()
@@ -212,96 +262,12 @@ class HancockAvailableDataPlotter:
 
         return clinical_count, patho_count, blood_count
 
-    def get_available_data_frame(self) -> pd.DataFrame:
-        if self._merged is None:
-            pass
-        return self._merged.copy()
+    def get_patho(self):
+        return self._pathoDataFrameReader.return_data()
 
 
 if __name__ == '__main__':
     parser = ArgumentParser()
     plotter = HancockAvailableDataPlotter(parser)
-    args = parser.parse_args()
-    root_dir = Path(args.dataset_dir)
-
-    rcParams.update({"font.size": 6})
-    rcParams["svg.fonttype"] = "none"
-
-    clinical_path = root_dir/args.path_clinical
-    patho_path = root_dir/args.path_patho
-    blood_path = root_dir/args.path_blood
-
-    # Structured data
-    [clinical_count, patho_count, blood_count] = plotter.get_tabular_data_count()
-
-    prim_count = get_file_count(
-        # Image data
-        root_dir/args.dir_wsi_primarytumor, "WSI Primary tumor", subdirs=True)
-    lk_count = get_file_count(
-        root_dir/args.dir_wsi_lymphnode, "WSI Lymph node")
-
-    # TMA data (only CD3 considered, as example)
-    tma_cd3_z, tma_cd3_inv = load_measurements(
-        measurement_file=root_dir/args.path_celldensity, tma_name="TMA CD3")
-
-    # Text data
-    report = get_file_count(root_dir/args.path_reports, "Surgery report")
-
-    # Merge
-    merged = clinical_count
-    for df in [patho_count, blood_count, report, tma_cd3_z, tma_cd3_inv, prim_count, lk_count]:
-        merged = merged.merge(df, on="patient_id", how="outer")
-
-    merged = merged.sort_values(by="patient_id").reset_index(drop=True)
-    merged[merged.columns[1:]] = (merged[merged.columns[1:]] >= 1).astype(int)
-
-    # Lymph node slides are only available for patients with positive lymph nodes
-    # merged = merged.merge(
-    #     patho[["patient_id", "number_of_positive_lymph_nodes"]].fillna(0), on="patient_id")
-    # merged["WSI Lymph node"] = merged.apply(
-    #     lambda x: 2 if (x["number_of_positive_lymph_nodes"] == 0) & (
-    #         x["WSI Lymph node"] == 0) else x["WSI Lymph node"],
-    #     axis=1)
-    # merged = merged.drop("number_of_positive_lymph_nodes", axis=1)
-
-    # # Plot
-    # merged_plot = merged[merged.columns[1:]]
-    # avail_sorted = merged_plot.sort_values(
-    #     by=list(reversed(merged_plot.columns)), ascending=True)
-    # avail_sorted = avail_sorted.T
-
-    # plt.figure(figsize=(6, 2))
-    # ax = sns.heatmap(avail_sorted, cmap=[sns.color_palette("Dark2")[
-    #     1], sns.color_palette("Set2")[0], (1, 1, 1)], cbar=False)
-    # plt.xticks([1, 100, 200, 300, 400, 500, 600, 700, 763])
-    # ax.set_xticklabels([1, 100, 200, 300, 400, 500, 600, 700, 763])
-    # plt.tight_layout()
-    # ax.hlines(list(range(0, 11)), *ax.get_xlim(), colors="white")
-
-    # myColors = [sns.color_palette("Set2")[0], sns.color_palette("Dark2")[
-    #     1], (1, 1, 1)]
-    # cmap = LinearSegmentedColormap.from_list("Custom", myColors, len(myColors))
-
-    # legend_handles = [Patch(facecolor=sns.color_palette("Set2")[0], label="Available"),
-    #                   Patch(facecolor=sns.color_palette("Dark2")[1], label="Not available")]
-    # plt.legend(handles=legend_handles, loc='center left',
-    #            bbox_to_anchor=(1, 0.5), frameon=False)
-    # sns.despine(bottom=False, left=True, offset=5)
-    # plt.tight_layout()
-    # plt.savefig(Path(args.results_dir) /
-    #             "available_data.svg", bbox_inches="tight")
-    # plt.savefig(Path(args.results_dir)/"available_data.png",
-    #             bbox_inches="tight", dpi=300)
-    # plt.show()
-
-    # # Find patients that don't cover all modalities
-    # patients_missing_data = merged[
-    #     # & (all_counts['HE Slides LYM'] == 0))
-    #     (merged["WSI Primary tumor"] == 0)
-    #     | (merged["Clinical data"] == 0)
-    #     | (merged["Pathological data"] == 0)
-    #     | (merged["Blood data"] == 0)
-    #     | (merged["Surgery report"] == 0)
-    # ]
-    # print(f'Patients with missing data: {len(patients_missing_data)}\n')
-    # print(patients_missing_data)
+    # plotter.plot_available_data()
+    plotter.print_missing_data()
