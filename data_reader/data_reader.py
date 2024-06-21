@@ -120,11 +120,11 @@ class FileRelationDataFrameReader(DataFrameReader):
         """
         file_list = []
         for file_name in os.listdir(self._data_dir):
-            if not os.path.isdir(self.data_dir / file_name):
+            if not os.path.isdir(self._data_dir / file_name):
                 patient_id = re.search(r"[0-9]{3}", file_name).group()
                 file_list.append({
                     self._columns[0]: patient_id,
-                    self._column[1]: self._data_dir / file_name
+                    self._columns[1]: self._data_dir / file_name
                 })
         if (file_list == []):
             slide_df = pd.DataFrame(columns=self._columns)
@@ -305,6 +305,30 @@ class WSILymphNodeDataFrameReader(FileRelationDataFrameReader):
         """
         return super().return_data_count(columns)
 
+
+class TextDataReportsDataFrameReader(FileRelationDataFrameReader):
+    """DataReader for the textual report data.
+    """
+    def __init__(self, data_dir: Path = Path(__file__)):
+        super().__init__(data_dir)
+
+    def return_data_count(
+        self, columns: list[str] = ['patient_id', 'Surgery report']):
+        """Returns a pandas data frame only with the count of rows we have 
+        for the first column. The second given column will be used as the 
+        column name for the count.
+
+        Args:
+            columns (list[str], optional): The names of the columns of the output 
+            data frame. First one is the value that will be counted, second 
+            one will be used as the column name for the count. 
+            Defaults to ['patient_id', 'WSI Lymph node'].
+
+        Returns:
+            pd.DataFrame: The data frame with the count of the first column.
+        """
+        return super().return_data_count(columns)
+    
 
 class TMACellDensityDataFrameReader(TabularDataFrameReader):
     @property

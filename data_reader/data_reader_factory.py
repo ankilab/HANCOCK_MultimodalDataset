@@ -6,8 +6,10 @@ from .data_reader import (
     BloodDataFrameReader,
     WSIPrimaryTumorDataFrameReader,
     WSILymphNodeDataFrameReader,
-    TMACellDensityDataFrameReader
+    TMACellDensityDataFrameReader,
+    TextDataReportsDataFrameReader
 )
+import warnings
 
 
 class DataFrameReaderFactory:
@@ -34,6 +36,8 @@ class DataFrameReaderFactory:
         elif data_type == 'TMA_CellDensityMeasurement':
             return TMACellDensityDataFrameReader(data_dir)
         elif data_type == 'TextData_reports':
-            return DataFrameReader(data_dir)
+            return TextDataReportsDataFrameReader(data_dir)
         else:
+            warnings.warn('The data type is not recognized and thus the default' 
+                          +' data reader used.')
             return DataFrameReader(self.data_dir)
