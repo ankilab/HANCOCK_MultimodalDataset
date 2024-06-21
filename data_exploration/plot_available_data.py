@@ -89,13 +89,15 @@ class HancockAvailableDataPlotter:
     def __init__(self, parser: ArgumentParser):
         self._add_parser_args(parser)
         self._create_absolute_paths(parser)
+        
         dataFrameReaderFactory = DataFrameReaderFactory()
-        self._clinical = dataFrameReaderFactory.make_data_frame_reader(
-            'Clinical', self._clinical_path).return_data()
-        self._patho = dataFrameReaderFactory.make_data_frame_reader(
-            'Pathological', self._patho_path).return_data()
-        self._blood = dataFrameReaderFactory.make_data_frame_reader(
-            'Blood', self._blood_path).return_data()
+        self._clinicalDataFrameReader = dataFrameReaderFactory.make_data_frame_reader(
+            'Clinical', self._clinical_path)
+        self._pathoDataFrameReader = dataFrameReaderFactory.make_data_frame_reader(
+            'Pathological', self._patho_path)
+        self._bloodDataFrameReader = dataFrameReaderFactory.make_data_frame_reader(
+            'Blood', self._blood_path)
+        
         self._merged = None
         
         rcParams.update({"font.size": 6})
@@ -169,7 +171,7 @@ class HancockAvailableDataPlotter:
 
         Args:
             parser (ArgumentParser): The parser with the relative paths 
-            as arguemnts.
+            as arguments.
         """
         args = parser.parse_args()
         root_dir = args.dataset_dir
@@ -192,15 +194,9 @@ class HancockAvailableDataPlotter:
             tuple[pd.DataFrame, pd.DataFrame, pd.DataFrame]: The tabular data
             as dataframes for clinical, pathological and blood data.
         """
-        clinical_count = self._clinical["patient_id"].value_counts(
-        ).reset_index()
-        clinical_count.columns = ["patient_id", "Clinical data"]
-
-        patho_count = self._patho["patient_id"].value_counts().reset_index()
-        patho_count.columns = ["patient_id", "Pathological data"]
-
-        blood_count = self._blood["patient_id"].value_counts().reset_index()
-        blood_count.columns = ["patient_id", "Blood data"]
+        clinical_count = self._clinicalDataFrameReader.return_data_count()
+        patho_count = self._pathoDataFrameReader.return_data_count()
+        blood_count = self._bloodDataFrameReader.return_data_count()
 
         return clinical_count, patho_count, blood_count
 
