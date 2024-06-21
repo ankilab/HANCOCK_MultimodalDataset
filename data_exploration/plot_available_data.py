@@ -151,6 +151,13 @@ class HancockAvailableDataPlotter:
         self._result_path = args.results_dir
 
     def _get_available_data(self) -> pd.DataFrame:
+        """Creates a data frame with the available data for each patient. The 
+        values in the dataframe can be either 0 (not available) or 1 (available) 
+        and 2 (not available but makes sense because of diagnosis).
+
+        Returns:
+            pd.DataFrame: The data frame with the available data for each patient.
+        """
         merged = self._merge_data()
         merged.sort_values(by='patient_id').reset_index(
             drop=True, inplace=True)
@@ -160,7 +167,14 @@ class HancockAvailableDataPlotter:
 
         return merged
 
-    def _merge_data(self):
+    def _merge_data(self) -> pd.DataFrame:
+        """Creates a data frame with the available data for each patient. The 
+        values in the dataframe are the counts of records for each patient for 
+        the in the column indicated 'modality'. 
+
+        Returns:
+            pd.DataFrame: The data frame with the available data for each patient.
+        """
         df_list = []
         merged = self._clinicalDataFrameReader.return_data_count()
         df_list.append(self._pathoDataFrameReader.return_data_count())
@@ -188,7 +202,7 @@ class HancockAvailableDataPlotter:
             'WSI Lymph node'.
 
         Returns:
-            pd.DataFrame: copy of merged data frame with modified 'WSI Lymph node' 
+            pd.DataFrame: Copy of merged data frame with modified 'WSI Lymph node' 
             column.
         """
         patho = self._pathoDataFrameReader.return_data()
@@ -204,6 +218,9 @@ class HancockAvailableDataPlotter:
         return merged_copy
 
     def plot_available_data(self) -> None:
+        """Plots the available data for each patient in a horizontal bar 
+        chart.
+        """
         merged = self.merged
         merged_plot = merged[merged.columns[1:]]
         avail_sorted = merged_plot.sort_values(
@@ -235,6 +252,13 @@ class HancockAvailableDataPlotter:
         plt.show()
         
     def print_missing_data(self) -> None:
+        """Prints the rows in the available data where data is missing. 
+        Ignores the WSI Primary tumor data as well as the WSI Lymph node data.
+        For latter one this is performed because the data is not necessary for 
+        each patient, depending on the diagnosis. 
+        The WSI Primary tumor data is currently ignored because the 
+        data is not available for any patient. 
+        """
         patients_missing_data = self.merged[
             # & (all_counts['HE Slides LYM'] == 0))
             (self.merged["Clinical data"] == 0)
