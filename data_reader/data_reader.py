@@ -143,6 +143,22 @@ class FileRelationDataFrameReader(DataFrameReader):
         """
         return self.data
 
+    def return_data_count(self, columns: list[str] = ['patient_id', 'file']):
+        """Returns a pandas data frame only with the count of rows we have 
+        for the first column. The second given column will be used as the 
+        column name for the count.
+
+        Args:
+            columns (list[str], optional): The names of the columns of the output 
+            data frame. First one is the value that will be counted, second 
+            one will be used as the column name for the count. 
+            Defaults to ['patient_id', 'data'].
+
+        Returns:
+            pd.DataFrame: The data frame with the count of the first column.
+        """
+        return super().return_data_count(columns)
+
 
 class SubDirDataFrameReader(FileRelationDataFrameReader):
     """The DataFrameReader for the data that is structured in several files and
@@ -223,7 +239,8 @@ class ClinicalDataFrameReader(TabularDataFrameReader):
     def __init__(self, data_dir: Path = Path(__file__)):
         super().__init__(data_dir)
 
-    def return_data_count(self, columns: list[str] = ['patient_id', 'Clinical data']):
+    def return_data_count(
+        self, columns: list[str] = ['patient_id', 'Clinical data']):
         return super().return_data_count(columns)
 
 
@@ -244,6 +261,24 @@ class WSIPrimaryTumorDataFrameReader(SubDirDataFrameReader):
 
     def __init__(self, data_dir: Path = Path(__file__)):
         super().__init__(data_dir)
+        self._columns = ['patient_id', 'WSI Primary tumor']
+        
+    def return_data_count(
+        self, columns: list[str] = ['patient_id', 'WSI Primary tumor']):
+        """Returns a pandas data frame only with the count of rows we have 
+        for the first column. The second given column will be used as the 
+        column name for the count.
+
+        Args:
+            columns (list[str], optional): The names of the columns of the output 
+            data frame. First one is the value that will be counted, second 
+            one will be used as the column name for the count. 
+            Defaults to ['patient_id', 'WSI Primary tumor'].
+
+        Returns:
+            pd.DataFrame: The data frame with the count of the first column.
+        """
+        return super().return_data_count(columns)
 
 
 class WSILymphNodeDataFrameReader(FileRelationDataFrameReader):
@@ -253,6 +288,23 @@ class WSILymphNodeDataFrameReader(FileRelationDataFrameReader):
     def __init__(self, data_dir: Path = Path(__file__)):
         super().__init__(data_dir)
 
+    def return_data_count(
+        self, columns: list[str] = ['patient_id', 'WSI Lymph node']):
+        """Returns a pandas data frame only with the count of rows we have 
+        for the first column. The second given column will be used as the 
+        column name for the count.
+
+        Args:
+            columns (list[str], optional): The names of the columns of the output 
+            data frame. First one is the value that will be counted, second 
+            one will be used as the column name for the count. 
+            Defaults to ['patient_id', 'WSI Lymph node'].
+
+        Returns:
+            pd.DataFrame: The data frame with the count of the first column.
+        """
+        return super().return_data_count(columns)
+
 
 class TMACellDensityDataFrameReader(TabularDataFrameReader):
     @property
@@ -260,7 +312,7 @@ class TMACellDensityDataFrameReader(TabularDataFrameReader):
         if self._data is None:
             # As the Case Id is not unique in the data I assume that
             # they are equivalent with the patient_id.
-            self._data = pd.read_csv(self._data_dir, type={"Case ID": str})
+            self._data = pd.read_csv(self._data_dir, dtype={"Case ID": str})
         return self._data.copy()
 
     def __init__(self, data_dir: Path = Path(__file__), tma_name: str = 'TMA CD3'):
@@ -292,5 +344,5 @@ class TMACellDensityDataFrameReader(TabularDataFrameReader):
         count_inv.columns = ["patient_id", self._tma_name + " invasion front"]
         complete_count = pd.merge(
             count_z, count_inv, on="patient_id", how="outer")
-        
+
         return complete_count
