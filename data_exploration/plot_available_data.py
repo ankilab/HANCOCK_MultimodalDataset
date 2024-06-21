@@ -245,25 +245,6 @@ class HancockAvailableDataPlotter:
         ]
         print(f'Patients with missing data: {len(patients_missing_data)}\n')
         print(patients_missing_data)
-    
-    def get_tabular_data_count(self) -> tuple[pd.DataFrame, pd.DataFrame, pd.DataFrame]:
-        """Returns the tabular data from the structured data files. 
-        Reads them from the directory specified in the parser and retains 
-        only two columns. The first column is the patient_id and the second 
-        the number of available records for that patient. 
-
-        Returns:
-            tuple[pd.DataFrame, pd.DataFrame, pd.DataFrame]: The tabular data
-            as data frames for clinical, pathological and blood data.
-        """
-        clinical_count = self._clinicalDataFrameReader.return_data_count()
-        patho_count = self._pathoDataFrameReader.return_data_count()
-        blood_count = self._bloodDataFrameReader.return_data_count()
-
-        return clinical_count, patho_count, blood_count
-
-    def get_patho(self):
-        return self._pathoDataFrameReader.return_data()
 
 
 if __name__ == '__main__':
