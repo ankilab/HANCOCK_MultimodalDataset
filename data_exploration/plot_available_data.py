@@ -213,16 +213,19 @@ class HancockAvailableDataPlotter:
             lambda x: 2 if (x['number_of_positive_lymph_nodes'] == 0) & (
                 x['WSI Lymph node'] == 0) else x['WSI Lymph node'], axis=1
         )
-        merged_copy.drop('number_of_positive_lymph_nodes', axis=1, inplace=True)
-        
+        merged_copy.drop('number_of_positive_lymph_nodes',
+                         axis=1, inplace=True)
+
         return merged_copy
 
     def plot_available_data(self) -> None:
         """Plots the available data for each patient in a horizontal bar 
-        chart.
+        chart. Y-axis does not correspond to the patient-id but is before
+        sorted by the reversed list of columns. 
         """
         merged = self.merged
         merged_plot = merged[merged.columns[1:]]
+        
         avail_sorted = merged_plot.sort_values(
             by=list(reversed(merged_plot.columns)), ascending=True)
         avail_sorted = avail_sorted.T
@@ -237,20 +240,21 @@ class HancockAvailableDataPlotter:
 
         myColors = [sns.color_palette("Set2")[0], sns.color_palette("Dark2")[
             1], (1, 1, 1)]
-        cmap = LinearSegmentedColormap.from_list("Custom", myColors, len(myColors))
+        cmap = LinearSegmentedColormap.from_list(
+            "Custom", myColors, len(myColors))
 
         legend_handles = [Patch(facecolor=sns.color_palette("Set2")[0], label="Available"),
-                        Patch(facecolor=sns.color_palette("Dark2")[1], label="Not available")]
+                          Patch(facecolor=sns.color_palette("Dark2")[1], label="Not available")]
         plt.legend(handles=legend_handles, loc='center left',
-                bbox_to_anchor=(1, 0.5), frameon=False)
+                   bbox_to_anchor=(1, 0.5), frameon=False)
         sns.despine(bottom=False, left=True, offset=5)
         plt.tight_layout()
         plt.savefig(self._result_path /
                     "available_data.svg", bbox_inches="tight")
-        plt.savefig(self._result_path /"available_data.png",
+        plt.savefig(self._result_path / "available_data.png",
                     bbox_inches="tight", dpi=300)
         plt.show()
-        
+
     def print_missing_data(self) -> None:
         """Prints the rows in the available data where data is missing. 
         Ignores the WSI Primary tumor data as well as the WSI Lymph node data.
@@ -274,5 +278,5 @@ class HancockAvailableDataPlotter:
 if __name__ == '__main__':
     parser = ArgumentParser()
     plotter = HancockAvailableDataPlotter(parser)
-    # plotter.plot_available_data()
+    plotter.plot_available_data()
     plotter.print_missing_data()
