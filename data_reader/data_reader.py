@@ -335,6 +335,8 @@ class TextDataReportsDataFrameReader(FileRelationDataFrameReader):
 
 
 class TMACellDensityDataFrameReader(TabularDataFrameReader):
+    """Data Reader for the cell density measurements of the TMA data.
+    """
     @property
     def data(self) -> pd.DataFrame:
         if self._data is None:
