@@ -50,23 +50,26 @@ class HancockAvailableDataPlotter:
     def _create_data_reader(self):
         dataFrameReaderFactory = DataFrameReaderFactory()
         self._clinicalDataFrameReader = dataFrameReaderFactory.make_data_frame_reader(
-            'Clinical', self._clinical_path)
+            'Clinical', self._clinical_path, data_dir_flag=True
+        )
         self._pathoDataFrameReader = dataFrameReaderFactory.make_data_frame_reader(
-            'Pathological', self._patho_path)
+            'Pathological', self._patho_path, data_dir_flag=True
+        )
         self._bloodDataFrameReader = dataFrameReaderFactory.make_data_frame_reader(
-            'Blood', self._blood_path)
+            'Blood', self._blood_path, data_dir_flag=True
+        )
 
         self._wsiPrimaryTumorDataFrameReader = dataFrameReaderFactory.make_data_frame_reader(
-            'WSI_PrimaryTumor', self._prim_path
+            'WSI_PrimaryTumor', self._prim_path, data_dir_flag=True
         )
         self._wSILymphNodeDataFrameReader = dataFrameReaderFactory.make_data_frame_reader(
-            'WSI_LymphNode', self._lk_path
+            'WSI_LymphNode', self._lk_path, data_dir_flag=True
         )
         self._tmaCellDensityDataFrameReader = dataFrameReaderFactory.make_data_frame_reader(
-            'TMA_CellDensityMeasurement', self._cell_density_path
+            'TMA_CellDensityMeasurement', self._cell_density_path, data_dir_flag=True
         )
         self._textDataReportsDataFrameReader = dataFrameReaderFactory.make_data_frame_reader(
-            'TextData_reports', self._report_path
+            'TextData_reports', self._report_path, data_dir_flag=True
         )
 
     def _add_parser_args(self, parser: ArgumentParser) -> None:

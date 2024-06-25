@@ -3,6 +3,9 @@ import pandas as pd
 import os
 import re
 
+data_dir = Path(__file__).parents[2] / 'Hancock_Dataset'
+data_structured_dir = data_dir / 'StructuredData'
+
 
 class DataFrameReader:
     """The DataFrameReader class reads the HANCOCK data from the directory.
@@ -210,7 +213,7 @@ class PathologicalDataFrameReader(TabularDataFrameReader):
     """DataReader for the pathological structured data.
     """
 
-    def __init__(self, data_dir: Path = Path(__file__)):
+    def __init__(self, data_dir: Path = data_structured_dir / 'pathological_data.json'):
         super().__init__(data_dir)
 
     def return_data_count(
@@ -236,11 +239,11 @@ class ClinicalDataFrameReader(TabularDataFrameReader):
     """DataReader for the clinical structured data.
     """
 
-    def __init__(self, data_dir: Path = Path(__file__)):
+    def __init__(self, data_dir: Path = data_structured_dir / 'clinical_data.json'):
         super().__init__(data_dir)
 
     def return_data_count(
-        self, columns: list[str] = ['patient_id', 'Clinical data']):
+            self, columns: list[str] = ['patient_id', 'Clinical data']):
         return super().return_data_count(columns)
 
 
@@ -248,7 +251,7 @@ class BloodDataFrameReader(TabularDataFrameReader):
     """DataReader for the blood structured data.
     """
 
-    def __init__(self, data_dir: Path = Path(__file__)):
+    def __init__(self, data_dir: Path = data_structured_dir / 'blood_data.json'):
         super().__init__(data_dir)
 
     def return_data_count(self, columns: list[str] = ['patient_id', 'Blood data']):
@@ -259,12 +262,12 @@ class WSIPrimaryTumorDataFrameReader(SubDirDataFrameReader):
     """DataReader for the WSI primary tumor data.
     """
 
-    def __init__(self, data_dir: Path = Path(__file__)):
+    def __init__(self, data_dir: Path = data_dir / 'WSI_PrimaryTumor'):
         super().__init__(data_dir)
         self._columns = ['patient_id', 'WSI Primary tumor']
-        
+
     def return_data_count(
-        self, columns: list[str] = ['patient_id', 'WSI Primary tumor']):
+            self, columns: list[str] = ['patient_id', 'WSI Primary tumor']):
         """Returns a pandas data frame only with the count of rows we have 
         for the first column. The second given column will be used as the 
         column name for the count.
@@ -285,11 +288,11 @@ class WSILymphNodeDataFrameReader(FileRelationDataFrameReader):
     """DataReader for the WSI lymph node data.
     """
 
-    def __init__(self, data_dir: Path = Path(__file__)):
+    def __init__(self, data_dir: Path = data_dir / 'WSI_LymphNode'):
         super().__init__(data_dir)
 
     def return_data_count(
-        self, columns: list[str] = ['patient_id', 'WSI Lymph node']):
+            self, columns: list[str] = ['patient_id', 'WSI Lymph node']):
         """Returns a pandas data frame only with the count of rows we have 
         for the first column. The second given column will be used as the 
         column name for the count.
@@ -309,11 +312,12 @@ class WSILymphNodeDataFrameReader(FileRelationDataFrameReader):
 class TextDataReportsDataFrameReader(FileRelationDataFrameReader):
     """DataReader for the textual report data.
     """
-    def __init__(self, data_dir: Path = Path(__file__)):
+
+    def __init__(self, data_dir: Path = data_dir / 'TextData' / 'reports'):
         super().__init__(data_dir)
 
     def return_data_count(
-        self, columns: list[str] = ['patient_id', 'Surgery report']):
+            self, columns: list[str] = ['patient_id', 'Surgery report']):
         """Returns a pandas data frame only with the count of rows we have 
         for the first column. The second given column will be used as the 
         column name for the count.
@@ -328,18 +332,21 @@ class TextDataReportsDataFrameReader(FileRelationDataFrameReader):
             pd.DataFrame: The data frame with the count of the first column.
         """
         return super().return_data_count(columns)
-    
+
 
 class TMACellDensityDataFrameReader(TabularDataFrameReader):
     @property
     def data(self) -> pd.DataFrame:
         if self._data is None:
-            # As the Case Id is not unique in the data I assume that
-            # they are equivalent with the patient_id.
             self._data = pd.read_csv(self._data_dir, dtype={"Case ID": str})
         return self._data.copy()
 
-    def __init__(self, data_dir: Path = Path(__file__), tma_name: str = 'TMA CD3'):
+    def __init__(
+        self,
+        data_dir: Path = data_dir / 'TMA_CellDensityMeasurements' /
+            'TMA_celldensity_measurements.csv',
+        tma_name: str = 'TMA CD3'
+    ):
         super().__init__(data_dir)
         self._tma_name = tma_name
 
@@ -370,3 +377,4 @@ class TMACellDensityDataFrameReader(TabularDataFrameReader):
             count_z, count_inv, on="patient_id", how="outer")
 
         return complete_count
+
