@@ -2,9 +2,12 @@ from pathlib import Path
 import pandas as pd
 import os
 import re
+import sys
 
-data_dir = Path(__file__).parents[2] / 'Hancock_Dataset'
-data_structured_dir = data_dir / 'StructuredData'
+sys.path.append(str(Path(__file__).parents[1]))
+from default_path import DefaultPaths
+
+defaultPaths = DefaultPaths()
 
 
 class DataFrameReader:
@@ -213,7 +216,7 @@ class PathologicalDataFrameReader(TabularDataFrameReader):
     """DataReader for the pathological structured data.
     """
 
-    def __init__(self, data_dir: Path = data_structured_dir / 'pathological_data.json'):
+    def __init__(self, data_dir: Path = defaultPaths.patho):
         super().__init__(data_dir)
 
     def return_data_count(
@@ -239,7 +242,7 @@ class ClinicalDataFrameReader(TabularDataFrameReader):
     """DataReader for the clinical structured data.
     """
 
-    def __init__(self, data_dir: Path = data_structured_dir / 'clinical_data.json'):
+    def __init__(self, data_dir: Path = defaultPaths.clinical):
         super().__init__(data_dir)
 
     def return_data_count(
@@ -251,7 +254,7 @@ class BloodDataFrameReader(TabularDataFrameReader):
     """DataReader for the blood structured data.
     """
 
-    def __init__(self, data_dir: Path = data_structured_dir / 'blood_data.json'):
+    def __init__(self, data_dir: Path = defaultPaths.blood):
         super().__init__(data_dir)
 
     def return_data_count(self, columns: list[str] = ['patient_id', 'Blood data']):
@@ -262,7 +265,7 @@ class WSIPrimaryTumorDataFrameReader(SubDirDataFrameReader):
     """DataReader for the WSI primary tumor data.
     """
 
-    def __init__(self, data_dir: Path = data_dir / 'WSI_PrimaryTumor'):
+    def __init__(self, data_dir: Path = defaultPaths.wsi_tumor):
         super().__init__(data_dir)
         self._columns = ['patient_id', 'WSI Primary tumor']
 
@@ -288,7 +291,7 @@ class WSILymphNodeDataFrameReader(FileRelationDataFrameReader):
     """DataReader for the WSI lymph node data.
     """
 
-    def __init__(self, data_dir: Path = data_dir / 'WSI_LymphNode'):
+    def __init__(self, data_dir: Path = defaultPaths.wsi_lymph_node):
         super().__init__(data_dir)
 
     def return_data_count(
@@ -313,7 +316,7 @@ class TextDataReportsDataFrameReader(FileRelationDataFrameReader):
     """DataReader for the textual report data.
     """
 
-    def __init__(self, data_dir: Path = data_dir / 'TextData' / 'reports'):
+    def __init__(self, data_dir: Path = defaultPaths.reports):
         super().__init__(data_dir)
 
     def return_data_count(
@@ -345,8 +348,7 @@ class TMACellDensityDataFrameReader(TabularDataFrameReader):
 
     def __init__(
         self,
-        data_dir: Path = data_dir / 'TMA_CellDensityMeasurements' /
-            'TMA_celldensity_measurements.csv',
+        data_dir: Path = defaultPaths.celldensity,
         tma_name: str = 'TMA CD3'
     ):
         super().__init__(data_dir)

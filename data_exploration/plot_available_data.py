@@ -40,7 +40,6 @@ class HancockAvailableDataPlotter:
 
     def __init__(self):
         self._argumentParser = HancockArgumentParser(type='plot_available_data')
-        # self._add_parser_args(parser)
         self._create_absolute_paths(self._argumentParser)
         self._create_data_reader()
 
@@ -73,68 +72,6 @@ class HancockAvailableDataPlotter:
         self._textDataReportsDataFrameReader = dataFrameReaderFactory.make_data_frame_reader(
             'TextData_reports', self._report_path, data_dir_flag=True
         )
-
-    # def _add_parser_args(self, parser: ArgumentParser) -> None:
-    #     """Functions adds the available arguments to the parser. The arguments
-
-    #     Args:
-    #         parser (ArgumentParser): The parser to which the arguments are added.
-    #     """
-    #     parser.add_argument("--dataset_dir", type=str,
-    #                         help="Root directory of dataset", nargs="?",
-    #                         default=Path(__file__).parents[2] / 'Hancock_Dataset')
-    #     parser.add_argument("--results_dir", type=str,
-    #                         help="Directory where plot will be saved", nargs="?",
-    #                         default=Path(__file__).parents[1] / 'results')
-    #     parser.add_argument(
-    #         "--path_clinical",
-    #         type=str,
-    #         help="Relative path of clinical data file in the specified dataset_dir",
-    #         default="StructuredData/clinical_data.json",
-    #         nargs="?"
-    #     )
-    #     parser.add_argument(
-    #         "--path_patho",
-    #         type=str,
-    #         help="Relative path of pathological data file in the specified dataset_dir",
-    #         default="StructuredData/pathological_data.json",
-    #         nargs="?"
-    #     )
-    #     parser.add_argument(
-    #         "--path_blood",
-    #         type=str,
-    #         help="Relative path of blood data file in the specified dataset_dir",
-    #         default="StructuredData/blood_data.json",
-    #         nargs="?"
-    #     )
-    #     parser.add_argument(
-    #         "--dir_wsi_primarytumor",
-    #         type=str,
-    #         help="Relative path to the WSI_PrimaryTumor directory in the specified dataset_dir",
-    #         default="WSI_PrimaryTumor",
-    #         nargs="?"
-    #     )
-    #     parser.add_argument(
-    #         "--dir_wsi_lymphnode",
-    #         type=str,
-    #         help="Relative path to the WSI_LymphNode directory in the specified dataset_dir",
-    #         default="WSI_LymphNode",
-    #         nargs="?"
-    #     )
-    #     parser.add_argument(
-    #         "--path_celldensity",
-    #         type=str,
-    #         help="Relative path to the cell density measurements file in the specified dataset_dir",
-    #         default="TMA_CellDensityMeasurements/TMA_celldensity_measurements.csv",
-    #         nargs="?"
-    #     )
-    #     parser.add_argument(
-    #         "--path_reports",
-    #         type=str,
-    #         help="Relative path to the directory containing surgery reports in the specified dataset_dir",
-    #         default="TextData/reports/",
-    #         nargs="?"
-    #     )
 
     def _create_absolute_paths(self, parser: ArgumentParser) -> None:
         """Creates the absolute paths from the relative paths specified in 
