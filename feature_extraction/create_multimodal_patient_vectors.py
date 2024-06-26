@@ -2,7 +2,6 @@ from extract_text_features import get_icd_vectors
 from extract_tabular_features import get_tabular_features, get_blood_features, get_target_classes
 from extract_tma_features import get_tma_features
 import numpy as np
-from argparse import ArgumentParser
 from pathlib import Path
 import sys
 
