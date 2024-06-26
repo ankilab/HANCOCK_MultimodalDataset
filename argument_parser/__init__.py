@@ -35,6 +35,8 @@ class HancockArgumentParser(ArgumentParser):
             self._add_tma_cell_density_arguments()
             self._add_text_data_arguments()
             self._add_wsi_arguments()
+        elif type == 'adjuvant_treatment_prediction':
+            self._add_data_split_arguments()
 
     def _add_always_arguments(self):
         self.add_argument("--results_dir", type=str,
@@ -124,4 +126,11 @@ class HancockArgumentParser(ArgumentParser):
         self.add_argument(
             "--npz", action="store_true",
             help="Save features to compressed numpy file instead of csv"
+        )
+        
+    def _add_data_split_arguments(self):
+        self.add_argument(
+            "--data_split_dir", type=str, nargs='?',
+            help="Path to directory that contains data splits as JSON files",
+            default=self._defaultPaths.data_split
         )

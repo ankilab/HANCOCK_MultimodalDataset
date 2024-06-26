@@ -72,7 +72,7 @@ class DataFrameReader:
         return data_count
 
 
-class TabularDataFrameReader(DataFrameReader):
+class JsonDataFrameReader(DataFrameReader):
     """The DataFrameReader for the tabular structured data, clinical, 
     blood and pathological data. It reads an json file from the specified
     data directory and returns it as pandas dataframe.
@@ -97,6 +97,12 @@ class TabularDataFrameReader(DataFrameReader):
         """
         return self.data
 
+class CSVDataFrameReader(JsonDataFrameReader):
+    @property
+    def data(self):
+        if self._data is None:
+            self._data = pd.read_csv(self._data_dir, dtype={'patient_id': str})
+        return self._data.copy()
 
 class FileRelationDataFrameReader(DataFrameReader):
     """The DataFrameReader for the data that is structured in several files and
@@ -212,7 +218,8 @@ class SubDirDataFrameReader(FileRelationDataFrameReader):
         return self.data
 
 
-class PathologicalDataFrameReader(TabularDataFrameReader):
+# ----- DataReader for the data set -----
+class PathologicalDataFrameReader(JsonDataFrameReader):
     """DataReader for the pathological structured data.
     """
 
@@ -238,7 +245,7 @@ class PathologicalDataFrameReader(TabularDataFrameReader):
         return super().return_data_count(columns)
 
 
-class ClinicalDataFrameReader(TabularDataFrameReader):
+class ClinicalDataFrameReader(JsonDataFrameReader):
     """DataReader for the clinical structured data.
     """
 
@@ -250,7 +257,7 @@ class ClinicalDataFrameReader(TabularDataFrameReader):
         return super().return_data_count(columns)
 
 
-class BloodDataFrameReader(TabularDataFrameReader):
+class BloodDataFrameReader(JsonDataFrameReader):
     """DataReader for the blood structured data.
     """
 
@@ -337,7 +344,7 @@ class TextDataReportsDataFrameReader(FileRelationDataFrameReader):
         return super().return_data_count(columns)
 
 
-class TMACellDensityDataFrameReader(TabularDataFrameReader):
+class TMACellDensityDataFrameReader(JsonDataFrameReader):
     """Data Reader for the cell density measurements of the TMA data.
     """
     @property
@@ -382,3 +389,34 @@ class TMACellDensityDataFrameReader(TabularDataFrameReader):
 
         return complete_count
 
+
+# ----- DataReader for the generated features -----
+class FeatureClinicalDataFrameReader(CSVDataFrameReader):
+    def __init__(self, data_dir: Path = defaultPaths.feature_clinical):
+        super().__init__(data_dir)
+
+        
+class FeaturePathologicalDataFrameReader(CSVDataFrameReader):
+    def __init__(self, data_dir: Path = defaultPaths.feature_patho):
+        super().__init__(data_dir)
+        
+
+class FeatureBloodDataFrameReader(CSVDataFrameReader):
+    def __init__(self, data_dir: Path = defaultPaths.feature_blood):
+        super().__init__(data_dir)
+        
+        
+class FeatureICDCodesDataFrameReader(CSVDataFrameReader):
+    def __init__(self, data_dir: Path = defaultPaths.feature_icd_codes):
+        super().__init__(data_dir)
+        
+        
+class FeatureTMACellDensityDataFrameReader(CSVDataFrameReader):
+    def __init__(self, data_dir: Path = defaultPaths.feature_celldensity):
+        super().__init__(data_dir)
+        
+        
+# --- DataReader for the targets ---
+class TargetsDataFrameReader(CSVDataFrameReader):
+    def __init__(self, data_dir: Path = defaultPaths.targets):
+        super().__init__(data_dir)

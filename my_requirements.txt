@@ -6,3 +6,4 @@ pathlib==1.0.1
 lifelines==0.28.0
 umap-learn==0.5.6
 imbalanced-learn==0.12.3
+shap==0.45.1
