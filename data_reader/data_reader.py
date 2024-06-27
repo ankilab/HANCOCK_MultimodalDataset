@@ -97,12 +97,14 @@ class JsonDataFrameReader(DataFrameReader):
         """
         return self.data
 
+
 class CSVDataFrameReader(JsonDataFrameReader):
     @property
     def data(self):
         if self._data is None:
             self._data = pd.read_csv(self._data_dir, dtype={'patient_id': str})
         return self._data.copy()
+
 
 class FileRelationDataFrameReader(DataFrameReader):
     """The DataFrameReader for the data that is structured in several files and
@@ -420,3 +422,94 @@ class FeatureTMACellDensityDataFrameReader(CSVDataFrameReader):
 class TargetsDataFrameReader(CSVDataFrameReader):
     def __init__(self, data_dir: Path = defaultPaths.targets):
         super().__init__(data_dir)
+        
+        
+class StructuralAggregatedDataFrameReader(DataFrameReader):
+    @property
+    def data(self):
+        if self._data is None:
+            self._data = self._merge_data()
+        return self._data.copy()
+
+    @property
+    def target(self):
+        if self._target is None:
+            self._target = self._target_reader.data
+        return self._target.copy()
+
+    def __init__(self, data_dir: Path = defaultPaths.features):
+        """Data frame reader for the feature data from clinical, pathological, 
+        blood, icd codes and tma cell density. The data is merged on 'patient_id'.
+        Assumes that the file names are the same as in the DefaultPaths class.
+        
+
+        Args:
+            data_dir (Path, optional): The data directory where the 
+            features and targets can be found after they are generated with 
+            the create_multimodal_patient_vectors.py. 
+            Defaults to defaultPaths.features.
+        """
+        super().__init__(data_dir)
+        self._target = None
+        self._prepare_data_reader()
+
+    def _create_file_name_properties(self):
+        """Creates the file name properties for the feature files.
+        """
+        self._feature_clinical_file_name = defaultPaths.feature_clinical_file_name
+        self._feature_patho_file_name = defaultPaths.feature_patho_file_name
+        self._feature_blood_file_name = defaultPaths.feature_blood_file_name
+        self._feature_icd_codes_file_name = defaultPaths.feature_icd_codes_file_name
+        self._feature_cell_density_file_name = defaultPaths.feature_cell_density_file_name
+        self._targets_file_name = defaultPaths.targets_file_name
+
+    def _prepare_data_reader(self):
+        self.feature_clinical_reader = FeatureClinicalDataFrameReader(
+            data_dir=self._data_dir / self._feature_clinical_file_name
+        )
+        self.feature_patho_reader = FeaturePathologicalDataFrameReader(
+            self._data_dir / self._feature_patho_file_name
+        )
+        self.feature_blood_reader = FeatureBloodDataFrameReader(
+            self._data_dir / self._feature_blood_file_name
+        )
+        self.feature_icd_codes_reader = FeatureICDCodesDataFrameReader(
+            self._data_dir / self._feature_icd_codes_file_name
+        )
+        self.feature_cell_density_reader = FeatureTMACellDensityDataFrameReader(
+            self._data_dir / self._feature_cell_density_file_name
+        )
+        self._target_reader = TargetsDataFrameReader(
+            self._data_dir / self._targets_file_name
+        )
+
+    def _merge_data(self) -> pd.DataFrame:
+        """
+        Merges the feature data from clinical, pathological, blood, icd codes and
+        tma cell density to a single dataframe on patient_id
+        """
+        df = self.feature_clinical_reader.data
+        df = df.merge(self.feature_patho_reader.data, on='patient_id', how='outer')
+        df = df.merge(self.feature_blood_reader.data, on='patient_id', how='outer')
+        df = df.merge(self.feature_icd_codes_reader.data, on='patient_id', how='outer')
+        df = df.merge(self.feature_cell_density_reader.data, on='patient_id', how='outer')
+        df.reset_index(drop=True, inplace=True)
+
+        return df
+    
+    def return_data(self) -> pd.DataFrame:
+        """Returns the merged feature data from clinical, pathological, blood, 
+        icd codes and tma cell density in a single dataframe merged on 'patient_id'.
+
+        Returns:
+            pd.DataFrame: The merged feature data.
+        """
+        return self.data
+    
+    def return_targets(self) -> pd.DataFrame:
+        """Returns the target data extracted from the clinical data.
+
+        Returns:
+            pd.DataFrame: The targets data.
+        """
+        return self.target

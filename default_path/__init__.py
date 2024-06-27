@@ -21,12 +21,19 @@ class DefaultPaths:
         self.wsi_lymph_node = self.data_dir / 'WSI_LymphNode'
         self.data_split = self.data_dir / 'DataSplits_DataDictionaries'
         # --- Features -----
-        self.feature_clinical = self.features / 'clinical.csv'
-        self.feature_patho = self.features / 'pathological.csv'
-        self.feature_blood = self.features / 'blood.csv'
-        self.feature_icd_codes = self.features / 'icd_codes.csv'
-        self.feature_celldensity = self.features / 'tma_cell_density.csv'
+        self.feature_clinical_file_name = 'clinical.csv'
+        self.feature_patho_file_name = 'pathological.csv'
+        self.feature_blood_file_name = 'blood.csv'
+        self.feature_icd_codes_file_name = 'icd_codes.csv'
+        self.feature_cell_density_file_name = 'tma_cell_density.csv'
+        
+        self.feature_clinical = self.features / self.feature_clinical_file_name
+        self.feature_patho = self.features / self.feature_patho_file_name
+        self.feature_blood = self.features / self.feature_blood_file_name
+        self.feature_icd_codes = self.features / self.feature_icd_codes_file_name
+        self.feature_celldensity = self.features / self.feature_cell_density_file_name
         # ---- Targets ----
-        self.targets = self.features / 'targets.csv'
+        self.targets_file_name = 'targets.csv'
+        self.targets = self.features / self.targets_file_name
         
     

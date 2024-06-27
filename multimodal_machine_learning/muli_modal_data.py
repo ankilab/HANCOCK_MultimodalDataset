@@ -1,20 +1,20 @@
 import numpy as np
 import pandas as pd
-from pathlib import Path
 from imblearn.over_sampling import SMOTE
 from sklearn.model_selection import StratifiedKFold
 from sklearn.metrics import roc_curve, roc_auc_score, classification_report
 from sklearn.ensemble import RandomForestClassifier
 import matplotlib.pyplot as plt
-from matplotlib import rcParams
 import seaborn as sns
 import shap
 from lifelines import KaplanMeierFitter, statistics
-import sys
 from utils import get_significance
 
+from pathlib import Path
+import sys
 sys.path.append(str(Path(__file__).parents[1]))
 from data_exploration.umap_embedding import setup_preprocessing_pipeline
+from data_reader import DataFrameReaderFactory
 from argument_parser import HancockArgumentParser
 
 
@@ -162,7 +162,7 @@ def training_and_testing(dataframe, dataframe_test, random_state):
     y_pred = (y_pred > 0.5).astype(int)
 
     # Load survival data for test cases
-    os_rfs = pd.read_csv(data_dir/"targets.csv", dtype={"patient_id": str})
+    os_rfs = pd.read_csv(features_dir/"targets.csv", dtype={"patient_id": str})
     os_rfs = os_rfs[os_rfs.patient_id.isin(
         dataframe_test.patient_id.tolist())].reset_index(drop=True)
     # Define event: 1 = deceased, 0 = censored
@@ -274,38 +274,27 @@ def training_and_testing(dataframe, dataframe_test, random_state):
     plt.close()
 
 
+class AdjuvantTreatmentPredictor:
+    def __init__(self, random_state:int = 42):
+        self.argumentParser = HancockArgumentParser(
+            type="adjuvant_treatment_prediction")
+        self.args = self.argumentParser.parse_args()
+        self.data_reader = DataFrameReaderFactory().make_data_frame_reader(
+            data_type='Structural Aggregated', data_dir=self.args.features_dir, 
+            data_dir_flag=True
+        )
+        self.rng = np.randomRandomState(random_state)
+
 if __name__ == "__main__":
-    parser = HancockArgumentParser(type="adjuvant_treatment_prediction")
-    args = parser.parse_args()
-
-    data_dir = Path(args.features_dir)
-    results_dir = Path(args.results_dir)
-    split_dir = Path(args.data_split_dir)
-
-    rcParams.update({"font.size": 6})
-    rcParams["svg.fonttype"] = "none"
-
-    # Random number generator for reproducibility
-    rng = np.random.RandomState(42)
-
-    # Load extracted features
-    clinical = pd.read_csv(data_dir/"clinical.csv", dtype={"patient_id": str})
-    patho = pd.read_csv(data_dir/"pathological.csv", dtype={"patient_id": str})
-    blood = pd.read_csv(data_dir/"blood.csv", dtype={"patient_id": str})
-    icd = pd.read_csv(data_dir/"icd_codes.csv", dtype={"patient_id": str})
-    cell_density = pd.read_csv(
-        data_dir/"tma_cell_density.csv", dtype={"patient_id": str})
-
-    # Merge modalities
-    df = clinical.merge(patho, on="patient_id", how="outer")
-    df = df.merge(blood, on="patient_id", how="outer")
-    df = df.merge(icd, on="patient_id", how="outer")
-    df = df.merge(cell_density, on="patient_id", how="outer")
-    df = df.reset_index(drop=True)
-
-    # Load patient IDs with dataset split and target classes
+    predictor = AdjuvantTreatmentPredictor()
+    df = predictor.data_reader.return_data()
+    
+    data_split_dir = predictor.args.data_split_dir
+    results_dir = predictor.args.results_dir
+    features_dir = predictor.args.features_dir
+    
     target_df = pd.read_json(
-        split_dir/"dataset_split_treatment_outcome.json", dtype={"patient_id": str})
+        data_split_dir/"dataset_split_treatment_outcome.json", dtype={"patient_id": str})
     target_df["target"] = target_df["adjuvant_treatment"].apply(
         lambda x: 0 if x == "none" else 1)
     target_train = target_df[target_df.dataset ==
@@ -318,33 +307,37 @@ if __name__ == "__main__":
     # Train classifier on multimodal data with 10-fold CV
     print("Running k-fold cross-validation for multimodal data...")
     roc_multimodal, auc_multimodal, shap_values_multimodal = cross_validation(
-        df_train, rng, k=10, plot_name="multimodal")
+        df_train, predictor.rng, k=2, plot_name="multimodal")
 
-    # Train classifiers on single modalities with 10-fold CV
-    print("Running k-fold cross-validation for clinical data...")
-    roc_clinical, auc_clinical, _ = cross_validation(
-        df_train[["target"] + list(clinical.columns)], rng, k=10)
-    print("Running k-fold cross-validation for pathological data...")
-    roc_patho, auc_patho, _ = cross_validation(
-        df_train[["target"] + list(patho.columns)], rng, k=10)
-    print("Running k-fold cross-validation for blood data...")
-    roc_blood, auc_blood, _ = cross_validation(
-        df_train[["target"] + list(blood.columns)], rng, k=10)
-    print("Running k-fold cross-validation for cell density data...")
-    roc_tma, auc_tma, _ = cross_validation(
-        df_train[["target"] + list(cell_density.columns)], rng, k=10)
-    print("Running k-fold cross-validation for text data...")
-    roc_icd, auc_icd, _ = cross_validation(
-        df_train[["target"] + list(icd.columns)], rng, k=10)
+    # # Train classifiers on single modalities with 10-fold CV
+    # print("Running k-fold cross-validation for clinical data...")
+    # roc_clinical, auc_clinical, _ = cross_validation(
+    #     df_train[["target"] + list(clinical.columns)], predictor.rng, k=10)
+    # print("Running k-fold cross-validation for pathological data...")
+    # roc_patho, auc_patho, _ = cross_validation(
+    #     df_train[["target"] + list(patho.columns)], predictor.rng, k=10)
+    # print("Running k-fold cross-validation for blood data...")
+    # roc_blood, auc_blood, _ = cross_validation(
+    #     df_train[["target"] + list(blood.columns)], predictor.rng, k=10)
+    # print("Running k-fold cross-validation for cell density data...")
+    # roc_tma, auc_tma, _ = cross_validation(
+    #     df_train[["target"] + list(cell_density.columns)], predictor.rng, k=10)
+    # print("Running k-fold cross-validation for text data...")
+    # roc_icd, auc_icd, _ = cross_validation(
+    #     df_train[["target"] + list(icd.columns)], predictor.rng, k=10)
 
-    # Plot average ROC curves with AUC scores
-    colors = [(132/255, 163/255, 204/255)] * 6
-    auc_list = [auc_multimodal, auc_clinical,
-                auc_patho, auc_blood, auc_tma, auc_icd]
-    roc_list = [roc_multimodal, roc_clinical,
-                roc_patho, roc_blood, roc_tma, roc_icd]
-    roc_labels = ["Multimodal", "Clinical", "Pathology",
-                  "Blood", "TMA cell density", "ICD codes"]
+    # # Plot average ROC curves with AUC scores
+    # colors = [(132/255, 163/255, 204/255)] * 6
+    # auc_list = [auc_multimodal, auc_clinical,
+    #             auc_patho, auc_blood, auc_tma, auc_icd]
+    # roc_list = [roc_multimodal, roc_clinical,
+    #             roc_patho, roc_blood, roc_tma, roc_icd]
+    # roc_labels = ["Multimodal", "Clinical", "Pathology",
+    #               "Blood", "TMA cell density", "ICD codes"]
+    colors = [(132,255)]
+    auc_list = [auc_multimodal]
+    roc_list = [roc_multimodal]
+    roc_labels = ['Multimodal']
 
     for i in range(len(colors)):
         plt.figure(figsize=(1.4, 1.4))  # plt.figure(figsize=(1, 2.5))
@@ -375,5 +368,7 @@ if __name__ == "__main__":
 
     # Train classifier once on multimodal data, show survival curves and bar plot
     print("Training and testing the final multimodal model...")
-    training_and_testing(df_train, df_test, rng)
+    training_and_testing(df_train, df_test, predictor.rng)
     print(f"Done. Saved results to {results_dir}")
+
+

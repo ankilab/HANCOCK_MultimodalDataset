@@ -13,7 +13,8 @@ from .data_reader import (
     FeatureBloodDataFrameReader,
     FeatureICDCodesDataFrameReader,
     FeatureTMACellDensityDataFrameReader,
-    TargetsDataFRameReader
+    TargetsDataFrameReader,
+    StructuralAggregatedDataFrameReader
 )
 import warnings
 
@@ -36,10 +37,10 @@ class DataFrameReaderFactory:
         Args:
             data_type (str, optional): The kind of the data reader the user 
             want to receive. Defaults to 'NA'.
-            
+
             data_dir (Path, optional): An optional path where the file to 
             be read is located. Defaults to Path(__file__).
-            
+
             data_dir_flag (bool, optional): Only when this flag is 
             set to True, the inserted data_dir is considered. Otherwise 
             the default directory from the implemented data reader is used. 
@@ -74,7 +75,9 @@ class DataFrameReaderFactory:
             elif data_type == 'Feature TMA Cell Density':
                 return FeatureTMACellDensityDataFrameReader(data_dir)
             elif data_type == 'Targets':
-                return TargetsDataFRameReader(data_dir) 
+                return TargetsDataFrameReader(data_dir)
+            elif data_type == 'Structural Aggregated':
+                return StructuralAggregatedDataFrameReader(data_dir)
         else:
             if data_type == 'Pathological':
                 return PathologicalDataFrameReader()
@@ -101,7 +104,10 @@ class DataFrameReaderFactory:
             elif data_type == 'Feature TMA Cell Density':
                 return FeatureTMACellDensityDataFrameReader()
             elif data_type == 'Targets':
-                return TargetsDataFRameReader(data_dir) 
+                return TargetsDataFrameReader()
+            elif data_type == 'Structural Aggregated':
+                return StructuralAggregatedDataFrameReader()
+
         warnings.warn('The data type is not recognized and thus the default'
-                    + ' data reader used.')
+                      + ' data reader used.')
         return DataFrameReader(self.data_dir)
