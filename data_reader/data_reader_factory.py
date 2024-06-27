@@ -7,7 +7,13 @@ from .data_reader import (
     WSIPrimaryTumorDataFrameReader,
     WSILymphNodeDataFrameReader,
     TMACellDensityDataFrameReader,
-    TextDataReportsDataFrameReader
+    TextDataReportsDataFrameReader,
+    FeatureClinicalDataFrameReader,
+    FeaturePathologicalDataFrameReader,
+    FeatureBloodDataFrameReader,
+    FeatureICDCodesDataFrameReader,
+    FeatureTMACellDensityDataFrameReader,
+    TargetsDataFRameReader
 )
 import warnings
 
@@ -57,6 +63,18 @@ class DataFrameReaderFactory:
                 return TMACellDensityDataFrameReader(data_dir)
             elif data_type == 'TextData_reports':
                 return TextDataReportsDataFrameReader(data_dir)
+            elif data_type == 'Clinical Feature':
+                return FeatureClinicalDataFrameReader(data_dir)
+            elif data_type == 'Pathological Feature':
+                return FeaturePathologicalDataFrameReader(data_dir)
+            elif data_type == 'Blood Feature':
+                return FeatureBloodDataFrameReader(data_dir)
+            elif data_type == 'ICD Codes Feature':
+                return FeatureICDCodesDataFrameReader(data_dir)
+            elif data_type == 'Feature TMA Cell Density':
+                return FeatureTMACellDensityDataFrameReader(data_dir)
+            elif data_type == 'Targets':
+                return TargetsDataFRameReader(data_dir) 
         else:
             if data_type == 'Pathological':
                 return PathologicalDataFrameReader()
@@ -72,6 +90,18 @@ class DataFrameReaderFactory:
                 return TMACellDensityDataFrameReader()
             elif data_type == 'TextData_reports':
                 return TextDataReportsDataFrameReader()
+            elif data_type == 'Clinical Feature':
+                return FeatureClinicalDataFrameReader()
+            elif data_type == 'Pathological Feature':
+                return FeaturePathologicalDataFrameReader()
+            elif data_type == 'Blood Feature':
+                return FeatureBloodDataFrameReader()
+            elif data_type == 'ICD Codes Feature':
+                return FeatureICDCodesDataFrameReader()
+            elif data_type == 'Feature TMA Cell Density':
+                return FeatureTMACellDensityDataFrameReader()
+            elif data_type == 'Targets':
+                return TargetsDataFRameReader(data_dir) 
         warnings.warn('The data type is not recognized and thus the default'
                     + ' data reader used.')
         return DataFrameReader(self.data_dir)
