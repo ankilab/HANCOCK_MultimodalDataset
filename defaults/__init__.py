@@ -63,10 +63,10 @@ class DefaultPaths:
         self.data_split_clinical = self.data_split / file_names.data_split_clinical
         self.data_split_patho = self.data_split / file_names.data_split_patho
         self.data_split_in = self.data_split / file_names.data_split_in
-        self.data_split_orypharynx = self.data_dir / \
+        self.data_split_orypharynx = self.data_split / \
             file_names.data_split_orypharynx
-        self.data_split_out = self.data_dir / file_names.data_split_out
-        self.data_split_treatment_outcome = self.data_dir / \
+        self.data_split_out = self.data_split / file_names.data_split_out
+        self.data_split_treatment_outcome = self.data_split / \
             file_names.data_split_treatment_outcome
 
 

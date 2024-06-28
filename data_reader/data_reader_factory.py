@@ -92,17 +92,20 @@ class DataFrameReaderFactory:
         data_reader = self._make_data_data_frame_reader(data_type, data_reader)
         data_reader = self._make_feature_data_frame_reader(
             data_type, data_reader)
+        data_reader = self._make_targets_data_frame_reader(
+            data_type, data_reader)
         data_reader = self._make_data_split_data_frame_reader(
             data_type, data_reader)
 
         if data_reader == DataFrameReader:
-            warnings.warn(f"Data type {data_type} not found. Returning default data reader.\n")
-        
+            warnings.warn(
+                f"Data type {data_type} not found. Returning default data reader.\n")
+
         if data_dir_flag:
             data_reader = data_reader(data_dir)
         else:
             data_reader = data_reader()
-        
+
         return data_reader
 
     def _make_data_data_frame_reader(

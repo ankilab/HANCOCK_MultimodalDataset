@@ -5,10 +5,14 @@ import re
 import sys
 
 sys.path.append(str(Path(__file__).parents[1]))
-from defaults import DefaultPaths
+from defaults import (
+    DefaultPaths,
+    DefaultFileNames
+)
 
 
 defaultPaths = DefaultPaths()
+defaultFileNames = DefaultFileNames()
 
 
 class DataFrameReader:
@@ -433,12 +437,6 @@ class StructuralAggregatedDataFrameReader(DataFrameReader):
             self._data = self._merge_data()
         return self._data.copy()
 
-    @property
-    def target(self):
-        if self._target is None:
-            self._target = self._target_reader.data
-        return self._target.copy()
-
     def __init__(self, data_dir: Path = defaultPaths.features):
         """Data frame reader for the feature data from clinical, pathological, 
         blood, icd codes and tma cell density. The data is merged on 'patient_id'.
@@ -453,37 +451,23 @@ class StructuralAggregatedDataFrameReader(DataFrameReader):
         """
         super().__init__(data_dir)
         self._target = None
-        self._create_file_name_properties()
         self._prepare_data_reader()
-
-    def _create_file_name_properties(self):
-        """Creates the file name properties for the feature files.
-        """
-        self._feature_clinical_file_name = defaultPaths.feature_clinical_file_name
-        self._feature_patho_file_name = defaultPaths.feature_patho_file_name
-        self._feature_blood_file_name = defaultPaths.feature_blood_file_name
-        self._feature_icd_codes_file_name = defaultPaths.feature_icd_codes_file_name
-        self._feature_cell_density_file_name = defaultPaths.feature_cell_density_file_name
-        self._targets_file_name = defaultPaths.targets_file_name
 
     def _prepare_data_reader(self):
         self.feature_clinical_reader = FeatureClinicalDataFrameReader(
-            data_dir=self._data_dir / self._feature_clinical_file_name
+            data_dir=self._data_dir / defaultFileNames.feature_clinical
         )
         self.feature_patho_reader = FeaturePathologicalDataFrameReader(
-            self._data_dir / self._feature_patho_file_name
+            data_dir=self._data_dir / defaultFileNames.feature_patho
         )
         self.feature_blood_reader = FeatureBloodDataFrameReader(
-            self._data_dir / self._feature_blood_file_name
+            data_dir=self._data_dir / defaultFileNames.feature_blood
         )
         self.feature_icd_codes_reader = FeatureICDCodesDataFrameReader(
-            self._data_dir / self._feature_icd_codes_file_name
+            data_dir=self._data_dir / defaultFileNames.feature_icd_codes
         )
         self.feature_cell_density_reader = FeatureTMACellDensityDataFrameReader(
-            self._data_dir / self._feature_cell_density_file_name
-        )
-        self._target_reader = TargetsDataFrameReader(
-            self._data_dir / self._targets_file_name
+            data_dir=self._data_dir / defaultFileNames.feature_cell_density
         )
 
     def _merge_data(self) -> pd.DataFrame:
@@ -512,14 +496,6 @@ class StructuralAggregatedDataFrameReader(DataFrameReader):
             pd.DataFrame: The merged feature data.
         """
         return self.data
-
-    def return_targets(self) -> pd.DataFrame:
-        """Returns the target data extracted from the clinical data.
-
-        Returns:
-            pd.DataFrame: The targets data.
-        """
-        return self.target
 
 
 # -- DataReader for data splits

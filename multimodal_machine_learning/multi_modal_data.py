@@ -8,15 +8,15 @@ import matplotlib.pyplot as plt
 import seaborn as sns
 import shap
 from lifelines import KaplanMeierFitter, statistics
-from utils import get_significance
 from matplotlib import rcParams
 
 from pathlib import Path
 import sys
 sys.path.append(str(Path(__file__).parents[1]))
-from data_exploration.umap_embedding import setup_preprocessing_pipeline
-from data_reader import DataFrameReaderFactory
+from defaults import DefaultFileNames
 from argument_parser import HancockArgumentParser
+from data_reader import DataFrameReaderFactory
+from data_exploration.umap_embedding import setup_preprocessing_pipeline
 
 
 def cross_validation(dataframe, random_state, k, plot_name=None):
@@ -193,7 +193,7 @@ def training_and_testing(dataframe, dataframe_test, random_state):
         event_observed_B=pred_1.survival_status
     )
     p_os = logrank_result_os.p_value
-    p_value_os = get_significance(p_os)
+    p_value_os = AdjuvantTreatmentPredictor().get_significance(p_os)
 
     # Overall survival, grouped by predictions
     plt.figure(figsize=(2.5, 1.4))
@@ -229,7 +229,7 @@ def training_and_testing(dataframe, dataframe_test, random_state):
         event_observed_B=pred_1.rfs_event
     )
     p_rfs = logrank_result_os.p_value
-    p_value_rfs = get_significance(p_rfs)
+    p_value_rfs = AdjuvantTreatmentPredictor().get_significance(p_rfs)
 
     plt.figure(figsize=(2.5, 1.4))
 
@@ -335,6 +335,16 @@ class HancockPredictor:
     def predict(self, data: pd.DataFrame) -> list:
         raise NotImplementedError("Prediction not implemented.")
 
+    def get_significance(self, p_value) -> str:
+        if p_value <= 0.001:
+            return "$p\\leq$0.001 (***)"
+        elif p_value <= 0.01:
+            return "$p\\leq$0.01 (**)"
+        elif p_value <= 0.05:
+            return "$p\\leq$0.05 (*)"
+        else:
+            return f"$p=${p_value:.3f}"
+
     def _get_df_train(self) -> pd.DataFrame:
         raise NotImplementedError("Data frame for training not implemented.")
 
@@ -352,17 +362,21 @@ class AdjuvantTreatmentPredictor(HancockPredictor):
                          type='adjuvant_treatment_prediction'
                          )
         self._prepare_data_frame_reader()
-        
+
     def _prepare_data_frame_reader(self) -> None:
-        self._data_reader_factory = DataFrameReaderFactory()
-        self.data_reader = self._data_reader_factory.make_data_frame_reader(
-            data_type='Structural Aggregated', data_dir=self.args.features_dir,
+        factory = DataFrameReaderFactory()
+        default_file_names = DefaultFileNames()
+        self.data_reader = factory.make_data_frame_reader(
+            data_type=factory.data_reader_types.structural_aggregated,
+            data_dir=self.args.features_dir,
             data_dir_flag=True
         )
-        self.targets_reader = self._data_reader_factory.make_data_frame_reader(
-            data_type='Targets', data_dir=self.args.features_dir, data_dir_flag=True
+        self.data_split_reader = factory.make_data_frame_reader(
+            data_type=factory.data_reader_types.data_split_treatment_outcome,
+            data_dir=self.args.data_split_dir /
+            default_file_names.data_split_treatment_outcome,
+            data_dir_flag=True
         )
-        # self.data_split_reader 
 
     def _get_df_train(self) -> pd.DataFrame:
         pass
@@ -422,7 +436,7 @@ if __name__ == "__main__":
     #             roc_patho, roc_blood, roc_tma, roc_icd]
     # roc_labels = ["Multimodal", "Clinical", "Pathology",
     #               "Blood", "TMA cell density", "ICD codes"]
-    
+
     colors = [(132/255, 163/255, 204/255)]
     auc_list = [auc_multimodal]
     roc_list = [roc_multimodal]

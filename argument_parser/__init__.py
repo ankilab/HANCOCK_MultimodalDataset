@@ -39,11 +39,11 @@ class HancockArgumentParser(ArgumentParser):
             self._add_data_split_arguments()
 
     def _add_always_arguments(self):
-        self.add_argument("--results_dir", type=str,
+        self.add_argument("--results_dir", type=Path,
                           help="Directory where plot will be saved", nargs="?",
                           default=self._defaultPaths.results)
         self.add_argument(
-            "--features_dir", type=str, nargs='?',
+            "--features_dir", type=Path, nargs='?',
             help="Path to directory where the features are saved",
             default=self._defaultPaths.features
         )
@@ -51,21 +51,21 @@ class HancockArgumentParser(ArgumentParser):
     def _add_structured_arguments(self):
         self.add_argument(
             "--path_clinical",
-            type=str,
+            type=Path,
             help="Absolute path of clinical data file.",
             default=self._defaultPaths.clinical,
             nargs="?"
         )
         self.add_argument(
             "--path_patho",
-            type=str,
+            type=Path,
             help="Absolute path of pathological data file.",
             default=self._defaultPaths.patho,
             nargs="?"
         )
         self.add_argument(
             "--path_blood",
-            type=str,
+            type=Path,
             help="Absolute path of blood data file.",
             default=self._defaultPaths.blood,
             nargs="?"
@@ -73,7 +73,7 @@ class HancockArgumentParser(ArgumentParser):
         
         self.add_argument(
             "--path_blood_ref",
-            type=str,
+            type=Path,
             help="Absolute path of blood reference file.",
             default=self._defaultPaths.blood_ref,
             nargs="?"
@@ -82,7 +82,7 @@ class HancockArgumentParser(ArgumentParser):
     def _add_tma_cell_density_arguments(self):
         self.add_argument(
             "--path_celldensity",
-            type=str,
+            type=Path,
             help="Absolute path to the cell density measurements file in the specified dataset_dir",
             default=self._defaultPaths.celldensity,
             nargs="?"
@@ -91,13 +91,13 @@ class HancockArgumentParser(ArgumentParser):
     def _add_text_data_arguments(self):
         self.add_argument(
             "--path_reports",
-            type=str,
+            type=Path,
             help="Absolute path to the directory containing surgery reports in the specified dataset_dir",
             default=self._defaultPaths.reports,
             nargs="?"
         )
         self.add_argument(
-            "--path_icd_codes", type=str, nargs='?',
+            "--path_icd_codes", type=Path, nargs='?',
             help="Path to directory with ICD code text files",
             default=self._defaultPaths.icd_codes
         )
@@ -105,14 +105,14 @@ class HancockArgumentParser(ArgumentParser):
     def _add_wsi_arguments(self):
         self.add_argument(
             "--path_wsi_primarytumor",
-            type=str,
+            type=Path,
             help="Absolute path to the WSI_PrimaryTumor directory in the specified dataset_dir",
             default=self._defaultPaths.wsi_tumor,
             nargs="?"
         )
         self.add_argument(
             "--path_wsi_lymphnode",
-            type=str,
+            type=Path,
             help="Absolute path to the WSI_LymphNode directory in the specified dataset_dir",
             default=self._defaultPaths.wsi_lymph_node,
             nargs="?"
@@ -130,7 +130,7 @@ class HancockArgumentParser(ArgumentParser):
         
     def _add_data_split_arguments(self):
         self.add_argument(
-            "--data_split_dir", type=str, nargs='?',
+            "--data_split_dir", type=Path, nargs='?',
             help="Path to directory that contains data splits as JSON files",
             default=self._defaultPaths.data_split
         )
