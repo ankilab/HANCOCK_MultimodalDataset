@@ -81,7 +81,7 @@ class DataFrameReaderFactory:
             be read is located. Defaults to Path(__file__).
 
             data_dir_flag (bool, optional): Only when this flag is 
-            set to True, the inserted data_dir is considered. Otherwise 
+            set to True, the inserted data_dir is considered. Otherwise,
             the default directory from the implemented data reader is used. 
             Defaults to False.
 
@@ -109,10 +109,10 @@ class DataFrameReaderFactory:
         return data_reader
 
     def _make_data_data_frame_reader(
-        self, data_type: str, data_reader: DataFrameReader
-    ) -> DataFrameReader:
+        self, data_type: str, data_reader: [DataFrameReader]
+    ) -> [DataFrameReader]:
         """Checks the data_type and returns the appropriate reference to the
-        data reader class. If there is not match between the data_type and 
+        data reader class. If there is no match between the data_type and
         the data related data_type's from the DataReaderTypes class, the
         input data_reader is returned.
 
@@ -144,10 +144,10 @@ class DataFrameReaderFactory:
         return data_reader
 
     def _make_feature_data_frame_reader(
-        self, data_type: str, data_reader: DataFrameReader
-    ) -> DataFrameReader:
+        self, data_type: str, data_reader: [DataFrameReader]
+    ) -> [DataFrameReader]:
         """Checks the data_type and returns the appropriate reference to the
-        data reader class. If there is not match between the data_type and 
+        data reader class. If there is no match between the data_type and
         the data related data_type's from the DataReaderTypes class, the
         input data_reader is returned.
 
@@ -173,10 +173,10 @@ class DataFrameReaderFactory:
         return data_reader
 
     def _make_targets_data_frame_reader(
-        self, data_type: str, data_reader: DataFrameReader
-    ) -> DataFrameReader:
+        self, data_type: str, data_reader: [DataFrameReader]
+    ) -> [DataFrameReader]:
         """Checks the data_type and returns the appropriate reference to the
-        data reader class. If there is not match between the data_type and 
+        data reader class. If there is no match between the data_type and
         the data related data_type's from the DataReaderTypes class, the
         input data_reader is returned.
 
@@ -194,10 +194,10 @@ class DataFrameReaderFactory:
         return data_reader
 
     def _make_data_split_data_frame_reader(
-        self, data_type: str, data_reader: DataFrameReader
-    ) -> DataFrameReader:
+        self, data_type: str, data_reader: [DataFrameReader]
+    ) -> [DataFrameReader]:
         """Checks the data_type and returns the appropriate reference to the
-        data reader class. If there is not match between the data_type and 
+        data reader class. If there is no match between the data_type and
         the data related data_type's from the DataReaderTypes class, the
         input data_reader is returned.
 

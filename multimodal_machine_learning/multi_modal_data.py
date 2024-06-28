@@ -43,7 +43,6 @@ def cross_validation(dataframe, random_state, k, plot_name=None):
     shap_values = []
     val_index_list = []
     features_per_fold = []
-    preprocessor_first = None
 
     # 10-fold cross-validation
     cv = StratifiedKFold(n_splits=k, shuffle=True, random_state=random_state)
@@ -55,29 +54,28 @@ def cross_validation(dataframe, random_state, k, plot_name=None):
         # Preprocess data
         preprocessor = setup_preprocessing_pipeline(
             df_train_folds.columns[2:], min_max_scaler=True)
+
+        x_train = preprocessor.fit_transform(
+            df_train_folds.drop(["patient_id", "target"], axis=1))
+        x_val = preprocessor.transform(
+            df_val_fold.drop(["patient_id", "target"], axis=1))
         y_train = df_train_folds["target"].to_numpy()
         y_val = df_val_fold["target"].to_numpy()
-        X_train = preprocessor.fit_transform(
-            df_train_folds.drop(["patient_id", "target"], axis=1))
-        X_val = preprocessor.transform(
-            df_val_fold.drop(["patient_id", "target"], axis=1))
-        if preprocessor_first is None:
-            preprocessor_first = preprocessor
 
         # Handle class imbalance
         smote = SMOTE(random_state=random_state)
-        X_train, y_train = smote.fit_resample(X_train, y_train)
+        x_train, y_train = smote.fit_resample(x_train, y_train)
 
         # Fit ML model
         model = RandomForestClassifier(
             n_estimators=800, random_state=random_state)
-        model.fit(X_train, y_train)
+        model.fit(x_train, y_train)
 
         # Get predictions for validation fold
-        y_pred = model.predict_proba(X_val)[:, 1]
+        y_pred = model.predict_proba(x_val)[:, 1]
 
         # Get SHAP values
-        svs = shap.TreeExplainer(model).shap_values(X_val)
+        svs = shap.TreeExplainer(model).shap_values(x_val)
         shap_values.append(svs[:, :, 1])  # class = 1 (adjuvant treatment yes)
         val_index_list.append(val_idx)
         features_per_fold.append(preprocessor.get_feature_names_out())
@@ -127,9 +125,9 @@ def cross_validation(dataframe, random_state, k, plot_name=None):
     plt.tight_layout()
     if plot_name is not None:
         plt.savefig(
-            results_dir/f"shap_summaryplot_{plot_name}_test.svg", bbox_inches="tight")
+            results_dir/f"shap_summary_plot_{plot_name}_test.svg", bbox_inches="tight")
         plt.savefig(
-            results_dir/f"shap_summaryplot_{plot_name}_test.png", bbox_inches="tight", dpi=200)
+            results_dir/f"shap_summary_plot_{plot_name}_test.png", bbox_inches="tight", dpi=200)
     plt.close()
 
     return tpr_list, auc_list, shap_values
@@ -139,23 +137,24 @@ def training_and_testing(dataframe, dataframe_test, random_state):
     # Preprocess data
     preprocessor = setup_preprocessing_pipeline(
         dataframe.columns[2:], min_max_scaler=True)
+
+    x_train = preprocessor.fit_transform(
+        dataframe.drop(["patient_id", "target"], axis=1))
+    x_test = preprocessor.transform(
+        dataframe_test.drop(["patient_id", "target"], axis=1))
     y_train = dataframe["target"].to_numpy()
     y_test = dataframe_test["target"].to_numpy()
-    X_train = preprocessor.fit_transform(
-        dataframe.drop(["patient_id", "target"], axis=1))
-    X_test = preprocessor.transform(
-        dataframe_test.drop(["patient_id", "target"], axis=1))
 
     # Handle class imbalance
     smote = SMOTE(random_state=random_state)
-    X_train, y_train = smote.fit_resample(X_train, y_train)
+    x_train, y_train = smote.fit_resample(x_train, y_train)
 
     # Fit ML model
     model = RandomForestClassifier(n_estimators=100, random_state=random_state)
-    model.fit(X_train, y_train)
+    model.fit(x_train, y_train)
 
     # Get predictions for test dataset
-    y_pred = model.predict_proba(X_test)[:, 1]
+    y_pred = model.predict_proba(x_test)[:, 1]
 
     print(classification_report(y_test, y_pred > 0.5))
 
@@ -186,14 +185,14 @@ def training_and_testing(dataframe, dataframe_test, random_state):
     pred_1 = os_rfs.iloc[idx1].reset_index(drop=True)
 
     # Log-rank test (survival)
-    logrank_result_os = statistics.logrank_test(
+    log_rank_result_os = statistics.logrank_test(
         durations_A=pred_0.followup_months,
         durations_B=pred_1.followup_months,
         event_observed_A=pred_0.survival_status,
         event_observed_B=pred_1.survival_status
     )
-    p_os = logrank_result_os.p_value
-    p_value_os = AdjuvantTreatmentPredictor().get_significance(p_os)
+    p_os = log_rank_result_os.p_value
+    p_value_os = get_significance(p_os)
 
     # Overall survival, grouped by predictions
     plt.figure(figsize=(2.5, 1.4))
@@ -222,14 +221,14 @@ def training_and_testing(dataframe, dataframe_test, random_state):
     plt.close()
 
     # Log-rank test (Recurrence-free survival, grouped by predictions)
-    logrank_result_os = statistics.logrank_test(
+    log_rank_result_os = statistics.logrank_test(
         durations_A=pred_0.months_to_rfs_event,
         durations_B=pred_1.months_to_rfs_event,
         event_observed_A=pred_0.rfs_event,
         event_observed_B=pred_1.rfs_event
     )
-    p_rfs = logrank_result_os.p_value
-    p_value_rfs = AdjuvantTreatmentPredictor().get_significance(p_rfs)
+    p_rfs = log_rank_result_os.p_value
+    p_value_rfs = get_significance(p_rfs)
 
     plt.figure(figsize=(2.5, 1.4))
 
@@ -266,13 +265,23 @@ def training_and_testing(dataframe, dataframe_test, random_state):
     plt.yticks(ticks=[0, 1], labels=[
                "Predicted no adjuvant therapy", "Predicted adjuvant therapy"])
     plt.xticks([0, 20, 40, 60, 80])
-    # plt.ylabel("Prediction", fontsize=6)
     plt.xlabel("# Patients", fontsize=6)
     plt.tight_layout()
     sns.despine()
     plt.savefig(
-        results_dir/"adjuvant_treatment_prediction_barplot_test.svg", bbox_inches="tight")
+        results_dir/"adjuvant_treatment_prediction_bar_plot_test.svg", bbox_inches="tight")
     plt.close()
+
+
+def get_significance(p_value) -> str:
+    if p_value <= 0.001:
+        return "$p\\leq$0.001 (***)"
+    elif p_value <= 0.01:
+        return "$p\\leq$0.01 (**)"
+    elif p_value <= 0.05:
+        return "$p\\leq$0.05 (*)"
+    else:
+        return f"$p=${p_value: .3f}"
 
 
 class HancockPredictor:
@@ -280,13 +289,13 @@ class HancockPredictor:
     project. All predictors should inherit from this class.
     """
     @property
-    def df_train(self):
+    def df_train(self) -> pd.DataFrame:
         if self._df_train is None:
             self._df_train = self._get_df_train()
         return self._df_train.copy()
 
     @property
-    def df_test(self):
+    def df_test(self) -> pd.DataFrame:
         if self._df_test is None:
             self._df_test = self._get_df_test()
         return self._df_test.copy()
@@ -295,16 +304,16 @@ class HancockPredictor:
     def model(self):
         if self._model is None:
             raise NotImplementedError("Model not trained yet.")
-        return self._mode.copy()
+        return self._model.copy()
 
     def __init__(
         self, save_flag: bool = False, plot_flag: bool = False,
-        random_state: int = 42, type: str = 'None'
+        random_state: int = 42, predictor_type: str = 'None'
     ):
         rcParams.update({"font.size": 6})
         rcParams["svg.fonttype"] = "none"
         self.argumentParser = HancockArgumentParser(
-            type=type)
+            type=predictor_type)
         self.args = self.argumentParser.parse_args()
         self.save_flag = save_flag
         self.plot_flag = plot_flag
@@ -317,7 +326,7 @@ class HancockPredictor:
         pass
 
     def cross_validate(
-        self, k: int = 10, plot_flag: bool = None, plot_name: str = 'cross_validate',
+        self, n_splits: int = 10, plot_flag: bool = None, plot_name: str = 'cross_validate',
         save_flag: bool = None
     ) -> None:
         raise NotImplementedError("Cross-validation not implemented.")
@@ -335,16 +344,6 @@ class HancockPredictor:
     def predict(self, data: pd.DataFrame) -> list:
         raise NotImplementedError("Prediction not implemented.")
 
-    def get_significance(self, p_value) -> str:
-        if p_value <= 0.001:
-            return "$p\\leq$0.001 (***)"
-        elif p_value <= 0.01:
-            return "$p\\leq$0.01 (**)"
-        elif p_value <= 0.05:
-            return "$p\\leq$0.05 (*)"
-        else:
-            return f"$p=${p_value:.3f}"
-
     def _get_df_train(self) -> pd.DataFrame:
         raise NotImplementedError("Data frame for training not implemented.")
 
@@ -359,57 +358,96 @@ class AdjuvantTreatmentPredictor(HancockPredictor):
     ):
         super().__init__(save_flag=save_flag, plot_flag=plot_flag,
                          random_state=random_state,
-                         type='adjuvant_treatment_prediction'
+                         predictor_type='adjuvant_treatment_prediction'
                          )
-        self._prepare_data_frame_reader()
+        self._prepare_data()
+        self._prepare_data_split()
 
-    def _prepare_data_frame_reader(self) -> None:
+    def cross_validate(
+        self, n_splits: int = 10, plot_flag: bool = None, plot_name: str = 'cross_validate',
+        save_flag: bool = None
+    ) -> None:
+        cv = StratifiedKFold(n_splits=n_splits, shuffle=True, random_state=self.random_state)
+        for train_idx, val_idx in cv.split(self.df_train, self.df_train['target']):
+            df_train_fold = self.df_train.iloc[train_idx]
+            df_val_fold = self.df_train.iloc[val_idx]
+            [x_train, y_train, x_val, y_val] = self._prepare_data_for_training(df_train_fold, df_val_fold)
+            # ToDo: Continue adapting from cross_validation function
+
+    def _prepare_data(self) -> None:
         factory = DataFrameReaderFactory()
-        default_file_names = DefaultFileNames()
-        self.data_reader = factory.make_data_frame_reader(
+        data_reader = factory.make_data_frame_reader(
             data_type=factory.data_reader_types.structural_aggregated,
             data_dir=self.args.features_dir,
             data_dir_flag=True
         )
-        self.data_split_reader = factory.make_data_frame_reader(
+        self._data = data_reader.return_data()
+    
+    def _prepare_data_split(self) -> None:
+        factory = DataFrameReaderFactory()
+        default_file_names = DefaultFileNames()
+        data_split_reader = factory.make_data_frame_reader(
             data_type=factory.data_reader_types.data_split_treatment_outcome,
             data_dir=self.args.data_split_dir /
             default_file_names.data_split_treatment_outcome,
             data_dir_flag=True
         )
+        self._data_split = data_split_reader.return_data()
+        self._data_split["target"] = self._data_split["adjuvant_treatment"].apply(
+            lambda x: 0 if x == "none" else 1)
 
     def _get_df_train(self) -> pd.DataFrame:
-        pass
+        target_train = self._data_split[self._data_split.dataset ==
+                                        "training"][["patient_id", "target"]]
+        return target_train.merge(self._data, on="patient_id", how="inner")
 
     def _get_df_test(self) -> pd.DataFrame:
-        pass
+        target_test = self._data_split[
+            self._data_split.dataset == "test"][["patient_id", "target"]]
+        return target_test.merge(self._data, on="patient_id", how="inner")
+
+    def _prepare_data_for_training(self, df_train_fold: pd.DataFrame, df_val_fold: pd.DataFrame) -> list:
+        """Preprocesses the input data and creates a numpy array for the labels. Also, over-samples the
+        underrepresented class if necessary.
+
+        Args:
+            df_train_fold (pd.DataFrame): The data intended for training. Must have
+            a column 'patient_id' and 'target'.
+            df_val_fold (pd.DataFrame): The data intended for validating the training process.
+
+        Returns:
+            list: List with x_train, y_train, x_val and y_val in that order.
+        """
+        preprocessor = setup_preprocessing_pipeline(
+            df_train_fold.columns[2:], min_max_scaler=True)
+
+        x_train = preprocessor.fit_transform(
+            df_train_fold.drop(["patient_id", "target"], axis=1))
+        x_val = preprocessor.transform(
+            df_val_fold.drop(["patient_id", "target"], axis=1))
+        y_train = df_train_fold["target"].to_numpy()
+        y_val = df_val_fold["target"].to_numpy()
+
+        # Handle class imbalance
+        smote = SMOTE(random_state=self.random_state)
+        x_train, y_train = smote.fit_resample(x_train, y_train)
+        return [x_train, y_train, x_val, y_val]
 
 
 if __name__ == "__main__":
     predictor = AdjuvantTreatmentPredictor()
-    df = predictor.data_reader.return_data()
 
-    data_split_dir = predictor.args.data_split_dir
-    results_dir = predictor.args.results_dir
-    features_dir = predictor.args.features_dir
+    # data_split_dir = predictor.args.data_split_dir
+    # results_dir = predictor.args.results_dir
+    # features_dir = predictor.args.features_dir
+    #
+    # df_train = predictor.df_train
+    # df_test = predictor.df_test
 
-    target_df = pd.read_json(
-        data_split_dir/"dataset_split_treatment_outcome.json", dtype={"patient_id": str})
-    target_df["target"] = target_df["adjuvant_treatment"].apply(
-        lambda x: 0 if x == "none" else 1)
-
-    target_train = target_df[target_df.dataset ==
-                             "training"][["patient_id", "target"]]
-    target_test = target_df[target_df.dataset ==
-                            "test"][["patient_id", "target"]]
-
-    df_train = target_train.merge(df, on="patient_id", how="inner")
-    df_test = target_test.merge(df, on="patient_id", how="inner")
-
-    # Train classifier on multimodal data with 10-fold CV
-    print("Running k-fold cross-validation for multimodal data...")
-    roc_multimodal, auc_multimodal, shap_values_multimodal = cross_validation(
-        df_train, predictor.random_state, k=2, plot_name="multimodal")
+    # Train classifier on multimodal data with k-fold CV
+    # print("Running k-fold cross-validation for multimodal data...")
+    # roc_multimodal, auc_multimodal, shap_values_multimodal = cross_validation(
+    #     df_train, predictor.random_state, k=2, plot_name="multimodal")
 
     # # Train classifiers on single modalities with 10-fold CV
     # print("Running k-fold cross-validation for clinical data...")
@@ -437,37 +475,37 @@ if __name__ == "__main__":
     # roc_labels = ["Multimodal", "Clinical", "Pathology",
     #               "Blood", "TMA cell density", "ICD codes"]
 
-    colors = [(132/255, 163/255, 204/255)]
-    auc_list = [auc_multimodal]
-    roc_list = [roc_multimodal]
-    roc_labels = ['Multimodal']
-
-    for i in range(len(colors)):
-        plt.figure(figsize=(1.4, 1.4))  # plt.figure(figsize=(1, 2.5))
-        mean_tpr = np.mean(roc_list[i], axis=0)
-        std_tpr = np.std(roc_list[i], axis=0)
-        tpr_upper = np.minimum(mean_tpr + std_tpr, 1)
-        tpr_lower = np.maximum(mean_tpr - std_tpr, 0)
-        mean_fpr = np.linspace(0, 1, 100)
-
-        plt.plot(mean_fpr, mean_tpr, linewidth=1,
-                 color=colors[i], label=f"AUC =\n{np.mean(auc_list[i]):.2f}")
-        plt.fill_between(mean_fpr, tpr_lower, tpr_upper,
-                         label=r"$\pm$ std.", color=colors[i], alpha=0.4, lw=0)
-
-        plt.plot([0, 1], [0, 1], "--", color="black", linewidth=1)  # random
-        plt.xticks([])
-        plt.yticks([])
-        plt.xlabel("FPR", fontsize=6)
-        plt.ylabel("TPR", fontsize=6)
-        plt.title(f"{roc_labels[i]}")
-        # plt.legend(frameon=False, loc='upper center', bbox_to_anchor=(0.5, -0.2))
-        plt.legend(frameon=False, loc="lower right", borderpad=0)
-        plt.tight_layout()
-        plt.gca().set_aspect("equal")
-        plt.savefig(
-            results_dir/f"roc_treatment_{roc_labels[i]}_test.svg", bbox_inches="tight")
-        plt.close()
+    # colors = [(132/255, 163/255, 204/255)]
+    # auc_list = [auc_multimodal]
+    # roc_list = [roc_multimodal]
+    # roc_labels = ['Multimodal']
+    #
+    # for i in range(len(colors)):
+    #     plt.figure(figsize=(1.4, 1.4))  # plt.figure(figsize=(1, 2.5))
+    #     mean_tpr = np.mean(roc_list[i], axis=0)
+    #     std_tpr = np.std(roc_list[i], axis=0)
+    #     tpr_upper = np.minimum(mean_tpr + std_tpr, 1)
+    #     tpr_lower = np.maximum(mean_tpr - std_tpr, 0)
+    #     mean_fpr = np.linspace(0, 1, 100)
+    #
+    #     plt.plot(mean_fpr, mean_tpr, linewidth=1,
+    #              color=colors[i], label=f"AUC =\n{np.mean(auc_list[i]):.2f}")
+    #     plt.fill_between(mean_fpr, tpr_lower, tpr_upper,
+    #                      label=r"$\pm$ std.", color=colors[i], alpha=0.4, lw=0)
+    #
+    #     plt.plot([0, 1], [0, 1], "--", color="black", linewidth=1)  # random
+    #     plt.xticks([])
+    #     plt.yticks([])
+    #     plt.xlabel("FPR", fontsize=6)
+    #     plt.ylabel("TPR", fontsize=6)
+    #     plt.title(f"{roc_labels[i]}")
+    #     # plt.legend(frameon=False, loc='upper center', bbox_to_anchor=(0.5, -0.2))
+    #     plt.legend(frameon=False, loc="lower right", borderpad=0)
+    #     plt.tight_layout()
+    #     plt.gca().set_aspect("equal")
+    #     plt.savefig(
+    #         results_dir/f"roc_treatment_{roc_labels[i]}_test.svg", bbox_inches="tight")
+    #     plt.close()
 
     # # Train classifier once on multimodal data, show survival curves and bar plot
     # print("Training and testing the final multimodal model...")
