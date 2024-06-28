@@ -5,7 +5,7 @@ import re
 import sys
 
 sys.path.append(str(Path(__file__).parents[1]))
-from default_path import DefaultPaths
+from defaults import DefaultPaths
 
 
 defaultPaths = DefaultPaths()

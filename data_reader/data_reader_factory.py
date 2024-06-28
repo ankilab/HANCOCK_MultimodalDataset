@@ -14,9 +14,48 @@ from .data_reader import (
     FeatureICDCodesDataFrameReader,
     FeatureTMACellDensityDataFrameReader,
     TargetsDataFrameReader,
-    StructuralAggregatedDataFrameReader
+    StructuralAggregatedDataFrameReader,
+    DataSplitBloodDataFrameReader,
+    DataSplitClinicalDataFrameReader,
+    DataSplitPathologicalDataFrameReader,
+    DataSplitInDataFrameReader,
+    DataSplitOrypharynxDataFrameReader,
+    DataSplitOutDataFrameReader,
+    DataSplitTreatmentOutcomeDataFrameReader
 )
 import warnings
+
+
+class DataReaderTypes:
+    def __init__(self):
+        # ---- Data ----
+        self.patho = 'Pathological'
+        self.clinical = 'Clinical'
+        self.blood = 'Blood'
+        self.structural_aggregated = 'Structural Aggregated'
+        self.wsi_tumor = 'WSI_PrimaryTumor'
+        self.wsi_lymph_node = 'WSI_LymphNode'
+        self.tma_cell_density = 'TMA_CellDensityMeasurement'
+        self.text_reports = 'TextData_reports'
+
+        # ---- Features ----
+        self.clinical_feature = 'Clinical Feature'
+        self.patho_feature = 'Pathological Feature'
+        self.blood_feature = 'Blood Feature'
+        self.icd_codes_feature = 'ICD Codes Feature'
+        self.tma_cell_density_feature = 'Feature TMA Cell Density'
+
+        # ---- Targets ----
+        self.targets = 'Targets'
+
+        # ---- Data Split ----
+        self.data_split_blood = 'Data Split Blood'
+        self.data_split_clinical = 'Data Split Clinical'
+        self.data_split_patho = 'Data Split Pathological'
+        self.data_split_in = 'Data Split In'
+        self.data_split_orypharynx = 'Data Split Orypharynx'
+        self.data_split_out = 'Data Split Out'
+        self.data_split_treatment_outcome = 'Data Split Treatment Outcome'
 
 
 class DataFrameReaderFactory:
@@ -25,7 +64,7 @@ class DataFrameReaderFactory:
     """
 
     def __init__(self):
-        pass
+        self.data_reader_types = DataReaderTypes()
 
     def make_data_frame_reader(
         self, data_type: str = 'NA', data_dir: Path = Path(__file__),
@@ -47,67 +86,139 @@ class DataFrameReaderFactory:
             Defaults to False.
 
         Returns:
-            DataFrameReader: _description_
+            DataFrameReader: DataFrameReader based on the given data_type.
         """
-        if data_dir_flag:
-            if data_type == 'Pathological':
-                return PathologicalDataFrameReader(data_dir)
-            elif data_type == 'Clinical':
-                return ClinicalDataFrameReader(data_dir)
-            elif data_type == 'Blood':
-                return BloodDataFrameReader(data_dir)
-            elif data_type == 'WSI_PrimaryTumor':
-                return WSIPrimaryTumorDataFrameReader(data_dir)
-            elif data_type == 'WSI_LymphNode':
-                return WSILymphNodeDataFrameReader(data_dir)
-            elif data_type == 'TMA_CellDensityMeasurement':
-                return TMACellDensityDataFrameReader(data_dir)
-            elif data_type == 'TextData_reports':
-                return TextDataReportsDataFrameReader(data_dir)
-            elif data_type == 'Clinical Feature':
-                return FeatureClinicalDataFrameReader(data_dir)
-            elif data_type == 'Pathological Feature':
-                return FeaturePathologicalDataFrameReader(data_dir)
-            elif data_type == 'Blood Feature':
-                return FeatureBloodDataFrameReader(data_dir)
-            elif data_type == 'ICD Codes Feature':
-                return FeatureICDCodesDataFrameReader(data_dir)
-            elif data_type == 'Feature TMA Cell Density':
-                return FeatureTMACellDensityDataFrameReader(data_dir)
-            elif data_type == 'Targets':
-                return TargetsDataFrameReader(data_dir)
-            elif data_type == 'Structural Aggregated':
-                return StructuralAggregatedDataFrameReader(data_dir)
-        else:
-            if data_type == 'Pathological':
-                return PathologicalDataFrameReader()
-            elif data_type == 'Clinical':
-                return ClinicalDataFrameReader()
-            elif data_type == 'Blood':
-                return BloodDataFrameReader()
-            elif data_type == 'WSI_PrimaryTumor':
-                return WSIPrimaryTumorDataFrameReader()
-            elif data_type == 'WSI_LymphNode':
-                return WSILymphNodeDataFrameReader()
-            elif data_type == 'TMA_CellDensityMeasurement':
-                return TMACellDensityDataFrameReader()
-            elif data_type == 'TextData_reports':
-                return TextDataReportsDataFrameReader()
-            elif data_type == 'Clinical Feature':
-                return FeatureClinicalDataFrameReader()
-            elif data_type == 'Pathological Feature':
-                return FeaturePathologicalDataFrameReader()
-            elif data_type == 'Blood Feature':
-                return FeatureBloodDataFrameReader()
-            elif data_type == 'ICD Codes Feature':
-                return FeatureICDCodesDataFrameReader()
-            elif data_type == 'Feature TMA Cell Density':
-                return FeatureTMACellDensityDataFrameReader()
-            elif data_type == 'Targets':
-                return TargetsDataFrameReader()
-            elif data_type == 'Structural Aggregated':
-                return StructuralAggregatedDataFrameReader()
+        data_reader = DataFrameReader
+        data_reader = self._make_data_data_frame_reader(data_type, data_reader)
+        data_reader = self._make_feature_data_frame_reader(
+            data_type, data_reader)
+        data_reader = self._make_data_split_data_frame_reader(
+            data_type, data_reader)
 
-        warnings.warn('The data type is not recognized and thus the default'
-                      + ' data reader used.')
-        return DataFrameReader(self.data_dir)
+        if data_reader == DataFrameReader:
+            warnings.warn(f"Data type {data_type} not found. Returning default data reader.\n")
+        
+        if data_dir_flag:
+            data_reader = data_reader(data_dir)
+        else:
+            data_reader = data_reader()
+        
+        return data_reader
+
+    def _make_data_data_frame_reader(
+        self, data_type: str, data_reader: DataFrameReader
+    ) -> DataFrameReader:
+        """Checks the data_type and returns the appropriate reference to the
+        data reader class. If there is not match between the data_type and 
+        the data related data_type's from the DataReaderTypes class, the
+        input data_reader is returned.
+
+        Args:
+            data_type (str): Data type of the data reader that should be returned.
+            data_reader (DataFrameReader): Reference to a data reader class.
+
+        Returns:
+            DataFrameReader: Reference to a data reader class based on the 
+            data type.
+        """
+        if data_type == self.data_reader_types.patho:
+            data_reader = PathologicalDataFrameReader
+        elif data_type == self.data_reader_types.clinical:
+            data_reader = ClinicalDataFrameReader
+        elif data_type == self.data_reader_types.blood:
+            data_reader = BloodDataFrameReader
+        elif data_type == self.data_reader_types.wsi_tumor:
+            data_reader = WSIPrimaryTumorDataFrameReader
+        elif data_type == self.data_reader_types.wsi_lymph_node:
+            data_reader = WSILymphNodeDataFrameReader
+        elif data_type == self.data_reader_types.tma_cell_density:
+            data_reader = TMACellDensityDataFrameReader
+        elif data_type == self.data_reader_types.text_reports:
+            data_reader = TextDataReportsDataFrameReader
+        elif data_type == self.data_reader_types.structural_aggregated:
+            data_reader = StructuralAggregatedDataFrameReader
+
+        return data_reader
+
+    def _make_feature_data_frame_reader(
+        self, data_type: str, data_reader: DataFrameReader
+    ) -> DataFrameReader:
+        """Checks the data_type and returns the appropriate reference to the
+        data reader class. If there is not match between the data_type and 
+        the data related data_type's from the DataReaderTypes class, the
+        input data_reader is returned.
+
+        Args:
+            data_type (str): Data type of the data reader that should be returned.
+            data_reader (DataFrameReader): Reference to a data reader class.
+
+        Returns:
+            DataFrameReader: Reference to a data reader class based on the 
+            data type.
+        """
+        if data_type == self.data_reader_types.clinical_feature:
+            data_reader = FeatureClinicalDataFrameReader
+        elif data_type == self.data_reader_types.patho_feature:
+            data_reader = FeaturePathologicalDataFrameReader
+        elif data_type == self.data_reader_types.blood_feature:
+            data_reader = FeatureBloodDataFrameReader
+        elif data_type == self.data_reader_types.icd_codes_feature:
+            data_reader = FeatureICDCodesDataFrameReader
+        elif data_type == self.data_reader_types.tma_cell_density_feature:
+            data_reader = FeatureTMACellDensityDataFrameReader
+
+        return data_reader
+
+    def _make_targets_data_frame_reader(
+        self, data_type: str, data_reader: DataFrameReader
+    ) -> DataFrameReader:
+        """Checks the data_type and returns the appropriate reference to the
+        data reader class. If there is not match between the data_type and 
+        the data related data_type's from the DataReaderTypes class, the
+        input data_reader is returned.
+
+        Args:
+            data_type (str): Data type of the data reader that should be returned.
+            data_reader (DataFrameReader): Reference to a data reader class.
+
+        Returns:
+            DataFrameReader: Reference to a data reader class based on the 
+            data type.
+        """
+        if data_type == self.data_reader_types.targets:
+            data_reader = TargetsDataFrameReader
+
+        return data_reader
+
+    def _make_data_split_data_frame_reader(
+        self, data_type: str, data_reader: DataFrameReader
+    ) -> DataFrameReader:
+        """Checks the data_type and returns the appropriate reference to the
+        data reader class. If there is not match between the data_type and 
+        the data related data_type's from the DataReaderTypes class, the
+        input data_reader is returned.
+
+        Args:
+            data_type (str): Data type of the data reader that should be returned.
+            data_reader (DataFrameReader): Reference to a data reader class.
+
+        Returns:
+            DataFrameReader: Reference to a data reader class based on the 
+            data type.
+        """
+        if data_type == self.data_reader_types.data_split_blood:
+            data_reader = DataSplitBloodDataFrameReader
+        elif data_type == self.data_reader_types.data_split_clinical:
+            data_reader = DataSplitClinicalDataFrameReader
+        elif data_type == self.data_reader_types.data_split_patho:
+            data_reader = DataSplitPathologicalDataFrameReader
+        elif data_type == self.data_reader_types.data_split_in:
+            data_reader = DataSplitInDataFrameReader
+        elif data_type == self.data_reader_types.data_split_orypharynx:
+            data_reader = DataSplitOrypharynxDataFrameReader
+        elif data_type == self.data_reader_types.data_split_out:
+            data_reader = DataSplitOutDataFrameReader
+        elif data_type == self.data_reader_types.data_split_treatment_outcome:
+            data_reader = DataSplitTreatmentOutcomeDataFrameReader
+
+        return data_reader

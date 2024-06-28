@@ -14,9 +14,9 @@ from matplotlib import rcParams
 from pathlib import Path
 import sys
 sys.path.append(str(Path(__file__).parents[1]))
-from argument_parser import HancockArgumentParser
-from data_reader import DataFrameReaderFactory
 from data_exploration.umap_embedding import setup_preprocessing_pipeline
+from data_reader import DataFrameReaderFactory
+from argument_parser import HancockArgumentParser
 
 
 def cross_validation(dataframe, random_state, k, plot_name=None):
@@ -275,18 +275,100 @@ def training_and_testing(dataframe, dataframe_test, random_state):
     plt.close()
 
 
-class AdjuvantTreatmentPredictor:
-    def __init__(self, random_state: int = 42):
+class HancockPredictor:
+    """Abstract class that defines the interface for all predictors in the Hancock
+    project. All predictors should inherit from this class.
+    """
+    @property
+    def df_train(self):
+        if self._df_train is None:
+            self._df_train = self._get_df_train()
+        return self._df_train.copy()
+
+    @property
+    def df_test(self):
+        if self._df_test is None:
+            self._df_test = self._get_df_test()
+        return self._df_test.copy()
+
+    @property
+    def model(self):
+        if self._model is None:
+            raise NotImplementedError("Model not trained yet.")
+        return self._mode.copy()
+
+    def __init__(
+        self, save_flag: bool = False, plot_flag: bool = False,
+        random_state: int = 42, type: str = 'None'
+    ):
         rcParams.update({"font.size": 6})
         rcParams["svg.fonttype"] = "none"
         self.argumentParser = HancockArgumentParser(
-            type="adjuvant_treatment_prediction")
+            type=type)
         self.args = self.argumentParser.parse_args()
-        self.data_reader = DataFrameReaderFactory().make_data_frame_reader(
+        self.save_flag = save_flag
+        self.plot_flag = plot_flag
+        self.random_state = np.random.RandomState(random_state)
+        self._data_reader_factory = DataFrameReaderFactory()
+
+        self._df_train = None
+        self._df_test = None
+        self._model = None
+        pass
+
+    def cross_validate(
+        self, k: int = 10, plot_flag: bool = None, plot_name: str = 'cross_validate',
+        save_flag: bool = None
+    ) -> None:
+        raise NotImplementedError("Cross-validation not implemented.")
+
+    def train(self, plot_flag: bool = None, plot_name: str = 'train',
+              save_flag: bool = None
+              ) -> None:
+        raise NotImplementedError("Training not implemented.")
+
+    def test(self, plot_flag: bool = None, plot_name: str = 'test',
+             save_flag: bool = None
+             ) -> None:
+        raise NotImplementedError("Testing not implemented.")
+
+    def predict(self, data: pd.DataFrame) -> list:
+        raise NotImplementedError("Prediction not implemented.")
+
+    def _get_df_train(self) -> pd.DataFrame:
+        raise NotImplementedError("Data frame for training not implemented.")
+
+    def _get_df_test(self) -> pd.DataFrame:
+        raise NotImplementedError("Data frame for testing not implemented.")
+
+
+class AdjuvantTreatmentPredictor(HancockPredictor):
+    def __init__(
+        self, save_flag: bool = False, plot_flag: bool = False,
+        random_state: int = 42
+    ):
+        super().__init__(save_flag=save_flag, plot_flag=plot_flag,
+                         random_state=random_state,
+                         type='adjuvant_treatment_prediction'
+                         )
+        self._prepare_data_frame_reader()
+        
+    def _prepare_data_frame_reader(self) -> None:
+        self._data_reader_factory = DataFrameReaderFactory()
+        self.data_reader = self._data_reader_factory.make_data_frame_reader(
             data_type='Structural Aggregated', data_dir=self.args.features_dir,
             data_dir_flag=True
         )
-        self.rng = np.random.RandomState(random_state)
+        self.targets_reader = self._data_reader_factory.make_data_frame_reader(
+            data_type='Targets', data_dir=self.args.features_dir, data_dir_flag=True
+        )
+        # self.data_split_reader 
+
+    def _get_df_train(self) -> pd.DataFrame:
+        pass
+
+    def _get_df_test(self) -> pd.DataFrame:
+        pass
 
 
 if __name__ == "__main__":
@@ -301,19 +383,19 @@ if __name__ == "__main__":
         data_split_dir/"dataset_split_treatment_outcome.json", dtype={"patient_id": str})
     target_df["target"] = target_df["adjuvant_treatment"].apply(
         lambda x: 0 if x == "none" else 1)
-    
+
     target_train = target_df[target_df.dataset ==
                              "training"][["patient_id", "target"]]
     target_test = target_df[target_df.dataset ==
                             "test"][["patient_id", "target"]]
-    
+
     df_train = target_train.merge(df, on="patient_id", how="inner")
     df_test = target_test.merge(df, on="patient_id", how="inner")
 
     # Train classifier on multimodal data with 10-fold CV
     print("Running k-fold cross-validation for multimodal data...")
     roc_multimodal, auc_multimodal, shap_values_multimodal = cross_validation(
-        df_train, predictor.rng, k=2, plot_name="multimodal")
+        df_train, predictor.random_state, k=2, plot_name="multimodal")
 
     # # Train classifiers on single modalities with 10-fold CV
     # print("Running k-fold cross-validation for clinical data...")
@@ -340,6 +422,7 @@ if __name__ == "__main__":
     #             roc_patho, roc_blood, roc_tma, roc_icd]
     # roc_labels = ["Multimodal", "Clinical", "Pathology",
     #               "Blood", "TMA cell density", "ICD codes"]
+    
     colors = [(132/255, 163/255, 204/255)]
     auc_list = [auc_multimodal]
     roc_list = [roc_multimodal]

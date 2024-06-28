@@ -3,7 +3,7 @@ from pathlib import Path
 
 import sys
 sys.path.append(str(Path(__file__).parents[1]))
-from default_path import DefaultPaths
+from defaults import DefaultPaths
 
 
 class HancockArgumentParser(ArgumentParser):

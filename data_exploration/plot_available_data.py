@@ -1,5 +1,3 @@
-import os
-import re
 import pandas as pd
 import matplotlib.pyplot as plt
 from matplotlib.colors import LinearSegmentedColormap
@@ -12,8 +10,8 @@ import sys
 
 # Add root directory to system path to import DataFrameReaderFactory
 sys.path.append(str(Path(__file__).parents[1]))
-from data_reader import DataFrameReaderFactory
 from argument_parser import HancockArgumentParser
+from data_reader import DataFrameReaderFactory
 
 
 class HancockAvailableDataPlotter:
@@ -39,7 +37,8 @@ class HancockAvailableDataPlotter:
         return self._merged.copy()
 
     def __init__(self):
-        self._argumentParser = HancockArgumentParser(type='plot_available_data')
+        self._argumentParser = HancockArgumentParser(
+            type='plot_available_data')
         self._create_absolute_paths(self._argumentParser)
         self._create_data_reader()
 
@@ -49,28 +48,28 @@ class HancockAvailableDataPlotter:
         rcParams["svg.fonttype"] = "none"
 
     def _create_data_reader(self):
-        dataFrameReaderFactory = DataFrameReaderFactory()
-        self._clinicalDataFrameReader = dataFrameReaderFactory.make_data_frame_reader(
-            'Clinical', self._clinical_path, data_dir_flag=True
+        factory = DataFrameReaderFactory()
+        self._clinicalDataFrameReader = factory.make_data_frame_reader(
+            factory.data_reader_types.clinical, self._clinical_path, data_dir_flag=True
         )
-        self._pathoDataFrameReader = dataFrameReaderFactory.make_data_frame_reader(
-            'Pathological', self._patho_path, data_dir_flag=True
+        self._pathoDataFrameReader = factory.make_data_frame_reader(
+            factory.data_reader_types.patho, self._patho_path, data_dir_flag=True
         )
-        self._bloodDataFrameReader = dataFrameReaderFactory.make_data_frame_reader(
-            'Blood', self._blood_path, data_dir_flag=True
+        self._bloodDataFrameReader = factory.make_data_frame_reader(
+            factory.data_reader_types.blood, self._blood_path, data_dir_flag=True
         )
 
-        self._wsiPrimaryTumorDataFrameReader = dataFrameReaderFactory.make_data_frame_reader(
-            'WSI_PrimaryTumor', self._prim_path, data_dir_flag=True
+        self._wsiPrimaryTumorDataFrameReader = factory.make_data_frame_reader(
+            factory.data_reader_types.wsi_tumor, self._prim_path, data_dir_flag=True
         )
-        self._wSILymphNodeDataFrameReader = dataFrameReaderFactory.make_data_frame_reader(
-            'WSI_LymphNode', self._lk_path, data_dir_flag=True
+        self._wSILymphNodeDataFrameReader = factory.make_data_frame_reader(
+            factory.data_reader_types.wsi_lymph_node, self._lk_path, data_dir_flag=True
         )
-        self._tmaCellDensityDataFrameReader = dataFrameReaderFactory.make_data_frame_reader(
-            'TMA_CellDensityMeasurement', self._cell_density_path, data_dir_flag=True
+        self._tmaCellDensityDataFrameReader = factory.make_data_frame_reader(
+            factory.data_reader_types.tma_cell_density, self._cell_density_path, data_dir_flag=True
         )
-        self._textDataReportsDataFrameReader = dataFrameReaderFactory.make_data_frame_reader(
-            'TextData_reports', self._report_path, data_dir_flag=True
+        self._textDataReportsDataFrameReader = factory.make_data_frame_reader(
+            factory.data_reader_types.text_reports, self._report_path, data_dir_flag=True
         )
 
     def _create_absolute_paths(self, parser: ArgumentParser) -> None:
@@ -166,7 +165,7 @@ class HancockAvailableDataPlotter:
         """
         merged = self.merged
         merged_plot = merged[merged.columns[1:]]
-        
+
         avail_sorted = merged_plot.sort_values(
             by=list(reversed(merged_plot.columns)), ascending=True)
         avail_sorted = avail_sorted.T
