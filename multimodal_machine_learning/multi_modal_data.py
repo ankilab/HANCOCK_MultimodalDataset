@@ -284,32 +284,84 @@ def get_significance(p_value) -> str:
         return f"$p=${p_value: .3f}"
 
 
-class HancockPredictor:
+class AbstractHancockPredictor:
     """Abstract class that defines the interface for all predictors in the Hancock
-    project. All predictors should inherit from this class.
+    project. All predictors should inherit from this class. Due not initialize 
+    this class directly, as it will throw a NotImplementedError.
     """
     @property
     def df_train(self) -> pd.DataFrame:
+        """Data frame for the trainings data. Will be eventually split into
+        training and validation data, depending on the implementation.
+        Uses the _get_df_train method to get the data the first time it is called.
+
+        Returns:
+            pd.DataFrame: The trainings data as a pandas data frame.
+        """
         if self._df_train is None:
             self._df_train = self._get_df_train()
         return self._df_train.copy()
 
     @property
     def df_test(self) -> pd.DataFrame:
+        """Data frame for only the test data. Do not use it for training, 
+        validation etc. Uses the _get_df_test method to get the data the first
+        time it is called.
+
+        Returns:
+            pd.DataFrame: The test data as a pandas data frame.
+        """
         if self._df_test is None:
             self._df_test = self._get_df_test()
         return self._df_test.copy()
 
     @property
     def model(self):
+        """The model that is used to make the predictions. Uses the _get_model
+        method to get the model the first time it is called.
+
+        Returns:
+            model: The model that is used to make the predictions. After
+            the model is trained, it is a copy of the trained model. The 
+            training process will be discarded before each training process and
+            thus also before the cross_validation call. 
+        """
         if self._model is None:
-            raise NotImplementedError("Model not trained yet.")
+            self._model = self._get_model()
         return self._model.copy()
+    
+    @model.setter
+    def model(self, model):
+        """Setter for the model property. If the setter is used, the model
+        will not longer be initialized by the _get_model method and thus
+        the training process will be continued with the given model. 
+        If this process should be discarded and the initial model should be 
+        used, change the self.model_setter_flag to False again.
+
+        Args:
+            model: The model that should be used to make the predictions.
+        """
+        self.model_setter_flag = True
+        self._model = model
 
     def __init__(
         self, save_flag: bool = False, plot_flag: bool = False,
         random_state: int = 42, predictor_type: str = 'None'
     ):
+        """Creates a new HancockPredictor object. The object should be used
+        to train, test and predict the HANCOCK data.
+
+        Args:
+            save_flag (bool, optional): If this is set to true the generated 
+            plots will be saved. Defaults to False.
+            plot_flag (bool, optional): If this is set to true the generated 
+            plots are displayed to the user. Defaults to False.
+            random_state (int, optional): To make sure that the outputs are
+            reproducible we initialize all processes that involve randomness 
+            with the random_state. Defaults to 42.
+            predictor_type (str, optional): The type of the predictor. 
+            Is used to initialize the HancockArgumentParser. Defaults to 'None'.
+        """
         rcParams.update({"font.size": 6})
         rcParams["svg.fonttype"] = "none"
         self.argumentParser = HancockArgumentParser(
@@ -319,39 +371,54 @@ class HancockPredictor:
         self.plot_flag = plot_flag
         self.random_state = np.random.RandomState(random_state)
         self._data_reader_factory = DataFrameReaderFactory()
+        self._default_file_names = DefaultFileNames()
 
         self._df_train = None
         self._df_test = None
         self._model = None
-        pass
+        self.model_setter_flag = False
+        
+        self._get_data()
+        self._get_data_split()
 
     def cross_validate(
-        self, n_splits: int = 10, plot_flag: bool = None, plot_name: str = 'cross_validate',
-        save_flag: bool = None
+        self, n_splits: int = 10, plot_name: str = 'cross_validate',
     ) -> None:
         raise NotImplementedError("Cross-validation not implemented.")
 
-    def train(self, plot_flag: bool = None, plot_name: str = 'train',
-              save_flag: bool = None
+    def train(self, df_train: pd.DataFrame = None, df_val: pd.DataFrame = None, plot_name: str = 'train',
               ) -> None:
         raise NotImplementedError("Training not implemented.")
 
-    def test(self, plot_flag: bool = None, plot_name: str = 'test',
-             save_flag: bool = None
+    def test(self, df: pd.DataFrame = None, plot_name: str = 'test',
              ) -> None:
         raise NotImplementedError("Testing not implemented.")
 
-    def predict(self, data: pd.DataFrame) -> list:
+    def predict(self, data: pd.DataFrame) -> np.array:
         raise NotImplementedError("Prediction not implemented.")
+    
+    def _get_data(self) -> None:
+        self._data = None
+        raise NotImplementedError("Data getting not implemented")
+    
+    def _get_data_split(self) -> None:
+        self._data_split = None
+        raise NotImplementedError("Data split getting not implemented.")
 
     def _get_df_train(self) -> pd.DataFrame:
         raise NotImplementedError("Data frame for training not implemented.")
 
     def _get_df_test(self) -> pd.DataFrame:
         raise NotImplementedError("Data frame for testing not implemented.")
+    
+    def _get_model(self):
+        if self.model_setter_flag:
+            return self._model
+        else:
+            raise NotImplementedError("Model not implemented.")
 
 
-class AdjuvantTreatmentPredictor(HancockPredictor):
+class StructuralAdjuvantTreatmentPredictor(AbstractHancockPredictor):
     def __init__(
         self, save_flag: bool = False, plot_flag: bool = False,
         random_state: int = 42
@@ -360,36 +427,45 @@ class AdjuvantTreatmentPredictor(HancockPredictor):
                          random_state=random_state,
                          predictor_type='adjuvant_treatment_prediction'
                          )
-        self._prepare_data()
-        self._prepare_data_split()
 
     def cross_validate(
-        self, n_splits: int = 10, plot_flag: bool = None, plot_name: str = 'cross_validate',
-        save_flag: bool = None
+        self, n_splits: int = 10, plot_name: str = 'cross_validate',
     ) -> None:
         cv = StratifiedKFold(n_splits=n_splits, shuffle=True, random_state=self.random_state)
         for train_idx, val_idx in cv.split(self.df_train, self.df_train['target']):
             df_train_fold = self.df_train.iloc[train_idx]
             df_val_fold = self.df_train.iloc[val_idx]
-            [x_train, y_train, x_val, y_val] = self._prepare_data_for_training(df_train_fold, df_val_fold)
+            self.train(df_train=df_train_fold, df_val=df_val_fold, plot_name=plot_name)
             # ToDo: Continue adapting from cross_validation function
 
-    def _prepare_data(self) -> None:
-        factory = DataFrameReaderFactory()
-        data_reader = factory.make_data_frame_reader(
-            data_type=factory.data_reader_types.structural_aggregated,
+    def train(self, df_train: pd.DataFrame = None, df_val: pd.DataFrame = None, plot_name: str = 'train',
+              ) -> None:
+        if df_train is None:
+            df_train = self.df_train
+        if df_val is None:
+            df_val = self.df_train
+        [x_train, y_train, x_val, y_val] = self._prepare_data_for_training(df_train, df_val)
+
+    def _get_data(self) -> None:
+        """Prepares the self._data property for the _get_df_train and _get_df_test
+        methods. For this predictor the StructuralAggregated data is used.
+        """
+        data_reader = self._data_reader_factory.make_data_frame_reader(
+            data_type=self._data_reader_factory.data_reader_types.structural_aggregated,
             data_dir=self.args.features_dir,
             data_dir_flag=True
         )
         self._data = data_reader.return_data()
     
-    def _prepare_data_split(self) -> None:
-        factory = DataFrameReaderFactory()
-        default_file_names = DefaultFileNames()
-        data_split_reader = factory.make_data_frame_reader(
-            data_type=factory.data_reader_types.data_split_treatment_outcome,
+    def _get_data_split(self) -> None:
+        """Prepares the self._data_split property for the _get_df_train and 
+        _get_df_test methods. For this predictor the treatment outcome data 
+        split is used. 
+        """
+        data_split_reader = self._data_reader_factory.make_data_frame_reader(
+            data_type=self._data_reader_factory.data_reader_types.data_split_treatment_outcome,
             data_dir=self.args.data_split_dir /
-            default_file_names.data_split_treatment_outcome,
+            self._default_file_names.data_split_treatment_outcome,
             data_dir_flag=True
         )
         self._data_split = data_split_reader.return_data()
@@ -407,7 +483,7 @@ class AdjuvantTreatmentPredictor(HancockPredictor):
         return target_test.merge(self._data, on="patient_id", how="inner")
 
     def _prepare_data_for_training(self, df_train_fold: pd.DataFrame, df_val_fold: pd.DataFrame) -> list:
-        """Preprocesses the input data and creates a numpy array for the labels. Also, over-samples the
+        """Preprocess the input data and creates a numpy array for the labels. Also, over-samples the
         underrepresented class if necessary.
 
         Args:
@@ -435,19 +511,19 @@ class AdjuvantTreatmentPredictor(HancockPredictor):
 
 
 if __name__ == "__main__":
-    predictor = AdjuvantTreatmentPredictor()
+    predictor = StructuralAdjuvantTreatmentPredictor()
 
-    # data_split_dir = predictor.args.data_split_dir
-    # results_dir = predictor.args.results_dir
-    # features_dir = predictor.args.features_dir
-    #
-    # df_train = predictor.df_train
-    # df_test = predictor.df_test
+    data_split_dir = predictor.args.data_split_dir
+    results_dir = predictor.args.results_dir
+    features_dir = predictor.args.features_dir
+    
+    df_train = predictor.df_train
+    df_test = predictor.df_test
 
     # Train classifier on multimodal data with k-fold CV
-    # print("Running k-fold cross-validation for multimodal data...")
-    # roc_multimodal, auc_multimodal, shap_values_multimodal = cross_validation(
-    #     df_train, predictor.random_state, k=2, plot_name="multimodal")
+    print("Running k-fold cross-validation for multimodal data...")
+    roc_multimodal, auc_multimodal, shap_values_multimodal = cross_validation(
+        df_train, predictor.random_state, k=2, plot_name="multimodal")
 
     # # Train classifiers on single modalities with 10-fold CV
     # print("Running k-fold cross-validation for clinical data...")
