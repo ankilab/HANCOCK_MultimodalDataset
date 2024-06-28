@@ -7,6 +7,7 @@ import sys
 sys.path.append(str(Path(__file__).parents[1]))
 from default_path import DefaultPaths
 
+
 defaultPaths = DefaultPaths()
 
 
@@ -397,33 +398,34 @@ class FeatureClinicalDataFrameReader(CSVDataFrameReader):
     def __init__(self, data_dir: Path = defaultPaths.feature_clinical):
         super().__init__(data_dir)
 
-        
+
 class FeaturePathologicalDataFrameReader(CSVDataFrameReader):
     def __init__(self, data_dir: Path = defaultPaths.feature_patho):
         super().__init__(data_dir)
-        
+
 
 class FeatureBloodDataFrameReader(CSVDataFrameReader):
     def __init__(self, data_dir: Path = defaultPaths.feature_blood):
         super().__init__(data_dir)
-        
-        
+
+
 class FeatureICDCodesDataFrameReader(CSVDataFrameReader):
     def __init__(self, data_dir: Path = defaultPaths.feature_icd_codes):
         super().__init__(data_dir)
-        
-        
+
+
 class FeatureTMACellDensityDataFrameReader(CSVDataFrameReader):
     def __init__(self, data_dir: Path = defaultPaths.feature_celldensity):
         super().__init__(data_dir)
-        
-        
+
+
 # --- DataReader for the targets ---
 class TargetsDataFrameReader(CSVDataFrameReader):
     def __init__(self, data_dir: Path = defaultPaths.targets):
         super().__init__(data_dir)
-        
-        
+
+
+# -- DataReader for aggregated data --
 class StructuralAggregatedDataFrameReader(DataFrameReader):
     @property
     def data(self):
@@ -441,7 +443,7 @@ class StructuralAggregatedDataFrameReader(DataFrameReader):
         """Data frame reader for the feature data from clinical, pathological, 
         blood, icd codes and tma cell density. The data is merged on 'patient_id'.
         Assumes that the file names are the same as in the DefaultPaths class.
-        
+
 
         Args:
             data_dir (Path, optional): The data directory where the 
@@ -490,14 +492,18 @@ class StructuralAggregatedDataFrameReader(DataFrameReader):
         tma cell density to a single dataframe on patient_id
         """
         df = self.feature_clinical_reader.data
-        df = df.merge(self.feature_patho_reader.data, on='patient_id', how='outer')
-        df = df.merge(self.feature_blood_reader.data, on='patient_id', how='outer')
-        df = df.merge(self.feature_icd_codes_reader.data, on='patient_id', how='outer')
-        df = df.merge(self.feature_cell_density_reader.data, on='patient_id', how='outer')
+        df = df.merge(self.feature_patho_reader.data,
+                      on='patient_id', how='outer')
+        df = df.merge(self.feature_blood_reader.data,
+                      on='patient_id', how='outer')
+        df = df.merge(self.feature_icd_codes_reader.data,
+                      on='patient_id', how='outer')
+        df = df.merge(self.feature_cell_density_reader.data,
+                      on='patient_id', how='outer')
         df.reset_index(drop=True, inplace=True)
 
         return df
-    
+
     def return_data(self) -> pd.DataFrame:
         """Returns the merged feature data from clinical, pathological, blood, 
         icd codes and tma cell density in a single dataframe merged on 'patient_id'.
@@ -506,7 +512,7 @@ class StructuralAggregatedDataFrameReader(DataFrameReader):
             pd.DataFrame: The merged feature data.
         """
         return self.data
-    
+
     def return_targets(self) -> pd.DataFrame:
         """Returns the target data extracted from the clinical data.
 
@@ -514,3 +520,39 @@ class StructuralAggregatedDataFrameReader(DataFrameReader):
             pd.DataFrame: The targets data.
         """
         return self.target
+
+
+# -- DataReader for data splits
+class DataSplitBloodDataFrameReader(CSVDataFrameReader):
+    def __init__(self, data_dir: Path = defaultPaths.data_split_blood):
+        super().__init__(data_dir)
+
+
+class DataSplitClinicalDataFrameReader(CSVDataFrameReader):
+    def __init__(self, data_dir: Path = defaultPaths.data_split_clinical):
+        super().__init__(data_dir)
+
+
+class DataSplitPathologicalDataFrameReader(CSVDataFrameReader):
+    def __init__(self, data_dir: Path = defaultPaths.data_split_patho):
+        super().__init__(data_dir)
+
+
+class DataSplitInDataFrameReader(JsonDataFrameReader):
+    def __init__(self, data_dir: Path = defaultPaths.data_split_in):
+        super().__init__(data_dir)
+
+
+class DataSplitOrypharynxDataFrameReader(JsonDataFrameReader):
+    def __init__(self, data_dir: Path = defaultPaths.data_split_orypharynx):
+        super().__init__(data_dir)
+
+
+class DataSplitOutDataFrameReader(JsonDataFrameReader):
+    def __init__(self, data_dir: Path = defaultPaths.data_split_out):
+        super().__init__(data_dir)
+
+
+class DataSplitTreatmentOutcomeDataFrameReader(JsonDataFrameReader):
+    def __init__(self, data_dir: Path = defaultPaths.data_split_treatment_outcome):
+        super().__init__(data_dir)

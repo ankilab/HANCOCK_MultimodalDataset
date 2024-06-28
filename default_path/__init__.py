@@ -52,7 +52,7 @@ class DefaultPaths:
 
         self.data_split_blood = self.data_split / self.data_split_blood_file_name
         self.data_split_clinical = self.data_split / self.data_split_clinical_file_name
-        self.data_split_patho_file_name = self.data_split / self.data_split_patho_file_name
+        self.data_split_patho = self.data_split / self.data_split_patho_file_name
         self.data_split_in = self.data_split / self.data_split_in_file_name
         self.data_split_orypharynx = self.data_dir / \
             self.data_split_orypharynx_file_name
