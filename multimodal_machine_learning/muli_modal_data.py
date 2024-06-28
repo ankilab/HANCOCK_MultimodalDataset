@@ -9,13 +9,14 @@ import seaborn as sns
 import shap
 from lifelines import KaplanMeierFitter, statistics
 from utils import get_significance
+from matplotlib import rcParams
 
 from pathlib import Path
 import sys
 sys.path.append(str(Path(__file__).parents[1]))
-from data_exploration.umap_embedding import setup_preprocessing_pipeline
-from data_reader import DataFrameReaderFactory
 from argument_parser import HancockArgumentParser
+from data_reader import DataFrameReaderFactory
+from data_exploration.umap_embedding import setup_preprocessing_pipeline
 
 
 def cross_validation(dataframe, random_state, k, plot_name=None):
@@ -126,9 +127,9 @@ def cross_validation(dataframe, random_state, k, plot_name=None):
     plt.tight_layout()
     if plot_name is not None:
         plt.savefig(
-            results_dir/f"shap_summaryplot_{plot_name}.svg", bbox_inches="tight")
+            results_dir/f"shap_summaryplot_{plot_name}_test.svg", bbox_inches="tight")
         plt.savefig(
-            results_dir/f"shap_summaryplot_{plot_name}.png", bbox_inches="tight", dpi=200)
+            results_dir/f"shap_summaryplot_{plot_name}_test.png", bbox_inches="tight", dpi=200)
     plt.close()
 
     return tpr_list, auc_list, shap_values
@@ -216,7 +217,7 @@ def training_and_testing(dataframe, dataframe_test, random_state):
     plt.tight_layout()
     sns.despine()
     plt.legend(frameon=False, loc='upper center', bbox_to_anchor=(0.5, -0.5))
-    plt.savefig(results_dir/"adjuvant_treatment_prediction_os.svg",
+    plt.savefig(results_dir/"adjuvant_treatment_prediction_os_test.svg",
                 bbox_inches="tight")
     plt.close()
 
@@ -251,7 +252,7 @@ def training_and_testing(dataframe, dataframe_test, random_state):
     plt.tight_layout()
     sns.despine()
     plt.legend(frameon=False, loc='upper center', bbox_to_anchor=(0.5, -0.5))
-    plt.savefig(results_dir/"adjuvant_treatment_prediction_rfs.svg",
+    plt.savefig(results_dir/"adjuvant_treatment_prediction_rfs_test.svg",
                 bbox_inches="tight")
     plt.close()
 
@@ -270,37 +271,42 @@ def training_and_testing(dataframe, dataframe_test, random_state):
     plt.tight_layout()
     sns.despine()
     plt.savefig(
-        results_dir/"adjuvant_treatment_prediction_barplot.svg", bbox_inches="tight")
+        results_dir/"adjuvant_treatment_prediction_barplot_test.svg", bbox_inches="tight")
     plt.close()
 
 
 class AdjuvantTreatmentPredictor:
-    def __init__(self, random_state:int = 42):
+    def __init__(self, random_state: int = 42):
+        rcParams.update({"font.size": 6})
+        rcParams["svg.fonttype"] = "none"
         self.argumentParser = HancockArgumentParser(
             type="adjuvant_treatment_prediction")
         self.args = self.argumentParser.parse_args()
         self.data_reader = DataFrameReaderFactory().make_data_frame_reader(
-            data_type='Structural Aggregated', data_dir=self.args.features_dir, 
+            data_type='Structural Aggregated', data_dir=self.args.features_dir,
             data_dir_flag=True
         )
-        self.rng = np.randomRandomState(random_state)
+        self.rng = np.random.RandomState(random_state)
+
 
 if __name__ == "__main__":
     predictor = AdjuvantTreatmentPredictor()
     df = predictor.data_reader.return_data()
-    
+
     data_split_dir = predictor.args.data_split_dir
     results_dir = predictor.args.results_dir
     features_dir = predictor.args.features_dir
-    
+
     target_df = pd.read_json(
         data_split_dir/"dataset_split_treatment_outcome.json", dtype={"patient_id": str})
     target_df["target"] = target_df["adjuvant_treatment"].apply(
         lambda x: 0 if x == "none" else 1)
+    
     target_train = target_df[target_df.dataset ==
                              "training"][["patient_id", "target"]]
     target_test = target_df[target_df.dataset ==
                             "test"][["patient_id", "target"]]
+    
     df_train = target_train.merge(df, on="patient_id", how="inner")
     df_test = target_test.merge(df, on="patient_id", how="inner")
 
@@ -334,7 +340,7 @@ if __name__ == "__main__":
     #             roc_patho, roc_blood, roc_tma, roc_icd]
     # roc_labels = ["Multimodal", "Clinical", "Pathology",
     #               "Blood", "TMA cell density", "ICD codes"]
-    colors = [(132,255)]
+    colors = [(132/255, 163/255, 204/255)]
     auc_list = [auc_multimodal]
     roc_list = [roc_multimodal]
     roc_labels = ['Multimodal']
@@ -350,7 +356,7 @@ if __name__ == "__main__":
         plt.plot(mean_fpr, mean_tpr, linewidth=1,
                  color=colors[i], label=f"AUC =\n{np.mean(auc_list[i]):.2f}")
         plt.fill_between(mean_fpr, tpr_lower, tpr_upper,
-                         label="$\pm$ std.", color=colors[i], alpha=0.4, lw=0)
+                         label=r"$\pm$ std.", color=colors[i], alpha=0.4, lw=0)
 
         plt.plot([0, 1], [0, 1], "--", color="black", linewidth=1)  # random
         plt.xticks([])
@@ -363,12 +369,10 @@ if __name__ == "__main__":
         plt.tight_layout()
         plt.gca().set_aspect("equal")
         plt.savefig(
-            results_dir/f"roc_treatment_{roc_labels[i]}.svg", bbox_inches="tight")
+            results_dir/f"roc_treatment_{roc_labels[i]}_test.svg", bbox_inches="tight")
         plt.close()
 
-    # Train classifier once on multimodal data, show survival curves and bar plot
-    print("Training and testing the final multimodal model...")
-    training_and_testing(df_train, df_test, predictor.rng)
-    print(f"Done. Saved results to {results_dir}")
-
-
+    # # Train classifier once on multimodal data, show survival curves and bar plot
+    # print("Training and testing the final multimodal model...")
+    # training_and_testing(df_train, df_test, predictor.rng)
+    # print(f"Done. Saved results to {results_dir}")

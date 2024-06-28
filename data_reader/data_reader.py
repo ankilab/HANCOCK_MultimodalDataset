@@ -451,6 +451,7 @@ class StructuralAggregatedDataFrameReader(DataFrameReader):
         """
         super().__init__(data_dir)
         self._target = None
+        self._create_file_name_properties()
         self._prepare_data_reader()
 
     def _create_file_name_properties(self):
