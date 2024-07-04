@@ -19,73 +19,6 @@ from argument_parser import HancockArgumentParser
 from defaults import DefaultFileNames
 
 
-def cross_validation(dataframe, random_state, k, plot_name=None):
-    """
-
-    Parameters
-    ----------
-    dataframe : Pandas dataframe
-
-    random_state :
-
-    k :
-
-    plot_name :
-
-    Returns
-    -------
-
-    """
-    cross_predictor = TabularAdjuvantTreatmentPredictor()
-    [tpr_list, auc_list, shap_values, val_index_list, features_per_fold] = cross_predictor.cross_validate(
-        n_splits=k,
-    )
-
-    # SHAP
-    # shap values: shape (#folds * #classes, #samples, #features)
-    preprocessor = setup_preprocessing_pipeline(
-        dataframe.columns[2:], min_max_scaler=True)
-    preprocessor.set_output(transform="pandas")
-    dataframe_reindex = preprocessor.fit_transform(
-        dataframe.drop(["patient_id", "target"], axis=1))
-    feature_names = preprocessor.get_feature_names_out()
-
-    # Workaround: OneHotEncoder sometimes looses a category in k-fold cv
-    for i in range(len(shap_values)):
-        features = features_per_fold[i]
-        missing = set(feature_names) - set(features)
-        for m in missing:
-            # Find index of missing category
-            missing_idx = list(feature_names).index(m)
-            # Insert zeros for missing category
-            shap_values[i] = np.insert(shap_values[i], missing_idx, 0, axis=1)
-
-    all_val_folds_idx = [
-        idx for idx_fold in val_index_list for idx in idx_fold]
-    shap.summary_plot(
-        shap_values=np.concatenate(shap_values),
-        features=dataframe_reindex.reindex(all_val_folds_idx),
-        feature_names=feature_names,
-        max_display=12,
-        show=False
-    )
-    fig, ax = plt.gcf(), plt.gca()
-    ax.tick_params(labelsize=8)
-    ax.set_xlabel("SHAP value", fontsize=8)
-    cbar = fig.axes[-1]
-    cbar.tick_params(labelsize=8)
-    fig.set_size_inches(6, 3)
-    plt.tight_layout()
-    if plot_name is not None:
-        plt.savefig(
-            results_dir/f"shap_summary_plot_{plot_name}_test.svg", bbox_inches="tight")
-        plt.savefig(
-            results_dir/f"shap_summary_plot_{plot_name}_test.png", bbox_inches="tight", dpi=200)
-    plt.close()
-
-    return tpr_list, auc_list, shap_values
-
-
 def training_and_testing(dataframe, dataframe_test, random_state):
     # Preprocess data
     preprocessor = setup_preprocessing_pipeline(
@@ -285,7 +218,7 @@ class AbstractHancockPredictor:
     @model.setter
     def model(self, model):
         """Setter for the model property. If the setter is used, the model
-        will not longer be initialized by the _get_model method and thus
+        will no longer be initialized by the _get_model method and thus
         the training process will be continued with the given model. 
         If this process should be discarded and the initial model should be 
         used, change first the model to None and afterward the
@@ -398,9 +331,27 @@ class TabularAdjuvantTreatmentPredictor(AbstractHancockPredictor):
                          predictor_type='adjuvant_treatment_prediction'
                          )
 
+    # ----- Cross validation -----
     def cross_validate(
-        self, n_splits: int = 10, plot_name: str = 'cross_validate',
+        self, n_splits: int = 10, plot_name: str = 'multimodal',
     ) -> list[list]:
+        """Performs cross-validation on the training data (df_train) with
+        n_split folds. The cross-validation is done with a StratifiedKFold.
+
+        Args:
+            n_splits (int): The number of splits for the cross-validation.
+            Defaults to 10.
+            plot_name (str): The name of the plot that should be saved to disk.
+
+        Returns:
+            list[list]: A list with [tpr_list, auc_list, shap_values, val_index_list,
+            features_per_fold]
+            tpr_list: List with the true positive rates for each fold.
+            auc_list: List with the AUC scores for each fold.
+            shap_values: List with the SHAP values for each fold.
+            val_index_list: List with the indices of the validation data for each fold.
+            features_per_fold: List with the ColumnTransformer features for each fold.
+        """
         tpr_list = []
         auc_list = []
         shap_values = []
@@ -417,6 +368,9 @@ class TabularAdjuvantTreatmentPredictor(AbstractHancockPredictor):
                 df_train_fold, df_val_fold, tpr_list, auc_list, shap_values,
                 features_per_fold, plot_name
             )
+
+        self._cross_validation_shap(shap_values, features_per_fold, val_index_list,
+                                    self.df_train, plot_name)
 
         return [tpr_list, auc_list, shap_values, val_index_list, features_per_fold]
 
@@ -456,6 +410,136 @@ class TabularAdjuvantTreatmentPredictor(AbstractHancockPredictor):
 
         self._model = None
 
+    def _cross_validation_shap(
+            self, shap_values: list, features_per_fold: list,
+            val_index_list: list, data: pd.DataFrame, plot_name: str
+    ):
+        """Processes the SHAP values for the cross-validation. This includes
+        fixing missing features for SHAP values in folds where the feature value
+        was not present in the training data. Also, plot the SHAP values and
+        saves them to disk, if the save_flag and plot_flag are set to True.
+
+        Args:
+            shap_values (list): The SHAP values for each fold. If values are
+            missing in folds, they will be added through this function.
+            features_per_fold (list): The features that were used for training.
+            val_index_list (list): The indices of the validation data for each fold.
+            data (pd.DataFrame): The data that was used for training and validation.
+            plot_name (str): The name of the plot that should be saved.
+        """
+        [data_preprocessed, feature_names] = self._cross_validation_fix_shap_values(
+            shap_values, features_per_fold, data
+        )
+        all_val_folds_idx = [
+            idx for idx_fold in val_index_list for idx in idx_fold]
+
+        self._cross_validation_plot_shap_values(
+            shap_values, data_preprocessed, feature_names, all_val_folds_idx
+        )
+        self._cross_validation_save_shap_values(
+            shap_values, data_preprocessed, feature_names, all_val_folds_idx, plot_name
+        )
+
+    def _cross_validation_fix_shap_values(
+            self, shap_values: list, features_per_fold: list, data: pd.DataFrame
+    ) -> list[list]:
+        """Fix missing features in SHAP values for each fold, because if not every value
+        of a feature is present in each fold of the cross validation the SHAP value for
+        this feature will be missing. This function adds zeros for missing features.
+
+        Args:
+            shap_values (list): The SHAP values for each fold. If values are missing
+            in folds, they will be added  through this function.
+            features_per_fold (list): The features that were used for training in
+            each fold.
+            data (pd.DataFrame): The data that was used for training and validation.
+
+        Returns:
+            list[list]: The data transformed through the preprocessor and the features
+            that are present in this data.
+        """
+        preprocessor = setup_preprocessing_pipeline(
+            data.columns[2:], min_max_scaler=True)
+        preprocessor.set_output(transform="pandas")
+        data_preprocessed = preprocessor.fit_transform(
+            data.drop(["patient_id", "target"], axis=1))
+        feature_names = preprocessor.get_feature_names_out()
+        for i in range(len(shap_values)):
+            features = features_per_fold[i]
+            missing = set(feature_names) - set(features)
+            for m in missing:
+                # Find index of missing category
+                missing_idx = list(feature_names).index(m)
+                # Insert zeros for missing category
+                shap_values[i] = np.insert(shap_values[i], missing_idx, 0, axis=1)
+        return [data_preprocessed, feature_names]
+
+    def _cross_validation_plot_shap_values(
+            self, shap_values: list, data_preprocessed: pd.DataFrame,
+            feature_names: list, all_val_folds_idx: list
+    ):
+        """Plots the SHAP values for the cross-validation if the self.plot_flag == True.
+
+        Args:
+            shap_values (list): The SHAP values for each fold.
+            data_preprocessed (pd.DataFrame): The data that was used for training and
+            validation transformed through the preprocessor.
+            feature_names (list): The features that were used for training.
+            all_val_folds_idx (list): List of all indices that were used for validation in
+            the data_preprocessed data frame.
+        """
+        shap.summary_plot(
+            shap_values=np.concatenate(shap_values),
+            features=data_preprocessed.reindex(all_val_folds_idx),
+            feature_names=feature_names,
+            max_display=12,
+            show=self.plot_flag
+        )
+
+    def _cross_validation_save_shap_values(
+            self, shap_values: list, data_preprocessed: pd.DataFrame,
+            feature_names: list, all_val_folds_idx: list, plot_name: str
+    ):
+        """Saves the SHAP values for the cross-validation if the self.save_flag == True.
+        The file name is 'shap_summary_plot_{plot_name}.svg'.
+
+        Args:
+            shap_values (list): The SHAP values for each fold.
+            data_preprocessed (pd.DataFrame): The data that was used for training and
+            validation transformed through the preprocessor.
+            feature_names (list): The features that were used for training.
+            all_val_folds_idx (list): List of all indices that were used for validation in
+            the data_preprocessed data frame.
+            plot_name (str): The name of the plot that should be saved.
+        """
+        if self.plot_flag:
+            shap.summary_plot(
+                shap_values=np.concatenate(shap_values),
+                features=data_preprocessed.reindex(all_val_folds_idx),
+                feature_names=feature_names,
+                max_display=12,
+                show=False
+            )
+
+        fig, ax = plt.gcf(), plt.gca()
+        ax.tick_params(labelsize=8)
+        ax.set_xlabel("SHAP value", fontsize=8)
+        cbar = fig.axes[-1]
+        cbar.tick_params(labelsize=8)
+        fig.set_size_inches(6, 3)
+        plt.tight_layout()
+        if self.save_flag:
+            plt.savefig(
+                self.args.results_dir / f"shap_summary_plot_{plot_name}.svg",
+                bbox_inches="tight"
+            )
+            plt.savefig(
+                self.args.results_dir / f"shap_summary_plot_{plot_name}.png",
+                bbox_inches="tight", dpi=200
+            )
+        plt.close()
+
+    # ----- Training -----
     def train(
         self, df_train: pd.DataFrame = None, df_val: pd.DataFrame = None,
         plot_name: str = 'train',
@@ -471,8 +555,7 @@ class TabularAdjuvantTreatmentPredictor(AbstractHancockPredictor):
 
              df_val (pd.DataFrame, optional): The data that should be used to validate
              the trainings results. Should have the columns 'patient_id' and 'target'.
-             Defaults to None and then the self.df_train property is used and the validation
-             is worthless.
+             Defaults to None and then the self.df_test property.
              plot_name (str, optional): The name of the plot that should be saved.
 
         Returns:
@@ -492,7 +575,7 @@ class TabularAdjuvantTreatmentPredictor(AbstractHancockPredictor):
         if df_train is None:
             df_train = self.df_train
         if df_val is None:
-            df_val = self.df_train
+            df_val = self.df_test
         [[x_train, y_train, x_val, y_val], features] = self._prepare_data_for_training(
             df_train, df_val)
         self.model.fit(x_train, y_train)
@@ -508,10 +591,43 @@ class TabularAdjuvantTreatmentPredictor(AbstractHancockPredictor):
         return [[fpr, tpr, roc_auc_score(y_val, y_pred)],
                 [x_train, y_train, x_val, y_val, y_pred], features]
 
+    def _prepare_data_for_training(
+            self, df_train_fold: pd.DataFrame, df_val_fold: pd.DataFrame
+    ) -> list:
+        """Preprocess the input data and creates a numpy array for the labels.
+        Also, over-samples the underrepresented class if necessary.
+
+        Args:
+            df_train_fold (pd.DataFrame): The data intended for training. Must have
+            a column 'patient_id' and 'target'.
+            df_val_fold (pd.DataFrame): The data intended for validating the training process.
+
+        Returns:
+            list: List with [[x_train, y_train, x_val, y_val], features] in that order.
+        """
+        preprocessor = setup_preprocessing_pipeline(
+            df_train_fold.columns[2:], min_max_scaler=True)
+
+        x_train = preprocessor.fit_transform(
+            df_train_fold.drop(["patient_id", "target"], axis=1))
+        x_val = preprocessor.transform(
+            df_val_fold.drop(["patient_id", "target"], axis=1))
+        y_train = df_train_fold["target"].to_numpy()
+        y_val = df_val_fold["target"].to_numpy()
+
+        features = preprocessor.get_feature_names_out()
+
+        # Handle class imbalance
+        smote = SMOTE(random_state=self.random_state)
+        x_train, y_train = smote.fit_resample(x_train, y_train)
+        return [[x_train, y_train, x_val, y_val], features]
+
+    # ---- Prediction ----
     def predict(self, data: pd.DataFrame) -> np.array:
         y_pred = self.model.predict_proba(data)[:, 1]
         return y_pred
 
+    # ---- Data preparation ----
     def _prepare_data(self) -> None:
         """Prepares the self._data property for the _get_df_train and _get_df_test
         methods. For this predictor the StructuralAggregated data is used.
@@ -548,44 +664,15 @@ class TabularAdjuvantTreatmentPredictor(AbstractHancockPredictor):
             self._data_split.dataset == "test"][["patient_id", "target"]]
         return target_test.merge(self._data, on="patient_id", how="inner")
 
+    # ---- Model creation ----
     def _create_new_model(self) -> RandomForestClassifier:
         model = RandomForestClassifier(n_estimators=800, random_state=self.random_state)
         return model
 
-    def _prepare_data_for_training(
-        self, df_train_fold: pd.DataFrame, df_val_fold: pd.DataFrame
-    ) -> list:
-        """Preprocess the input data and creates a numpy array for the labels. 
-        Also, over-samples the underrepresented class if necessary.
-
-        Args:
-            df_train_fold (pd.DataFrame): The data intended for training. Must have
-            a column 'patient_id' and 'target'.
-            df_val_fold (pd.DataFrame): The data intended for validating the training process.
-
-        Returns:
-            list: List with [[x_train, y_train, x_val, y_val], features] in that order.
-        """
-        preprocessor = setup_preprocessing_pipeline(
-            df_train_fold.columns[2:], min_max_scaler=True)
-
-        x_train = preprocessor.fit_transform(
-            df_train_fold.drop(["patient_id", "target"], axis=1))
-        x_val = preprocessor.transform(
-            df_val_fold.drop(["patient_id", "target"], axis=1))
-        y_train = df_train_fold["target"].to_numpy()
-        y_val = df_val_fold["target"].to_numpy()
-
-        features = preprocessor.get_feature_names_out()
-
-        # Handle class imbalance
-        smote = SMOTE(random_state=self.random_state)
-        x_train, y_train = smote.fit_resample(x_train, y_train)
-        return [[x_train, y_train, x_val, y_val], features]
-
 
 if __name__ == "__main__":
-    predictor = TabularAdjuvantTreatmentPredictor()
+    predictor = TabularAdjuvantTreatmentPredictor(save_flag=True, plot_flag=True)
+    cross_validation_splits = 10
 
     data_split_dir = predictor.args.data_split_dir
     results_dir = predictor.args.results_dir
@@ -596,8 +683,11 @@ if __name__ == "__main__":
 
     # Train classifier on multimodal data with k-fold CV
     print("Running k-fold cross-validation for multimodal data...")
-    roc_multimodal, auc_multimodal, shap_values_multimodal = cross_validation(
-        df_train_to_delete, predictor.random_state, k=10, plot_name="multimodal")
+    multi_modal_cross_validation = predictor.cross_validate(
+        n_splits=cross_validation_splits, plot_name='multimodal_test')
+    roc_multimodal = multi_modal_cross_validation[0]
+    auc_multimodal = multi_modal_cross_validation[1]
+    shap_values_multimodal = multi_modal_cross_validation[2]
 
     # # Train classifiers on single modalities with 10-fold CV
     # print("Running k-fold cross-validation for clinical data...")
