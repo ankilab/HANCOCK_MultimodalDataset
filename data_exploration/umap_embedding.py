@@ -18,13 +18,17 @@ import seaborn as sns
 SEED = 42
 
 
-def setup_preprocessing_pipeline(columns, min_max_scaler=False):
+def setup_preprocessing_pipeline(
+        columns, min_max_scaler: bool = False
+) -> ColumnTransformer:
     """
     Sets up a sklearn pipeline for preprocessing the data before applying UMAP
     Parameters
     ----------
     columns : list of str
         List of columns to consider
+    min_max_scaler: bool
+        If True, MinMaxScaler is used instead of StandardScaler. Default: False
 
     Returns
     -------
