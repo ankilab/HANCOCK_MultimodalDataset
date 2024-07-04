@@ -172,7 +172,7 @@ def get_significance(p_value) -> str:
 
 class AbstractHancockPredictor:
     """Abstract class that defines the interface for all predictors in the Hancock
-    project. All predictors should inherit from this class. Due not initialize 
+    project. All predictors should inherit from this class. Do not initialize
     this class directly, as it will throw a NotImplementedError.
     """
     @property
@@ -440,8 +440,9 @@ class TabularAdjuvantTreatmentPredictor(AbstractHancockPredictor):
             shap_values, data_preprocessed, feature_names, all_val_folds_idx, plot_name
         )
 
+    @staticmethod
     def _cross_validation_fix_shap_values(
-            self, shap_values: list, features_per_fold: list, data: pd.DataFrame
+            shap_values: list, features_per_fold: list, data: pd.DataFrame
     ) -> list[list]:
         """Fix missing features in SHAP values for each fold, because if not every value
         of a feature is present in each fold of the cross validation the SHAP value for
@@ -561,8 +562,8 @@ class TabularAdjuvantTreatmentPredictor(AbstractHancockPredictor):
         Returns:
             list: A list with the validation parameters and the data that was used.
             [[fpr, tpr, auc], [x_train, y_train, x_val, y_val, y_pred], features]
-            fpr: False postive rate
-            tpr: True postive rate
+            fpr: False positive rate
+            tpr: True positive rate
             x_train: The training data encoded
             y_train: The training labels
             x_val: The validation data encoded
