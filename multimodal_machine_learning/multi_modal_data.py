@@ -13,10 +13,10 @@ from matplotlib import rcParams
 from pathlib import Path
 import sys
 sys.path.append(str(Path(__file__).parents[1]))
-from defaults import DefaultFileNames
-from argument_parser import HancockArgumentParser
-from data_reader import DataFrameReaderFactory
 from data_exploration.umap_embedding import setup_preprocessing_pipeline
+from data_reader import DataFrameReaderFactory
+from argument_parser import HancockArgumentParser
+from defaults import DefaultFileNames
 
 
 def cross_validation(dataframe, random_state, k, plot_name=None):
@@ -36,57 +36,10 @@ def cross_validation(dataframe, random_state, k, plot_name=None):
     -------
 
     """
-
-    tpr_list = []
-    auc_list = []
-    x_linspace = np.linspace(0, 1, 100)
-    shap_values = []
-    val_index_list = []
-    features_per_fold = []
-
-    # 10-fold cross-validation
-    cv = StratifiedKFold(n_splits=k, shuffle=True, random_state=random_state)
-    for train_idx, val_idx in cv.split(dataframe, dataframe["target"]):
-        # Split folds
-        df_train_folds = dataframe.iloc[train_idx]
-        df_val_fold = dataframe.iloc[val_idx]
-
-        # Preprocess data
-        preprocessor = setup_preprocessing_pipeline(
-            df_train_folds.columns[2:], min_max_scaler=True)
-
-        x_train = preprocessor.fit_transform(
-            df_train_folds.drop(["patient_id", "target"], axis=1))
-        x_val = preprocessor.transform(
-            df_val_fold.drop(["patient_id", "target"], axis=1))
-        y_train = df_train_folds["target"].to_numpy()
-        y_val = df_val_fold["target"].to_numpy()
-
-        # Handle class imbalance
-        smote = SMOTE(random_state=random_state)
-        x_train, y_train = smote.fit_resample(x_train, y_train)
-
-        # Fit ML model
-        model = RandomForestClassifier(
-            n_estimators=800, random_state=random_state)
-        model.fit(x_train, y_train)
-
-        # Get predictions for validation fold
-        y_pred = model.predict_proba(x_val)[:, 1]
-
-        # Get SHAP values
-        svs = shap.TreeExplainer(model).shap_values(x_val)
-        shap_values.append(svs[:, :, 1])  # class = 1 (adjuvant treatment yes)
-        val_index_list.append(val_idx)
-        features_per_fold.append(preprocessor.get_feature_names_out())
-
-        # ROC curve
-        fpr, tpr, thresh = roc_curve(y_val, y_pred)
-        tpr = np.interp(x_linspace, fpr, tpr)
-        tpr[0] = 0.0
-        tpr[-1] = 1.0
-        tpr_list.append(tpr)
-        auc_list.append(roc_auc_score(y_val, y_pred))
+    cross_predictor = TabularAdjuvantTreatmentPredictor()
+    [tpr_list, auc_list, shap_values, val_index_list, features_per_fold] = cross_predictor.cross_validate(
+        n_splits=k,
+    )
 
     # SHAP
     # shap values: shape (#folds * #classes, #samples, #features)
@@ -322,21 +275,21 @@ class AbstractHancockPredictor:
 
         Returns:
             model: The model that is used to make the predictions. After
-            the model is trained, it is a copy of the trained model. The 
-            training process will be discarded before each training process and
-            thus also before the cross_validation call. 
+            the model is trained, it is a copy of the trained model.
         """
         if self._model is None:
+            self.model_setter_flag = False
             self._model = self._get_model()
-        return self._model.copy()
-    
+        return self._model
+
     @model.setter
     def model(self, model):
         """Setter for the model property. If the setter is used, the model
         will not longer be initialized by the _get_model method and thus
         the training process will be continued with the given model. 
         If this process should be discarded and the initial model should be 
-        used, change the self.model_setter_flag to False again.
+        used, change first the model to None and afterward the
+        self.model_setter_flag to False.
 
         Args:
             model: The model that should be used to make the predictions.
@@ -377,9 +330,9 @@ class AbstractHancockPredictor:
         self._df_test = None
         self._model = None
         self.model_setter_flag = False
-        
-        self._get_data()
-        self._get_data_split()
+
+        self._prepare_data()
+        self._prepare_data_split()
 
     def cross_validate(
         self, n_splits: int = 10, plot_name: str = 'cross_validate',
@@ -387,7 +340,7 @@ class AbstractHancockPredictor:
         raise NotImplementedError("Cross-validation not implemented.")
 
     def train(self, df_train: pd.DataFrame = None, df_val: pd.DataFrame = None, plot_name: str = 'train',
-              ) -> None:
+              ) -> list:
         raise NotImplementedError("Training not implemented.")
 
     def test(self, df: pd.DataFrame = None, plot_name: str = 'test',
@@ -396,12 +349,26 @@ class AbstractHancockPredictor:
 
     def predict(self, data: pd.DataFrame) -> np.array:
         raise NotImplementedError("Prediction not implemented.")
-    
-    def _get_data(self) -> None:
+
+    def _prepare_data(self) -> None:
+        """Should implement the data getting process and write the data to 
+        the self._data property. The data should be a pandas data frame.
+
+        Raises:
+            NotImplementedError: If the method is not implemented by the 
+            child class.
+        """
         self._data = None
-        raise NotImplementedError("Data getting not implemented")
-    
-    def _get_data_split(self) -> None:
+        raise NotImplementedError("Data preparing not implemented")
+
+    def _prepare_data_split(self) -> None:
+        """Prepares the self._data_split property for the _get_df_train and 
+        _get_df_test methods. 
+
+        Raises:
+            NotImplementedError: if the method is not implemented by the 
+            child class.
+        """
         self._data_split = None
         raise NotImplementedError("Data split getting not implemented.")
 
@@ -410,15 +377,18 @@ class AbstractHancockPredictor:
 
     def _get_df_test(self) -> pd.DataFrame:
         raise NotImplementedError("Data frame for testing not implemented.")
-    
+
     def _get_model(self):
         if self.model_setter_flag:
             return self._model
         else:
-            raise NotImplementedError("Model not implemented.")
+            return self._create_new_model()
+
+    def _create_new_model(self):
+        raise NotImplementedError("Model creation not implemented.")
 
 
-class StructuralAdjuvantTreatmentPredictor(AbstractHancockPredictor):
+class TabularAdjuvantTreatmentPredictor(AbstractHancockPredictor):
     def __init__(
         self, save_flag: bool = False, plot_flag: bool = False,
         random_state: int = 42
@@ -430,23 +400,119 @@ class StructuralAdjuvantTreatmentPredictor(AbstractHancockPredictor):
 
     def cross_validate(
         self, n_splits: int = 10, plot_name: str = 'cross_validate',
-    ) -> None:
-        cv = StratifiedKFold(n_splits=n_splits, shuffle=True, random_state=self.random_state)
+    ) -> list[list]:
+        tpr_list = []
+        auc_list = []
+        shap_values = []
+        val_index_list = []
+        features_per_fold = []
+
+        cv = StratifiedKFold(n_splits=n_splits, shuffle=True,
+                             random_state=self.random_state)
         for train_idx, val_idx in cv.split(self.df_train, self.df_train['target']):
+            val_index_list.append(val_idx)
             df_train_fold = self.df_train.iloc[train_idx]
             df_val_fold = self.df_train.iloc[val_idx]
-            self.train(df_train=df_train_fold, df_val=df_val_fold, plot_name=plot_name)
-            # ToDo: Continue adapting from cross_validation function
+            self._cross_validation_single_fold(
+                df_train_fold, df_val_fold, tpr_list, auc_list, shap_values,
+                features_per_fold, plot_name
+            )
 
-    def train(self, df_train: pd.DataFrame = None, df_val: pd.DataFrame = None, plot_name: str = 'train',
-              ) -> None:
+        return [tpr_list, auc_list, shap_values, val_index_list, features_per_fold]
+
+    def _cross_validation_single_fold(
+            self, df_train_fold: pd.DataFrame, df_val_fold: pd.DataFrame,
+            tpr_list: list, auc_list: list, shap_values: list,
+            features_per_fold: list, plot_name: str
+    ):
+        """Performs the training for a single fold and adds the results to the
+        corresponding lists. Also resets the self._model property to None.
+
+        Args:
+            df_train_fold (pd.DataFrame): The data that should be used for training.
+            df_val_fold (pd.DataFrame): The data that should be used for validation.
+            tpr_list (list): List with the true positive rates for each fold.
+            auc_list (list): List with the AUC scores for each fold.
+            shap_values (list): List with the SHAP values for each fold.
+            features_per_fold (list): List with the ColumnTransformer features
+            plot_name (str): The name of the plot that should be saved to disk
+            for the trainings process.
+        """
+        train_return = self.train(
+            df_train=df_train_fold, df_val=df_val_fold, plot_name=plot_name
+        )
+        tpr = train_return[0][1]
+        tpr_list.append(tpr)
+
+        roc_score = train_return[0][2]
+        auc_list.append(roc_score)
+
+        features = train_return[2]
+        features_per_fold.append(features)
+
+        x_val = train_return[1][2]
+        svs = shap.TreeExplainer(self.model).shap_values(x_val)
+        shap_values.append(svs[:, :, 1])  # class = 1 (adjuvant treatment yes)
+
+        self._model = None
+
+    def train(
+        self, df_train: pd.DataFrame = None, df_val: pd.DataFrame = None,
+        plot_name: str = 'train',
+    ) -> list:
+        """This method trains the model on the given data and returns
+        performance metrics for the validation data as well as the
+        data that was used for training and validation.
+
+        Args:
+             df_train (pd.DataFrame, optional): The data that should be used
+             to train the model. Should have the columns 'patient_id' and 'target'.
+             Defaults to None and then the self.df_train property is used.
+
+             df_val (pd.DataFrame, optional): The data that should be used to validate
+             the trainings results. Should have the columns 'patient_id' and 'target'.
+             Defaults to None and then the self.df_train property is used and the validation
+             is worthless.
+             plot_name (str, optional): The name of the plot that should be saved.
+
+        Returns:
+            list: A list with the validation parameters and the data that was used.
+            [[fpr, tpr, auc], [x_train, y_train, x_val, y_val, y_pred], features]
+            fpr: False postive rate
+            tpr: True postive rate
+            x_train: The training data encoded
+            y_train: The training labels
+            x_val: The validation data encoded
+            y_val: The validation labels
+            y_pred: The predicted labels for the validation data
+            features: The features from the ColumnTransformer that was used for
+            encoding the training data.
+        """
+        x_linspace = np.linspace(0, 1, 100)
         if df_train is None:
             df_train = self.df_train
         if df_val is None:
             df_val = self.df_train
-        [x_train, y_train, x_val, y_val] = self._prepare_data_for_training(df_train, df_val)
+        [[x_train, y_train, x_val, y_val], features] = self._prepare_data_for_training(
+            df_train, df_val)
+        self.model.fit(x_train, y_train)
+        y_pred = self.predict(x_val)
+        fpr, tpr, _ = roc_curve(y_val, y_pred)
+        tpr = np.interp(x_linspace, fpr, tpr)
+        tpr[0] = 0.0
+        tpr[-1] = 1.0
+        print(
+            f'Training Classification Report: \n{classification_report(y_val, y_pred > 0.5)}',
+            end='\n\n'
+        )
+        return [[fpr, tpr, roc_auc_score(y_val, y_pred)],
+                [x_train, y_train, x_val, y_val, y_pred], features]
 
-    def _get_data(self) -> None:
+    def predict(self, data: pd.DataFrame) -> np.array:
+        y_pred = self.model.predict_proba(data)[:, 1]
+        return y_pred
+
+    def _prepare_data(self) -> None:
         """Prepares the self._data property for the _get_df_train and _get_df_test
         methods. For this predictor the StructuralAggregated data is used.
         """
@@ -456,8 +522,8 @@ class StructuralAdjuvantTreatmentPredictor(AbstractHancockPredictor):
             data_dir_flag=True
         )
         self._data = data_reader.return_data()
-    
-    def _get_data_split(self) -> None:
+
+    def _prepare_data_split(self) -> None:
         """Prepares the self._data_split property for the _get_df_train and 
         _get_df_test methods. For this predictor the treatment outcome data 
         split is used. 
@@ -482,9 +548,15 @@ class StructuralAdjuvantTreatmentPredictor(AbstractHancockPredictor):
             self._data_split.dataset == "test"][["patient_id", "target"]]
         return target_test.merge(self._data, on="patient_id", how="inner")
 
-    def _prepare_data_for_training(self, df_train_fold: pd.DataFrame, df_val_fold: pd.DataFrame) -> list:
-        """Preprocess the input data and creates a numpy array for the labels. Also, over-samples the
-        underrepresented class if necessary.
+    def _create_new_model(self) -> RandomForestClassifier:
+        model = RandomForestClassifier(n_estimators=800, random_state=self.random_state)
+        return model
+
+    def _prepare_data_for_training(
+        self, df_train_fold: pd.DataFrame, df_val_fold: pd.DataFrame
+    ) -> list:
+        """Preprocess the input data and creates a numpy array for the labels. 
+        Also, over-samples the underrepresented class if necessary.
 
         Args:
             df_train_fold (pd.DataFrame): The data intended for training. Must have
@@ -492,7 +564,7 @@ class StructuralAdjuvantTreatmentPredictor(AbstractHancockPredictor):
             df_val_fold (pd.DataFrame): The data intended for validating the training process.
 
         Returns:
-            list: List with x_train, y_train, x_val and y_val in that order.
+            list: List with [[x_train, y_train, x_val, y_val], features] in that order.
         """
         preprocessor = setup_preprocessing_pipeline(
             df_train_fold.columns[2:], min_max_scaler=True)
@@ -504,26 +576,28 @@ class StructuralAdjuvantTreatmentPredictor(AbstractHancockPredictor):
         y_train = df_train_fold["target"].to_numpy()
         y_val = df_val_fold["target"].to_numpy()
 
+        features = preprocessor.get_feature_names_out()
+
         # Handle class imbalance
         smote = SMOTE(random_state=self.random_state)
         x_train, y_train = smote.fit_resample(x_train, y_train)
-        return [x_train, y_train, x_val, y_val]
+        return [[x_train, y_train, x_val, y_val], features]
 
 
 if __name__ == "__main__":
-    predictor = StructuralAdjuvantTreatmentPredictor()
+    predictor = TabularAdjuvantTreatmentPredictor()
 
     data_split_dir = predictor.args.data_split_dir
     results_dir = predictor.args.results_dir
     features_dir = predictor.args.features_dir
-    
-    df_train = predictor.df_train
-    df_test = predictor.df_test
+
+    df_train_to_delete = predictor.df_train
+    df_test_to_delete = predictor.df_test
 
     # Train classifier on multimodal data with k-fold CV
     print("Running k-fold cross-validation for multimodal data...")
     roc_multimodal, auc_multimodal, shap_values_multimodal = cross_validation(
-        df_train, predictor.random_state, k=2, plot_name="multimodal")
+        df_train_to_delete, predictor.random_state, k=10, plot_name="multimodal")
 
     # # Train classifiers on single modalities with 10-fold CV
     # print("Running k-fold cross-validation for clinical data...")

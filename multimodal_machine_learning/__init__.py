@@ -1,1 +1,1 @@
-from .multi_modal_data import StructuralAdjuvantTreatmentPredictor
+from .multi_modal_data import TabularAdjuvantTreatmentPredictor
