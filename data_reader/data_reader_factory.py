@@ -15,7 +15,7 @@ from .data_reader import (
     FeatureTMACellDensityDataFrameReader,
     TargetsDataFrameReader,
     TargetsAdjuvantPredictionDataFrameReader,
-    StructuralAggregatedDataFrameReader,
+    FeatureTabularMergedDataFrameReader,
     DataSplitBloodDataFrameReader,
     DataSplitClinicalDataFrameReader,
     DataSplitPathologicalDataFrameReader,
@@ -141,7 +141,7 @@ class DataFrameReaderFactory:
         elif data_type == self.data_reader_types.text_reports:
             data_reader = TextDataReportsDataFrameReader
         elif data_type == self.data_reader_types.structural_aggregated:
-            data_reader = StructuralAggregatedDataFrameReader
+            data_reader = FeatureTabularMergedDataFrameReader
 
         return data_reader
 

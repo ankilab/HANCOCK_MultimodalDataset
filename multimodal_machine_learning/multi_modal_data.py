@@ -32,9 +32,28 @@ def get_significance(p_value) -> str:
 
 class PredictionPlotter:
     def __init__(self, save_dir: Path, save_flag: bool = True, plot_flag: bool = True):
+        self._backup_save_flag = None
+        self._backup_plot_flag = None
         self.save_dir = save_dir
         self.save_flag = save_flag
         self.plot_flag = plot_flag
+
+    def deactivate(self):
+        """Saves the status of the plot and save flag and sets it to False.
+        """
+        self._backup_save_flag = self.save_flag
+        self._backup_plot_flag = self.plot_flag
+        self.save_flag = False
+        self.plot_flag = False
+
+    def reactivate(self):
+        """Reads the backup status of the plot and save flag from the last
+        deactivate call and sets it to the current status.
+        """
+        if self._backup_plot_flag is None or self._backup_plot_flag is None:
+            return
+        self.save_flag = self._backup_save_flag
+        self.plot_flag = self._backup_plot_flag
 
     def prediction_plot(
             self, y_pred: np.array, plot_name: str = 'adjuvant_treatment'
@@ -162,7 +181,7 @@ class PredictionPlotter:
         else:
             plt.close()
 
-    def cross_validation_plot_shap_values(
+    def plot_shap_values(
             self, shap_values: list, data_preprocessed: pd.DataFrame,
             feature_names: list, all_val_folds_idx: list
     ) -> None:
@@ -184,7 +203,7 @@ class PredictionPlotter:
             show=self.plot_flag
         )
 
-    def cross_validation_save_shap_values(
+    def save_shap_values(
             self, shap_values: list, data_preprocessed: pd.DataFrame,
             feature_names: list, all_val_folds_idx: list, plot_name: str
     ) -> None:
@@ -226,6 +245,49 @@ class PredictionPlotter:
                 bbox_inches="tight", dpi=200
             )
         plt.close()
+
+    def roc_curve(
+            self, auc_score: np.array, tpr_list: list,
+            plot_name: str
+    ) -> None:
+        """Creates the ROC curve for the cross-validation if the self.plot_flag == True
+        it will be shown to the user, if the self.save_flag is True it will be save to disk.
+
+        Args:
+            auc_score (np.array): The AUC scores for each fold.
+            tpr_list (list): The true positive rates for each fold.
+            plot_name (str): the name of the plot.
+        """
+        color = (132 / 255, 163 / 255, 204 / 255)
+        plt.figure(figsize=(1.4, 1.4))
+        mean_tpr = np.mean(tpr_list, axis=0)
+        std_tpr = np.std(tpr_list, axis=0)
+        tpr_upper = np.minimum(mean_tpr + std_tpr, 1)
+        tpr_lower = np.maximum(mean_tpr - std_tpr, 0)
+        mean_fpr = np.linspace(0, 1, 100)
+
+        plt.plot(mean_fpr, mean_tpr, linewidth=1,
+                 color=color, label=f"AUC =\n{np.mean(auc_score): .2f}")
+        plt.fill_between(mean_fpr, tpr_lower, tpr_upper,
+                         label=r"$\pm$ std.", color=color, alpha=0.4, lw=0)
+
+        plt.plot([0, 1], [0, 1], "--", color="black", linewidth=1)  # random
+        plt.xticks([])
+        plt.yticks([])
+        plt.xlabel("FPR", fontsize=6)
+        plt.ylabel("TPR", fontsize=6)
+        plt.title(f"{plot_name}")
+        # plt.legend(frameon=False, loc='upper center', bbox_to_anchor=(0.5, -0.2))
+        plt.legend(frameon=False, loc="lower right", borderpad=0)
+        plt.tight_layout()
+        plt.gca().set_aspect("equal")
+        if self.save_flag:
+            plt.savefig(
+                self.save_dir / f"roc_treatment_{plot_name}.svg", bbox_inches="tight")
+        if self.plot_flag:
+            plt.show()
+        else:
+            plt.close()
 
 
 class AbstractHancockPredictor:
@@ -382,10 +444,28 @@ class AbstractHancockPredictor:
 
 
 class TabularAdjuvantTreatmentPredictor(AbstractHancockPredictor):
+    """Class for predicting adjuvant treatments. Here the merged tabular
+    data is used.
+    """
     def __init__(
         self, save_flag: bool = False, plot_flag: bool = False,
         random_state: int = 42
     ):
+        """
+        Initializes the TabularAdjuvantTreatmentPredictor. It can be used to
+        perform adjuvant treatment prediction with the merged tabular data.
+
+        Args:
+            save_flag (bool, optional): If this is set to True the generated
+            plots will be saved. Defaults to False.
+
+            plot_flag (bool, optional): If this is set to True the generated
+            plots will be shown to the user. Defaults to False.
+
+            random_state (int, optional): To make sure that the outputs are
+            reproducible we initialize all processes that involve randomness
+            with the random_state. Defaults to 42.
+        """
         super().__init__(save_flag=save_flag, plot_flag=plot_flag,
                          random_state=random_state,
                          predictor_type='adjuvant_treatment_prediction'
@@ -420,10 +500,7 @@ class TabularAdjuvantTreatmentPredictor(AbstractHancockPredictor):
 
         cv = StratifiedKFold(n_splits=n_splits, shuffle=True,
                              random_state=self.random_state)
-        save_flag = self._plotter.save_flag
-        plot_flag = self._plotter.save_flag
-        self._plotter.save_flag = False
-        self._plotter.plot_flag = False
+        self._plotter.deactivate()
 
         for train_idx, val_idx in cv.split(self.df_train, self.df_train['target']):
             val_index_list.append(val_idx)
@@ -434,10 +511,10 @@ class TabularAdjuvantTreatmentPredictor(AbstractHancockPredictor):
                 features_per_fold, plot_name
             )
 
-        self._plotter.save_flag = save_flag
-        self._plotter.plot_flag = plot_flag
+        self._plotter.reactivate()
         self._cross_validation_shap(shap_values, features_per_fold, val_index_list,
                                     self.df_train, plot_name)
+        self._plotter.roc_curve(auc_list, tpr_list, plot_name)
 
         return [tpr_list, auc_list, shap_values, val_index_list, features_per_fold]
 
@@ -500,10 +577,10 @@ class TabularAdjuvantTreatmentPredictor(AbstractHancockPredictor):
         all_val_folds_idx = [
             idx for idx_fold in val_index_list for idx in idx_fold]
 
-        self._plotter.cross_validation_plot_shap_values(
+        self._plotter.plot_shap_values(
             shap_values, data_preprocessed, feature_names, all_val_folds_idx
         )
-        self._plotter.cross_validation_save_shap_values(
+        self._plotter.save_shap_values(
            shap_values, data_preprocessed, feature_names, all_val_folds_idx, plot_name
         )
 
@@ -545,7 +622,7 @@ class TabularAdjuvantTreatmentPredictor(AbstractHancockPredictor):
     # ----- Training -----
     def train(
         self, df_train: pd.DataFrame = None, df_other: pd.DataFrame = None,
-        plot_name: str = 'train', model_reset: bool = True
+        plot_name: str = 'adjuvant_treatment_multimodal', model_reset: bool = True
     ) -> list:
         """This method trains the model on the given data and returns
         performance metrics for the validation data as well as the
@@ -558,6 +635,7 @@ class TabularAdjuvantTreatmentPredictor(AbstractHancockPredictor):
 
              df_other (pd.DataFrame, optional): The data that should be used to validate
              the trainings results. Should have the columns 'patient_id' and 'target'.
+
              Defaults to None and then the self.df_test property.
              plot_name (str, optional): The name of the plot that should be saved.
 
@@ -577,7 +655,6 @@ class TabularAdjuvantTreatmentPredictor(AbstractHancockPredictor):
             features (list): The features from the ColumnTransformer that was used for
             encoding the training data.
         """
-        x_linspace = np.linspace(0, 1, 100)
         if df_train is None:
             df_train = self.df_train
         if df_other is None:
@@ -674,7 +751,7 @@ class TabularAdjuvantTreatmentPredictor(AbstractHancockPredictor):
         return [fpr, tpr, auc_score]
 
     def _plot_train(
-            self, df_test: pd.DataFrame, y_pred: np.array, plot_name: str = 'adjuvant_treatment'
+            self, df_test: pd.DataFrame, y_pred: np.array, plot_name: str
     ) -> None:
         survival_targets = self._data_reader_factory.make_data_frame_reader(
             self._data_reader_factory.data_reader_types.targets_adjuvant_treatment
@@ -737,32 +814,143 @@ class TabularAdjuvantTreatmentPredictor(AbstractHancockPredictor):
         return model
 
 
+class ClinicalAdjuvantTreatmentPredictor(TabularAdjuvantTreatmentPredictor):
+    """Class for predicting adjuvant treatments. Here the clinical tabular
+    data is used.
+    """
+    def __init__(self, save_flag: bool = False, plot_flag: bool = False, random_state: int = 42):
+        """
+        Initializes the ClinicalAdjuvantTreatmentPredictor. It can be used to
+        perform adjuvant treatment prediction with the clinical tabular data.
+
+        Args:
+            save_flag (bool, optional): If this is set to True the generated
+            plots will be saved. Defaults to False.
+
+            plot_flag (bool, optional): If this is set to True the generated
+            plots will be shown to the user. Defaults to False.
+
+            random_state (int, optional): To make sure that the outputs are
+            reproducible we initialize all processes that involve randomness
+            with the random_state. Defaults to 42.
+        """
+        super().__init__(save_flag=save_flag, plot_flag=plot_flag, random_state=random_state)
+
+    def _prepare_data(self):
+        data_reader = self._data_reader_factory.make_data_frame_reader(
+            data_type=self._data_reader_factory.data_reader_types.clinical_feature
+        )
+        self._data = data_reader.return_data()
+
+
+class PathologicalAdjuvantTreatmentPredictor(TabularAdjuvantTreatmentPredictor):
+    """Class for predicting adjuvant treatments. Here the pathological tabular
+    data is used.
+
+    """
+    def __init__(self, save_flag: bool = False, plot_flag: bool = False, random_state: int = 42):
+        """
+        Initializes the ClinicalAdjuvantTreatmentPredictor. It can be used to
+        perform adjuvant treatment prediction with the clinical tabular data.
+
+        Args:
+            save_flag (bool, optional): If this is set to True the generated
+            plots will be saved. Defaults to False.
+
+            plot_flag (bool, optional): If this is set to True the generated
+            plots will be shown to the user. Defaults to False.
+
+            random_state (int, optional): To make sure that the outputs are
+            reproducible we initialize all processes that involve randomness
+            with the random_state. Defaults to 42.
+        """
+        super().__init__(save_flag=save_flag, plot_flag=plot_flag, random_state=random_state)
+
+    def _prepare_data(self):
+        data_reader = self._data_reader_factory.make_data_frame_reader(
+            data_type=self._data_reader_factory.data_reader_types.pathological_feature
+        )
+        self._data = data_reader.return_data()
+
+
+class BloodAdjuvantTreatmentPredictor(TabularAdjuvantTreatmentPredictor):
+    """Class for predicting adjuvant treatments. Here the blood tabular
+    data is used.
+    """
+    def __init__(self, save_flag: bool = False, plot_flag: bool = False, random_state: int = 42):
+        """
+        Initializes the BloodAdjuvantTreatmentPredictor. It can be used to
+        perform adjuvant treatment prediction with the blood tabular data.
+
+        Args:
+            save_flag (bool, optional): If this is set to True the generated
+            plots will be saved. Defaults to False.
+
+            plot_flag (bool, optional): If this is set to True the generated
+            plots will be shown to the user. Defaults to False.
+
+            random_state (int, optional): To make sure that the outputs are
+            reproducible we initialize all processes that involve randomness
+            with the random_state. Defaults to 42.
+        """
+        super().__init__(save_flag=save_flag, plot_flag=plot_flag, random_state=random_state)
+
+    def _prepare_data(self):
+        data_reader = self._data_reader_factory.make_data_frame_reader(
+            data_type=self._data_reader_factory.data_reader_types.blood_feature
+        )
+        self._data = data_reader.return_data()
+
+
+class ICDCodesAdjuvantTreatmentPredictor(TabularAdjuvantTreatmentPredictor):
+    """Class for predicting adjuvant treatments. Here the ICD codes are
+    is used."""
+    def __init__(self, save_flag: bool = False, plot_flag: bool = False, random_state: int = 42):
+        """
+        Initializes the ICDCodesAdjuvantTreatmentPredictor. It can be used to
+        perform adjuvant treatment prediction with the ICD Codes data.
+
+        Args:
+            save_flag (bool, optional): If this is set to True the generated
+            plots will be saved. Defaults to False.
+
+            plot_flag (bool, optional): If this is set to True the generated
+            plots will be shown to the user. Defaults to False.
+
+            random_state (int, optional): To make sure that the outputs are
+            reproducible we initialize all processes that involve randomness
+            with the random_state. Defaults to 42.
+        """
+        super().__init__(save_flag=save_flag, plot_flag=plot_flag, random_state=random_state)
+
+    def _prepare_data(self):
+        data_reader = self._data_reader_factory.make_data_frame_reader(
+            data_type=self._data_reader_factory.data_reader_types.icd_codes_feature
+        )
+        self._data = data_reader.return_data()
+
+
 if __name__ == "__main__":
-    predictor = TabularAdjuvantTreatmentPredictor(save_flag=True, plot_flag=True)
+    multi_predictor = TabularAdjuvantTreatmentPredictor(save_flag=True, plot_flag=True)
+    clinical_predictor = ClinicalAdjuvantTreatmentPredictor(save_flag=True, plot_flag=True)
+    patho_predictor = PathologicalAdjuvantTreatmentPredictor(save_flag=True, plot_flag=True)
     cross_validation_splits = 10
 
-    data_split_dir = predictor.args.data_split_dir
-    results_dir = predictor.args.results_dir
-    features_dir = predictor.args.features_dir
-
-    df_train_to_delete = predictor.df_train
-    df_test_to_delete = predictor.df_test
-
-    # Train classifier on multimodal data with k-fold CV
-    print("Running k-fold cross-validation for multimodal data...")
-    multi_modal_cross_validation = predictor.cross_validate(
-        n_splits=cross_validation_splits)
-    roc_multimodal = multi_modal_cross_validation[0]
-    auc_multimodal = multi_modal_cross_validation[1]
-    shap_values_multimodal = multi_modal_cross_validation[2]
+    # # Train classifier on multimodal data with k-fold CV
+    # print("Running k-fold cross-validation for multimodal data...")
+    # _ = multi_predictor.cross_validate(
+    #     n_splits=cross_validation_splits)
 
     # # Train classifiers on single modalities with 10-fold CV
     # print("Running k-fold cross-validation for clinical data...")
-    # roc_clinical, auc_clinical, _ = cross_validation(
-    #     df_train[["target"] + list(clinical.columns)], predictor.rng, k=10)
+    # _ = clinical_predictor.cross_validate(
+    #     n_splits=cross_validation_splits, plot_name='adjuvant_therapy_clinical'
+    # )
     # print("Running k-fold cross-validation for pathological data...")
-    # roc_patho, auc_patho, _ = cross_validation(
-    #     df_train[["target"] + list(patho.columns)], predictor.rng, k=10)
+    # _ = patho_predictor.cross_validate(
+    #     n_splits=cross_validation_splits, plot_name='adjuvant_therapy_pathological'
+    # )
+
     # print("Running k-fold cross-validation for blood data...")
     # roc_blood, auc_blood, _ = cross_validation(
     #     df_train[["target"] + list(blood.columns)], predictor.rng, k=10)
@@ -773,7 +961,8 @@ if __name__ == "__main__":
     # roc_icd, auc_icd, _ = cross_validation(
     #     df_train[["target"] + list(icd.columns)], predictor.rng, k=10)
 
-    # # Plot average ROC curves with AUC scores
+    # ---- This can be removed it is for plotting ROC curve ------
+    # Plot average ROC curves with AUC scores
     # colors = [(132/255, 163/255, 204/255)] * 6
     # auc_list = [auc_multimodal, auc_clinical,
     #             auc_patho, auc_blood, auc_tma, auc_icd]
@@ -781,7 +970,6 @@ if __name__ == "__main__":
     #             roc_patho, roc_blood, roc_tma, roc_icd]
     # roc_labels = ["Multimodal", "Clinical", "Pathology",
     #               "Blood", "TMA cell density", "ICD codes"]
-
     # colors = [(132/255, 163/255, 204/255)]
     # auc_list = [auc_multimodal]
     # roc_list = [roc_multimodal]
@@ -796,7 +984,7 @@ if __name__ == "__main__":
     #     mean_fpr = np.linspace(0, 1, 100)
     #
     #     plt.plot(mean_fpr, mean_tpr, linewidth=1,
-    #              color=colors[i], label=f"AUC =\n{np.mean(auc_list[i]):.2f}")
+    #              color=colors[i], label=f"AUC =\n{np.mean(auc_list[i]): .2f}")
     #     plt.fill_between(mean_fpr, tpr_lower, tpr_upper,
     #                      label=r"$\pm$ std.", color=colors[i], alpha=0.4, lw=0)
     #
@@ -811,10 +999,10 @@ if __name__ == "__main__":
     #     plt.tight_layout()
     #     plt.gca().set_aspect("equal")
     #     plt.savefig(
-    #         results_dir/f"roc_treatment_{roc_labels[i]}_test.svg", bbox_inches="tight")
+    #         predictor.args.results_dir / f"roc_treatment_{roc_labels[i]}_test.svg", bbox_inches="tight")
     #     plt.close()
 
-    # Train classifier once on multimodal data, show survival curves and bar plot
-    print("Training and testing the final multimodal model...")
-    predictor.train()
-    print(f"Done. Saved results to {results_dir}")
+    # # Train classifier once on multimodal data, show survival curves and bar plot
+    # print("Training and testing the final multimodal model...")
+    # multi_predictor.train(plot_name='adjuvant_therapy_multimodal')
+    # print(f"Done")

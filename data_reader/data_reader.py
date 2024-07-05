@@ -424,38 +424,7 @@ class FeatureTMACellDensityDataFrameReader(CSVDataFrameReader):
         super().__init__(data_dir)
 
 
-# --- DataReader for the targets ---
-class TargetsDataFrameReader(CSVDataFrameReader):
-    def __init__(self, data_dir: Path = defaultPaths.targets):
-        super().__init__(data_dir)
-
-
-class TargetsAdjuvantPredictionDataFrameReader(CSVDataFrameReader):
-    @property
-    def data(self):
-        if self._data is None:
-            self._data = self._create_data()
-        return self._data.copy()
-
-    def __init__(self, data_dir: Path = defaultPaths.targets):
-        super().__init__(data_dir)
-
-    def _create_data(self):
-        data = super().data
-        data.survival_status = (data.survival_status == 'deceased').astype(int)
-        data.recurrence = (data.recurrence == 'yes').astype(int)
-        data['followup_months'] = self._days_to_months(days=data['days_to_last_information'])
-        data['months_to_rfs_event'] = self._days_to_months(days=data['days_to_rfs_event'])
-        return data
-
-    @staticmethod
-    def _days_to_months(days: np.array) -> np.array:
-        avg_days_per_month = 365.25 / 12
-        return np.round(days / avg_days_per_month)
-
-
-# -- DataReader for aggregated data --
-class StructuralAggregatedDataFrameReader(DataFrameReader):
+class FeatureTabularMergedDataFrameReader(DataFrameReader):
     @property
     def data(self):
         if self._data is None:
@@ -463,15 +432,15 @@ class StructuralAggregatedDataFrameReader(DataFrameReader):
         return self._data.copy()
 
     def __init__(self, data_dir: Path = defaultPaths.features):
-        """Data frame reader for the feature data from clinical, pathological, 
+        """Data frame reader for the feature data from clinical, pathological,
         blood, icd codes and tma cell density. The data is merged on 'patient_id'.
         Assumes that the file names are the same as in the DefaultPaths class.
 
 
         Args:
-            data_dir (Path, optional): The data directory where the 
-            features and targets can be found after they are generated with 
-            the create_multimodal_patient_vectors.py. 
+            data_dir (Path, optional): The data directory where the
+            features and targets can be found after they are generated with
+            the create_multimodal_patient_vectors.py.
             Defaults to defaultPaths.features.
         """
         super().__init__(data_dir)
@@ -514,13 +483,43 @@ class StructuralAggregatedDataFrameReader(DataFrameReader):
         return df
 
     def return_data(self) -> pd.DataFrame:
-        """Returns the merged feature data from clinical, pathological, blood, 
+        """Returns the merged feature data from clinical, pathological, blood,
         icd codes and tma cell density in a single dataframe merged on 'patient_id'.
 
         Returns:
             pd.DataFrame: The merged feature data.
         """
         return self.data
+
+
+# --- DataReader for the targets ---
+class TargetsDataFrameReader(CSVDataFrameReader):
+    def __init__(self, data_dir: Path = defaultPaths.targets):
+        super().__init__(data_dir)
+
+
+class TargetsAdjuvantPredictionDataFrameReader(CSVDataFrameReader):
+    @property
+    def data(self):
+        if self._data is None:
+            self._data = self._create_data()
+        return self._data.copy()
+
+    def __init__(self, data_dir: Path = defaultPaths.targets):
+        super().__init__(data_dir)
+
+    def _create_data(self):
+        data = super().data
+        data.survival_status = (data.survival_status == 'deceased').astype(int)
+        data.recurrence = (data.recurrence == 'yes').astype(int)
+        data['followup_months'] = self._days_to_months(days=data['days_to_last_information'])
+        data['months_to_rfs_event'] = self._days_to_months(days=data['days_to_rfs_event'])
+        return data
+
+    @staticmethod
+    def _days_to_months(days: np.array) -> np.array:
+        avg_days_per_month = 365.25 / 12
+        return np.round(days / avg_days_per_month)
 
 
 # -- DataReader for data splits
