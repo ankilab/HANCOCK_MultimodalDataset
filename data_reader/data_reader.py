@@ -3,6 +3,7 @@ import pandas as pd
 import os
 import re
 import sys
+import numpy as np
 
 sys.path.append(str(Path(__file__).parents[1]))
 from defaults import (
@@ -427,6 +428,30 @@ class FeatureTMACellDensityDataFrameReader(CSVDataFrameReader):
 class TargetsDataFrameReader(CSVDataFrameReader):
     def __init__(self, data_dir: Path = defaultPaths.targets):
         super().__init__(data_dir)
+
+
+class TargetsAdjuvantPredictionDataFrameReader(CSVDataFrameReader):
+    @property
+    def data(self):
+        if self._data is None:
+            self._data = self._create_data()
+        return self._data.copy()
+
+    def __init__(self, data_dir: Path = defaultPaths.targets):
+        super().__init__(data_dir)
+
+    def _create_data(self):
+        data = super().data
+        data.survival_status = (data.survival_status == 'deceased').astype(int)
+        data.recurrence = (data.recurrence == 'yes').astype(int)
+        data['followup_months'] = self._days_to_months(days=data['days_to_last_information'])
+        data['months_to_rfs_event'] = self._days_to_months(days=data['days_to_rfs_event'])
+        return data
+
+    @staticmethod
+    def _days_to_months(days: np.array) -> np.array:
+        avg_days_per_month = 365.25 / 12
+        return np.round(days / avg_days_per_month)
 
 
 # -- DataReader for aggregated data --

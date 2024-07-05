@@ -14,6 +14,7 @@ from .data_reader import (
     FeatureICDCodesDataFrameReader,
     FeatureTMACellDensityDataFrameReader,
     TargetsDataFrameReader,
+    TargetsAdjuvantPredictionDataFrameReader,
     StructuralAggregatedDataFrameReader,
     DataSplitBloodDataFrameReader,
     DataSplitClinicalDataFrameReader,
@@ -47,6 +48,7 @@ class DataReaderTypes:
 
         # ---- Targets ----
         self.targets = 'Targets'
+        self.targets_adjuvant_treatment = 'Targets Adjuvant Treatment'
 
         # ---- Data Split ----
         self.data_split_blood = 'Data Split Blood'
@@ -190,6 +192,8 @@ class DataFrameReaderFactory:
         """
         if data_type == self.data_reader_types.targets:
             data_reader = TargetsDataFrameReader
+        elif data_type == self.data_reader_types.targets_adjuvant_treatment:
+            data_reader = TargetsAdjuvantPredictionDataFrameReader
 
         return data_reader
 

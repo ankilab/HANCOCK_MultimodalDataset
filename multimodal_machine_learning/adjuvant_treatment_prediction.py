@@ -88,6 +88,10 @@ def cross_validation(dataframe, random_state, k, plot_name=None):
         tpr[-1] = 1.0
         tpr_list.append(tpr)
         auc_list.append(roc_auc_score(y_val, y_pred))
+        print(
+            f'Training Classification Report: \n{classification_report(y_val, y_pred > 0.5)}',
+            end='\n\n'
+        )
 
     # SHAP
     # shap values: shape (#folds * #classes, #samples, #features)
