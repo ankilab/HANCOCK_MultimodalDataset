@@ -202,7 +202,11 @@ For more information about scripting in QuPath, check the [documentation](https:
 
 Create one QuPath project for each immunohistochemistry marker. For example, create a project
 "TMA_CD3" and import all files in the folder "Hancock_Dataset/TMA_TumorCenter/CD3". 
-This results in the following directory structure:
+
+> [!IMPORTANT]  
+> Set "Rotate Image" to 180 degrees for all TMAs in QuPath's import dialog.
+
+This step should result in the following directory structure:
 ```
 QuPathProjectsDirectory
 ├── TMA_CD3
@@ -252,7 +256,7 @@ python extract_tma_image_features.py path/to/QuPathProjectsDirectory ../features
 **Optional: Counting immune cells**
 
 The intratumoral density of CD3- and CD8-positive cells was already computed and is provided in the dataset folder
-"TMA_CellDensityMeasurements". However, if you would like to reproduce these measurements, you can perform the folowing steps:
+"TMA_CellDensityMeasurements". However, if you would like to reproduce these measurements, you can perform the following steps:
 
 Copy the pixel classifier from this repository to your project:
 ```
