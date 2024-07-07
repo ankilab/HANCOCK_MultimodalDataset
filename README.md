@@ -288,4 +288,15 @@ python adjuvant_treatment_prediction_convnet.py ../features ../results
 ```
 
 # Reference
-__TO DO__
+Dörrich, Marion, et al. "A multimodal dataset for precision oncology in head and neck cancer." medRxiv (2024): 2024-05.
+doi: https://doi.org/10.1101/2024.05.29.24308141
+```
+@article{doerrich2024multimodal,
+  title={A multimodal dataset for precision oncology in head and neck cancer},
+  author={D{\"o}rrich, Marion and Balk, Matthias and Heusinger, Tatjana and Beyer, Sandra and Kanso, Hassan and Matek, Christian and Hartmann, Arndt and Iro, Heinrich and Eckstein, Markus and Gostian, Antoniu-Oreste and others},
+  journal={medRxiv},
+  pages={2024--05},
+  year={2024},
+  publisher={Cold Spring Harbor Laboratory Press}
+}
+```
