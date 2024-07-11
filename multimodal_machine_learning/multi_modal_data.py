@@ -9,6 +9,7 @@ import seaborn as sns
 import shap
 from lifelines import KaplanMeierFitter, statistics
 from matplotlib import rcParams
+import copy
 
 from pathlib import Path
 import sys
@@ -347,15 +348,30 @@ class AbstractHancockPredictor:
         will no longer be initialized by the _create_new_model method but instead
         will use the model that is set here.
         If this process should be discarded and the initial model should be 
-        used, change first the self.model_setter_flag to False and then the 
-        model to None. 
+        used, first set the self.model_setter_flag to False and then call this
+        setter with None.
 
         Args:
             model: The model that should be used to make the predictions.
         """
-        self.model_setter_flag = True
-        self._untrained_model = model.copy()
+        if model is not None:
+            self.model_setter_flag = True
+        elif model is None:
+            self._model = model
+            if not self.model_setter_flag:
+                self._untrained_model = model
+                self.model_setter_flag = False
+            return
+
+        self._untrained_model = copy.deepcopy(model)
         self._model = model
+
+    def reset_model(self):
+        """Resets the model so that it again uses the default
+        model. Keep in mind that it also deletes the training process.
+        """
+        self.model_setter_flag = False
+        self.model = None
 
     def __init__(
         self, save_flag: bool = False, plot_flag: bool = False,
@@ -447,7 +463,7 @@ class AbstractHancockPredictor:
             if self._untrained_model is None:
                 print('No model set. Either set a model or change the' +
                       ' model_setter_flag to False.')
-            return self._untrained_model
+            return copy.deepcopy(self._untrained_model)
         else:
             return self._create_new_model()
 
@@ -983,34 +999,34 @@ class ICDCodesAdjuvantTreatmentPredictor(TabularAdjuvantTreatmentPredictor):
 
 
 if __name__ == "__main__":
-    main_save_flag = True
+    main_save_flag = False
     main_plot_flag = True
     multi_predictor = TabularAdjuvantTreatmentPredictor(
         save_flag=main_save_flag, plot_flag=main_plot_flag)
-    clinical_predictor = ClinicalAdjuvantTreatmentPredictor(
-        save_flag=main_save_flag, plot_flag=main_plot_flag)
-    patho_predictor = PathologicalAdjuvantTreatmentPredictor(
-        save_flag=main_save_flag, plot_flag=main_plot_flag)
-    blood_predictor = BloodAdjuvantTreatmentPredictor(
-        save_flag=main_save_flag, plot_flag=main_plot_flag)
-    tma_cell_density_predictor = TMACellDensityAdjuvantTreatmentPredictor(
-        save_flag=main_save_flag, plot_flag=main_plot_flag)
-    icd_predictor = ICDCodesAdjuvantTreatmentPredictor(
-        save_flag=main_save_flag, plot_flag=main_plot_flag)
-    cross_validation_splits = 10
+    # clinical_predictor = ClinicalAdjuvantTreatmentPredictor(
+    #     save_flag=main_save_flag, plot_flag=main_plot_flag)
+    # patho_predictor = PathologicalAdjuvantTreatmentPredictor(
+    #     save_flag=main_save_flag, plot_flag=main_plot_flag)
+    # blood_predictor = BloodAdjuvantTreatmentPredictor(
+    #     save_flag=main_save_flag, plot_flag=main_plot_flag)
+    # tma_cell_density_predictor = TMACellDensityAdjuvantTreatmentPredictor(
+    #     save_flag=main_save_flag, plot_flag=main_plot_flag)
+    # icd_predictor = ICDCodesAdjuvantTreatmentPredictor(
+    #     save_flag=main_save_flag, plot_flag=main_plot_flag)
+    # cross_validation_splits = 10
+    #
+    # data_types = [
+    #     'multimodal', 'clinical', 'pathological', 'blood', 'cell density', 'text'
+    # ]
+    # predictors = [
+    #     multi_predictor, clinical_predictor, patho_predictor, blood_predictor,
+    #     tma_cell_density_predictor, icd_predictor
+    # ]
 
-    data_types = [
-        'multimodal', 'clinical', 'pathological', 'blood', 'cell density', 'text'
-    ]
-    predictors = [
-        multi_predictor, clinical_predictor, patho_predictor, blood_predictor,
-        tma_cell_density_predictor, icd_predictor
-    ]
-
-    for data_type, predictor in zip(data_types, predictors):
-        print(f'Running k-fold cross-validation for {data_type} data ...')
-        _ = predictor.cross_validate(n_splits=cross_validation_splits,
-                                     plot_name='adjuvant_therapy_' + data_type)
+    # for data_type, predictor in zip(data_types, predictors):
+    #     print(f'Running k-fold cross-validation for {data_type} data ...')
+    #     _ = predictor.cross_validate(n_splits=cross_validation_splits,
+    #                                  plot_name='adjuvant_therapy_' + data_type)
 
     # # Train classifier on multimodal data with k-fold CV
     # print("Running k-fold cross-validation for multimodal data...")
@@ -1044,8 +1060,8 @@ if __name__ == "__main__":
     # )
 
     # Train classifier once on multimodal data, show survival curves and bar plot
-    print("Training and testing the final multimodal model...")
-    multi_predictor.train(
-        plot_name='adjuvant_therapy_multimodal', df_train=multi_predictor.df_train,
-        df_other=multi_predictor.df_test
-    )
+    # print("Training and testing the final multimodal model...")
+    # multi_predictor.train(
+    #     plot_name='adjuvant_therapy_multimodal', df_train=multi_predictor.df_train,
+    #     df_other=multi_predictor.df_test
+    # )
