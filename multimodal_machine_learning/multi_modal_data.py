@@ -693,7 +693,7 @@ class TabularAdjuvantTreatmentPredictor(AbstractHancockPredictor):
         if model_reset:
             self._model = None
 
-        [[x_train, y_train, x_other, y_other], features] = self._prepare_data_for_training(
+        [[x_train, y_train, x_other, y_other], features] = self._prepare_data_for_model(
             df_train, df_other)
         self.model.fit(x_train, y_train)
         y_pred = self.predict(x_other)
@@ -707,7 +707,7 @@ class TabularAdjuvantTreatmentPredictor(AbstractHancockPredictor):
         return [[fpr, tpr, auc_score],
                 [x_train, y_train, x_other, y_other, y_pred], features]
 
-    def _prepare_data_for_training(
+    def _prepare_data_for_model(
             self, df_train_fold: pd.DataFrame, df_other_fold: pd.DataFrame
     ) -> list:
         """Preprocess the input data and creates a numpy array for the labels.
@@ -1003,65 +1003,34 @@ if __name__ == "__main__":
     main_plot_flag = True
     multi_predictor = TabularAdjuvantTreatmentPredictor(
         save_flag=main_save_flag, plot_flag=main_plot_flag)
-    # clinical_predictor = ClinicalAdjuvantTreatmentPredictor(
-    #     save_flag=main_save_flag, plot_flag=main_plot_flag)
-    # patho_predictor = PathologicalAdjuvantTreatmentPredictor(
-    #     save_flag=main_save_flag, plot_flag=main_plot_flag)
-    # blood_predictor = BloodAdjuvantTreatmentPredictor(
-    #     save_flag=main_save_flag, plot_flag=main_plot_flag)
-    # tma_cell_density_predictor = TMACellDensityAdjuvantTreatmentPredictor(
-    #     save_flag=main_save_flag, plot_flag=main_plot_flag)
-    # icd_predictor = ICDCodesAdjuvantTreatmentPredictor(
-    #     save_flag=main_save_flag, plot_flag=main_plot_flag)
-    # cross_validation_splits = 10
-    #
-    # data_types = [
-    #     'multimodal', 'clinical', 'pathological', 'blood', 'cell density', 'text'
-    # ]
-    # predictors = [
-    #     multi_predictor, clinical_predictor, patho_predictor, blood_predictor,
-    #     tma_cell_density_predictor, icd_predictor
-    # ]
+    clinical_predictor = ClinicalAdjuvantTreatmentPredictor(
+        save_flag=main_save_flag, plot_flag=main_plot_flag)
+    patho_predictor = PathologicalAdjuvantTreatmentPredictor(
+        save_flag=main_save_flag, plot_flag=main_plot_flag)
+    blood_predictor = BloodAdjuvantTreatmentPredictor(
+        save_flag=main_save_flag, plot_flag=main_plot_flag)
+    tma_cell_density_predictor = TMACellDensityAdjuvantTreatmentPredictor(
+        save_flag=main_save_flag, plot_flag=main_plot_flag)
+    icd_predictor = ICDCodesAdjuvantTreatmentPredictor(
+        save_flag=main_save_flag, plot_flag=main_plot_flag)
+    cross_validation_splits = 10
 
-    # for data_type, predictor in zip(data_types, predictors):
-    #     print(f'Running k-fold cross-validation for {data_type} data ...')
-    #     _ = predictor.cross_validate(n_splits=cross_validation_splits,
-    #                                  plot_name='adjuvant_therapy_' + data_type)
+    data_types = [
+        'multimodal', 'clinical', 'pathological', 'blood', 'cell density', 'text'
+    ]
+    predictors = [
+        multi_predictor, clinical_predictor, patho_predictor, blood_predictor,
+        tma_cell_density_predictor, icd_predictor
+    ]
 
-    # # Train classifier on multimodal data with k-fold CV
-    # print("Running k-fold cross-validation for multimodal data...")
-    # _ = multi_predictor.cross_validate(
-    #     n_splits=cross_validation_splits)
-    #
-    # # Train classifiers on single modalities with 10-fold CV
-    # print("Running k-fold cross-validation for clinical data...")
-    # _ = clinical_predictor.cross_validate(
-    #     n_splits=cross_validation_splits, plot_name='adjuvant_therapy_clinical'
-    # )
-    #
-    # print("Running k-fold cross-validation for pathological data...")
-    # _ = patho_predictor.cross_validate(
-    #     n_splits=cross_validation_splits, plot_name='adjuvant_therapy_pathological'
-    # )
-    #
-    # print("Running k-fold cross-validation for blood data...")
-    # _ = blood_predictor.cross_validate(
-    #     n_splits=cross_validation_splits, plot_name='adjuvant_therapy_blood'
-    # )
-    #
-    # print("Running k-fold cross-validation for cell density data...")
-    # _ = tma_cell_density_predictor.cross_validate(
-    #     n_splits=cross_validation_splits, plot_name='adjuvant_therapy_tma_cell_density'
-    # )
-    #
-    # print("Running k-fold cross-validation for text data...")
-    # _ = icd_predictor.cross_validate(
-    #     n_splits=cross_validation_splits, plot_name='adjuvant_therapy_icd_codes'
-    # )
+    for data_type, predictor in zip(data_types, predictors):
+        print(f'Running k-fold cross-validation for {data_type} data ...')
+        _ = predictor.cross_validate(n_splits=cross_validation_splits,
+                                     plot_name='adjuvant_therapy_' + data_type)
 
     # Train classifier once on multimodal data, show survival curves and bar plot
-    # print("Training and testing the final multimodal model...")
-    # multi_predictor.train(
-    #     plot_name='adjuvant_therapy_multimodal', df_train=multi_predictor.df_train,
-    #     df_other=multi_predictor.df_test
-    # )
+    print("Training and testing the final multimodal model...")
+    multi_predictor.train(
+        plot_name='adjuvant_therapy_multimodal', df_train=multi_predictor.df_train,
+        df_other=multi_predictor.df_test
+    )

@@ -136,8 +136,8 @@ class RandomForestTabularAdjuvantTreatmentModelEvaluator(
 if __name__ == "__main__":
     main_plot_flag = True
     main_save_flag = True
-    test_n_splits = 2
-    test_n_iter = 5
+    test_n_splits = 10
+    test_n_iter = 100
     random_forest_evaluator = RandomForestTabularAdjuvantTreatmentModelEvaluator(
         plot_flag=main_plot_flag, save_flag=main_save_flag
     )
