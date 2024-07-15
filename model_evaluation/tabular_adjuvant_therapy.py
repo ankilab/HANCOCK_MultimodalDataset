@@ -9,10 +9,10 @@ from sklearn.tree import DecisionTreeClassifier
 import json
 
 sys.path.append(str(Path(__file__).parents[1]))
-from multimodal_machine_learning import TabularAdjuvantTherapyPredictor
+from multimodal_machine_learning import TabularAdjuvantTreatmentPredictor
 
 
-class AbstractTabularAdjuvantTherapyModelEvaluator:
+class AbstractTabularAdjuvantTreatmentModelEvaluator:
     """For Evaluating Hyper-Parameters of Adjuvant Treatment Models
     on the merged tabular (multi-modal) data set.
     """
@@ -28,7 +28,7 @@ class AbstractTabularAdjuvantTherapyModelEvaluator:
             random_state (int, optional): Random state seed for reproducibility. Will be passed to
             all functions classes that contain random events. Defaults to 42.
         """
-        self.predictor = TabularAdjuvantTherapyPredictor(
+        self.predictor = TabularAdjuvantTreatmentPredictor(
             plot_flag=plot_flag, save_flag=save_flag, random_state=random_state
         )
         self._random_state = random_state
@@ -197,8 +197,8 @@ class AbstractTabularAdjuvantTherapyModelEvaluator:
         raise NotImplementedError('Base model not implemented!')
 
 
-class RandomForestAbstractTabularAdjuvantTherapyModelEvaluator(
-    AbstractTabularAdjuvantTherapyModelEvaluator
+class RandomForestAbstractTabularAdjuvantTreatmentModelEvaluator(
+    AbstractTabularAdjuvantTreatmentModelEvaluator
 ):
     def __init__(
             self, plot_flag: bool = False, save_flag: bool = False, random_state: int = 42
@@ -300,8 +300,8 @@ class RandomForestAbstractTabularAdjuvantTherapyModelEvaluator(
         return base_model
 
 
-class SVCAbstractTabularAdjuvantTherapyModelEvaluator(
-    AbstractTabularAdjuvantTherapyModelEvaluator
+class SVCAbstractTabularAdjuvantTreatmentModelEvaluator(
+    AbstractTabularAdjuvantTreatmentModelEvaluator
 ):
     def __init__(
             self, plot_flag: bool = False, save_flag: bool = True,
@@ -396,8 +396,8 @@ class SVCAbstractTabularAdjuvantTherapyModelEvaluator(
         return base_model
 
 
-class AdaBoostAbstractTabularAdjuvantTherapyModelEvaluator(
-    AbstractTabularAdjuvantTherapyModelEvaluator
+class AdaBoostAbstractTabularAdjuvantTreatmentModelEvaluator(
+    AbstractTabularAdjuvantTreatmentModelEvaluator
 ):
     def __init__(
             self, plot_flag: bool = False, save_flag: bool = False, random_state: int = 42
@@ -531,8 +531,8 @@ class AdaBoostAbstractTabularAdjuvantTherapyModelEvaluator(
         return base_model
 
 
-class LogRegressorAbstractTabularAdjuvantTherapyModelEvaluator(
-    AbstractTabularAdjuvantTherapyModelEvaluator
+class LogRegressorAbstractTabularAdjuvantTreatmentModelEvaluator(
+    AbstractTabularAdjuvantTreatmentModelEvaluator
 ):
     def __init__(
             self, plot_flag: bool = False, save_flag: bool = False, random_state: int = 42
@@ -634,21 +634,21 @@ if __name__ == "__main__":
     test_n_splits = 10
     test_n_iter = 100
     if do_it_flag:
-        ada_boost_evaluator = AdaBoostAbstractTabularAdjuvantTherapyModelEvaluator(
+        ada_boost_evaluator = AdaBoostAbstractTabularAdjuvantTreatmentModelEvaluator(
             plot_flag=main_plot_flag, save_flag=main_save_flag
         )
         _ = ada_boost_evaluator.random_search_with_cross_validation(
             n_splits=test_n_splits, n_iter=test_n_iter
         )
 
-        random_forest_evaluator = RandomForestAbstractTabularAdjuvantTherapyModelEvaluator(
+        random_forest_evaluator = RandomForestAbstractTabularAdjuvantTreatmentModelEvaluator(
             plot_flag=main_plot_flag, save_flag=main_save_flag
         )
         _ = random_forest_evaluator.random_search_with_cross_validation(
             n_splits=test_n_splits, n_iter=test_n_iter
         )
 
-        svc_evaluator = SVCAbstractTabularAdjuvantTherapyModelEvaluator(
+        svc_evaluator = SVCAbstractTabularAdjuvantTreatmentModelEvaluator(
             plot_flag=main_plot_flag, save_flag=main_save_flag
         )
         _ = svc_evaluator.random_search_with_cross_validation(

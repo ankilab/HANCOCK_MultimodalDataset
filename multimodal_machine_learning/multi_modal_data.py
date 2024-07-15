@@ -297,6 +297,28 @@ class PredictionPlotter:
         else:
             plt.close()
 
+    def predictor_comparison_table(
+            self,
+            metrics_data: list[list],
+            metrics: list[str],
+            row_labels: list[str],
+            fig_size: tuple[int, int] = (18, 6),
+            plot_name: str = 'comparison_adjuvant_treatment'
+    ) -> None:
+        fig, ax = plt.subplots(figsize=fig_size)
+        _ = ax.axis('tight')
+        _ = ax.axis('off')
+        the_table = ax.table(cellText=metrics_data, rowLabels=row_labels, colLabels=metrics, loc='center')
+        the_table.set_fontsize(10)
+        the_table.auto_set_column_width(col=list(range(len(metrics))))
+
+        if self.save_flag:
+            plt.savefig(self.save_dir / f'{plot_name}.png')
+        if self.plot_flag:
+            plt.show()
+        else:
+            plt.close()
+
 
 class AbstractHancockPredictor:
     """Abstract class that defines the interface for all predictors in the Hancock
@@ -471,7 +493,7 @@ class AbstractHancockPredictor:
         raise NotImplementedError("Model creation not implemented.")
 
 
-class TabularAdjuvantTherapyPredictor(AbstractHancockPredictor):
+class TabularAdjuvantTreatmentPredictor(AbstractHancockPredictor):
     """Class for predicting adjuvant treatments. Here the merged tabular
     data is used.
     """
@@ -693,7 +715,7 @@ class TabularAdjuvantTherapyPredictor(AbstractHancockPredictor):
         if model_reset:
             self._model = None
 
-        [[x_train, y_train, x_other, y_other], features] = self._prepare_data_for_model(
+        [[x_train, y_train, x_other, y_other], features] = self.prepare_data_for_model(
             df_train, df_other)
         self.model.fit(x_train, y_train)
         y_pred = self.predict(x_other)
@@ -707,7 +729,7 @@ class TabularAdjuvantTherapyPredictor(AbstractHancockPredictor):
         return [[fpr, tpr, auc_score],
                 [x_train, y_train, x_other, y_other, y_pred], features]
 
-    def _prepare_data_for_model(
+    def prepare_data_for_model(
             self, df_train_fold: pd.DataFrame, df_other_fold: pd.DataFrame
     ) -> list:
         """Preprocess the input data and creates a numpy array for the labels.
@@ -848,7 +870,7 @@ class TabularAdjuvantTherapyPredictor(AbstractHancockPredictor):
         return model
 
 
-class ClinicalAdjuvantTherapyPredictor(TabularAdjuvantTherapyPredictor):
+class ClinicalAdjuvantTreatmentPredictor(TabularAdjuvantTreatmentPredictor):
     """Class for predicting adjuvant treatments. Here the clinical tabular
     data is used.
     """
@@ -878,7 +900,7 @@ class ClinicalAdjuvantTherapyPredictor(TabularAdjuvantTherapyPredictor):
         self._data = data_reader.return_data()
 
 
-class PathologicalAdjuvantTherapyPredictor(TabularAdjuvantTherapyPredictor):
+class PathologicalAdjuvantTreatmentPredictor(TabularAdjuvantTreatmentPredictor):
     """Class for predicting adjuvant treatments. Here the pathological tabular
     data is used.
 
@@ -909,7 +931,7 @@ class PathologicalAdjuvantTherapyPredictor(TabularAdjuvantTherapyPredictor):
         self._data = data_reader.return_data()
 
 
-class BloodAdjuvantTherapyPredictor(TabularAdjuvantTherapyPredictor):
+class BloodAdjuvantTreatmentPredictor(TabularAdjuvantTreatmentPredictor):
     """Class for predicting adjuvant treatments. Here the blood tabular
     data is used.
     """
@@ -939,7 +961,7 @@ class BloodAdjuvantTherapyPredictor(TabularAdjuvantTherapyPredictor):
         self._data = data_reader.return_data()
 
 
-class TMACellDensityAdjuvantTherapyPredictor(TabularAdjuvantTherapyPredictor):
+class TMACellDensityAdjuvantTreatmentPredictor(TabularAdjuvantTreatmentPredictor):
     """Class for predicting adjuvant treatments. Here the TMA cell density tabular
     data is used.
     """
@@ -969,7 +991,7 @@ class TMACellDensityAdjuvantTherapyPredictor(TabularAdjuvantTherapyPredictor):
         self._data = data_reader.return_data()
 
 
-class ICDCodesAdjuvantTherapyPredictor(TabularAdjuvantTherapyPredictor):
+class ICDCodesAdjuvantTreatmentPredictor(TabularAdjuvantTreatmentPredictor):
     """Class for predicting adjuvant treatments. Here the ICD codes are
     is used."""
 
@@ -1001,17 +1023,17 @@ class ICDCodesAdjuvantTherapyPredictor(TabularAdjuvantTherapyPredictor):
 if __name__ == "__main__":
     main_save_flag = False
     main_plot_flag = True
-    multi_predictor = TabularAdjuvantTherapyPredictor(
+    multi_predictor = TabularAdjuvantTreatmentPredictor(
         save_flag=main_save_flag, plot_flag=main_plot_flag)
-    clinical_predictor = ClinicalAdjuvantTherapyPredictor(
+    clinical_predictor = ClinicalAdjuvantTreatmentPredictor(
         save_flag=main_save_flag, plot_flag=main_plot_flag)
-    patho_predictor = PathologicalAdjuvantTherapyPredictor(
+    patho_predictor = PathologicalAdjuvantTreatmentPredictor(
         save_flag=main_save_flag, plot_flag=main_plot_flag)
-    blood_predictor = BloodAdjuvantTherapyPredictor(
+    blood_predictor = BloodAdjuvantTreatmentPredictor(
         save_flag=main_save_flag, plot_flag=main_plot_flag)
-    tma_cell_density_predictor = TMACellDensityAdjuvantTherapyPredictor(
+    tma_cell_density_predictor = TMACellDensityAdjuvantTreatmentPredictor(
         save_flag=main_save_flag, plot_flag=main_plot_flag)
-    icd_predictor = ICDCodesAdjuvantTherapyPredictor(
+    icd_predictor = ICDCodesAdjuvantTreatmentPredictor(
         save_flag=main_save_flag, plot_flag=main_plot_flag)
     cross_validation_splits = 10
 

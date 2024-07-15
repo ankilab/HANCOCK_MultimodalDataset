@@ -1,1 +1,2 @@
-from .multi_modal_data import TabularAdjuvantTherapyPredictor
+from .multi_modal_data import TabularAdjuvantTreatmentPredictor
+from .multi_modal_data import PredictionPlotter
