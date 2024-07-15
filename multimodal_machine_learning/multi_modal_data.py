@@ -471,7 +471,7 @@ class AbstractHancockPredictor:
         raise NotImplementedError("Model creation not implemented.")
 
 
-class TabularAdjuvantTreatmentPredictor(AbstractHancockPredictor):
+class TabularAdjuvantTherapyPredictor(AbstractHancockPredictor):
     """Class for predicting adjuvant treatments. Here the merged tabular
     data is used.
     """
@@ -848,7 +848,7 @@ class TabularAdjuvantTreatmentPredictor(AbstractHancockPredictor):
         return model
 
 
-class ClinicalAdjuvantTreatmentPredictor(TabularAdjuvantTreatmentPredictor):
+class ClinicalAdjuvantTherapyPredictor(TabularAdjuvantTherapyPredictor):
     """Class for predicting adjuvant treatments. Here the clinical tabular
     data is used.
     """
@@ -878,7 +878,7 @@ class ClinicalAdjuvantTreatmentPredictor(TabularAdjuvantTreatmentPredictor):
         self._data = data_reader.return_data()
 
 
-class PathologicalAdjuvantTreatmentPredictor(TabularAdjuvantTreatmentPredictor):
+class PathologicalAdjuvantTherapyPredictor(TabularAdjuvantTherapyPredictor):
     """Class for predicting adjuvant treatments. Here the pathological tabular
     data is used.
 
@@ -909,7 +909,7 @@ class PathologicalAdjuvantTreatmentPredictor(TabularAdjuvantTreatmentPredictor):
         self._data = data_reader.return_data()
 
 
-class BloodAdjuvantTreatmentPredictor(TabularAdjuvantTreatmentPredictor):
+class BloodAdjuvantTherapyPredictor(TabularAdjuvantTherapyPredictor):
     """Class for predicting adjuvant treatments. Here the blood tabular
     data is used.
     """
@@ -939,7 +939,7 @@ class BloodAdjuvantTreatmentPredictor(TabularAdjuvantTreatmentPredictor):
         self._data = data_reader.return_data()
 
 
-class TMACellDensityAdjuvantTreatmentPredictor(TabularAdjuvantTreatmentPredictor):
+class TMACellDensityAdjuvantTherapyPredictor(TabularAdjuvantTherapyPredictor):
     """Class for predicting adjuvant treatments. Here the TMA cell density tabular
     data is used.
     """
@@ -969,7 +969,7 @@ class TMACellDensityAdjuvantTreatmentPredictor(TabularAdjuvantTreatmentPredictor
         self._data = data_reader.return_data()
 
 
-class ICDCodesAdjuvantTreatmentPredictor(TabularAdjuvantTreatmentPredictor):
+class ICDCodesAdjuvantTherapyPredictor(TabularAdjuvantTherapyPredictor):
     """Class for predicting adjuvant treatments. Here the ICD codes are
     is used."""
 
@@ -1001,17 +1001,17 @@ class ICDCodesAdjuvantTreatmentPredictor(TabularAdjuvantTreatmentPredictor):
 if __name__ == "__main__":
     main_save_flag = False
     main_plot_flag = True
-    multi_predictor = TabularAdjuvantTreatmentPredictor(
+    multi_predictor = TabularAdjuvantTherapyPredictor(
         save_flag=main_save_flag, plot_flag=main_plot_flag)
-    clinical_predictor = ClinicalAdjuvantTreatmentPredictor(
+    clinical_predictor = ClinicalAdjuvantTherapyPredictor(
         save_flag=main_save_flag, plot_flag=main_plot_flag)
-    patho_predictor = PathologicalAdjuvantTreatmentPredictor(
+    patho_predictor = PathologicalAdjuvantTherapyPredictor(
         save_flag=main_save_flag, plot_flag=main_plot_flag)
-    blood_predictor = BloodAdjuvantTreatmentPredictor(
+    blood_predictor = BloodAdjuvantTherapyPredictor(
         save_flag=main_save_flag, plot_flag=main_plot_flag)
-    tma_cell_density_predictor = TMACellDensityAdjuvantTreatmentPredictor(
+    tma_cell_density_predictor = TMACellDensityAdjuvantTherapyPredictor(
         save_flag=main_save_flag, plot_flag=main_plot_flag)
-    icd_predictor = ICDCodesAdjuvantTreatmentPredictor(
+    icd_predictor = ICDCodesAdjuvantTherapyPredictor(
         save_flag=main_save_flag, plot_flag=main_plot_flag)
     cross_validation_splits = 10
 
