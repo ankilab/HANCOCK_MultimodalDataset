@@ -19,7 +19,7 @@ SEED = 42
 
 
 def setup_preprocessing_pipeline(
-        columns, min_max_scaler: bool = False
+        columns: list[str], min_max_scaler: bool = False
 ) -> ColumnTransformer:
     """
     Sets up a sklearn pipeline for preprocessing the data before applying UMAP
