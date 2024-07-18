@@ -45,7 +45,7 @@ class DefaultPaths:
         self.text_data_dir = self.data_dir / 'TextData'
         self.reports = self.text_data_dir / "reports"
         self.icd_codes = self.text_data_dir / 'icd_codes'
-        self.wsi_tumor = self.data_dir / 'WSI_PrimaryTumor'
+        self.wsi_tumor = self.data_dir / '..' / 'WSI_PrimaryTumor'
         self.wsi_lymph_node = self.data_dir / 'WSI_LymphNode'
 
         # --- Features -----
