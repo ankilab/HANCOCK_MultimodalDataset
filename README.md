@@ -194,15 +194,13 @@ python adjuvant_treatment_prediction.py path/to/Hancock_Dataset/DataSplits_DataD
 ## Adjuvant treatment prediction using histology images
 
 We used the open-source histology software QuPath for analyzing TMAs. 
-The folder [qupath_scripts](qupath_scripts) contains code that can executed in QuPath's script editor. 
-You can run the following scripts for all TMAs at once by selecting "Run for project" in the script editor.
+The folder [qupath_scripts](qupath_scripts) contains code that can be executed in QuPath's script editor. 
+You can run the following scripts for all TMAs at once by selecting <kbd>Run</kbd>><kbd>Run for project</kbd>.
 For more information about scripting in QuPath, check the [documentation](https://qupath.readthedocs.io/en/stable/docs/scripting/overview.html).
 
-**Step 1: Creating a QuPath project**
+**Step 1: Creating QuPath projects**
 
-Create one QuPath project for each immunohistochemistry marker. For example, create a project
-"TMA_CD3" and import all files in the folder "Hancock_Dataset/TMA_TumorCenter/CD3". 
-This results in the following directory structure:
+Create one empty directory for each immunohistochemistry marker, named "TMA_CD3", "TMA_CD8", "TMA_CD56", and so on:
 ```
 QuPathProjectsDirectory
 ├── TMA_CD3
@@ -214,25 +212,49 @@ QuPathProjectsDirectory
 ├── TMA_MHC1
 └── TMA_PDL1
 ```
+Next, create a QuPath project from each of these folders and import the corresponding TMAs.
+For example, click <kbd>Create Project</kbd>, select the directory "TMA_CD3" and import all SVS files from the folder "Hancock_Dataset/TMA_TumorCenter/CD3".
+> [!IMPORTANT]  
+> Set "Rotate Image" to 180 degrees for all TMAs in QuPath's import dialog.
+
 
 **Step 2: TMA dearraying**
 
-Run `dearray_tma.groovy` to create a grid of 6 columns x 12 rows for locating the TMA cores within the image.
-Next, you can run `check_tma_grid_size.groovy` to check for any incorrect grid sizes. You might need to manually
-adjust some grids. For learning more about TMA dearraying, we recommend reading 
-[this guide](https://github.com/qupath/qupath/wiki/TMA-CD3-analysis).
+Open `dearray_tma.groovy` in QuPath's script editor and click <kbd>Run for project</kbd>. This will create a grid of 6 columns x 12 rows 
+for locating the TMA cores within the image.  Next, you can run `check_tma_grid_size.groovy` to check for any incorrect 
+grid sizes. You might need to manually adjust some grids. 
 
-**Step 3: Extracting tiles**
+Next, open `import_tma_map.groovy` in the script editor and click <kbd>Run for project</kbd> to import the TMA maps. 
+When prompted, select the folder "TMA_Maps" provided in our dataset. The patient ID can then be found as "Case ID" in QuPath.
 
 > [!NOTE]
-> Each TMA contains tissue cores of several patients. In QuPath, TMA maps must be imported to assign patient IDs to tissue cores.
+> Each TMA contains tissue cores of several patients. 
+> In QuPath, **TMA maps** must be imported to assign patient IDs to tissue cores.
+> You can run our scripts (see [qupath_scripts](qupath_scripts)) which automate the required steps for dearraying and
+> importing TMA maps.
+> 
+> However, if you would like to manually analyze a TMA, you can perform the following steps:
+> 
+> 1) With a TMA opened in QuPath, run the TMA dearrayer (<kbd>TMA</kbd>><kbd>TMA dearrayer</kbd>) with a core diameter of 1.9 mm, 
+> column labels 1-6 and row labels 1-12 
+> 2) A grid has been created and might need manual adjustments 
+> 3) A TMA map e.g. "TMA_Map_block1.csv" contains the core coordinates of the 12 x 6 grid and patient IDs (Case IDs)
+> 4) Click <kbd>File</kbd>><kbd>TMA data</kbd>><kbd>Import TMA map</kbd>><kbd>Import data</kbd> and select the TMA map
+> 5) Each TMA core is now associated with the correct patient ID
+>
+> ![TMA dearraying in QuPath](./images/qupath_tma_dearraying.png)
+> ![Importing TMA maps in QuPath](./images/qupath_importing_tma_maps.png)
+> 
+> For learning more about TMA dearraying, we recommend reading
+> [this guide](https://github.com/qupath/qupath/wiki/TMA-CD3-analysis).
 
-Run `import_tma_map.groovy` to import the TMA maps. When prompted, select the folder "TMA_Maps" provided in our dataset.
-The patient ID can then be found as "Case ID" in QuPath.
+
+**Step 3: Extracting tiles**
 
 Next, run `export_centertiles_from_tma_cores.groovy` to extract one tile from the center of each TMA core. The images
 are saved as PNG files to the directory `path/to/your_qupath_project/tiles`. Each tile's filename is built as follows:
 `<patient_id>_core<core_index>_tile.png`
+
 
 
 **Step 4: Extracting image features**
@@ -252,7 +274,7 @@ python extract_tma_image_features.py path/to/QuPathProjectsDirectory ../features
 **Optional: Counting immune cells**
 
 The intratumoral density of CD3- and CD8-positive cells was already computed and is provided in the dataset folder
-"TMA_CellDensityMeasurements". However, if you would like to reproduce these measurements, you can perform the folowing steps:
+"TMA_CellDensityMeasurements". However, if you would like to reproduce these measurements, you can perform the following steps:
 
 Copy the pixel classifier from this repository to your project:
 ```
