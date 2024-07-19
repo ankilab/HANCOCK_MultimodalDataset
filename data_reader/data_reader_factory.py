@@ -33,7 +33,6 @@ class DataReaderTypes:
         self.patho = 'Pathological'
         self.clinical = 'Clinical'
         self.blood = 'Blood'
-        self.structural_aggregated = 'Structural Aggregated'
         self.wsi_tumor = 'WSI_PrimaryTumor'
         self.wsi_lymph_node = 'WSI_LymphNode'
         self.tma_cell_density = 'TMA_CellDensityMeasurement'
@@ -45,6 +44,7 @@ class DataReaderTypes:
         self.blood_feature = 'Blood Feature'
         self.icd_codes_feature = 'ICD Codes Feature'
         self.tma_cell_density_feature = 'Feature TMA Cell Density'
+        self.merged_feature = 'Structural Aggregated'
 
         # ---- Targets ----
         self.targets = 'Targets'
@@ -140,7 +140,7 @@ class DataFrameReaderFactory:
             data_reader = TMACellDensityDataFrameReader
         elif data_type == self.data_reader_types.text_reports:
             data_reader = TextDataReportsDataFrameReader
-        elif data_type == self.data_reader_types.structural_aggregated:
+        elif data_type == self.data_reader_types.merged_feature:
             data_reader = FeatureTabularMergedDataFrameReader
 
         return data_reader

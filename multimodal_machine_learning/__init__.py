@@ -1,2 +1,3 @@
 from .multi_modal_data import TabularAdjuvantTreatmentPredictor
 from .multi_modal_data import PredictionPlotter
+from .custom_preprocessor import ColumnPreprocessor

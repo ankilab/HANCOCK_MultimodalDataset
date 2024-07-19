@@ -14,7 +14,7 @@ import copy
 from pathlib import Path
 import sys
 sys.path.append(str(Path(__file__).parents[1]))
-from data_exploration.umap_embedding import setup_preprocessing_pipeline
+from multimodal_machine_learning.custom_preprocessor import ColumnPreprocessor
 from data_reader import DataFrameReaderFactory
 from argument_parser import HancockArgumentParser
 from defaults import DefaultFileNames
@@ -655,7 +655,7 @@ class TabularAdjuvantTreatmentPredictor(AbstractHancockPredictor):
             list[list]: The data transformed through the preprocessor and the features
             that are present in this data.
         """
-        preprocessor = setup_preprocessing_pipeline(
+        preprocessor = ColumnPreprocessor(
             data.columns[2:], min_max_scaler=True)
         preprocessor.set_output(transform="pandas")
         data_preprocessed = preprocessor.fit_transform(
@@ -743,7 +743,7 @@ class TabularAdjuvantTreatmentPredictor(AbstractHancockPredictor):
         Returns:
             list: List with [[x_train, y_train, x_val, y_val], features] in that order.
         """
-        preprocessor = setup_preprocessing_pipeline(
+        preprocessor = ColumnPreprocessor(
             df_train_fold.columns[2:], min_max_scaler=True)
 
         x_train = preprocessor.fit_transform(
@@ -830,7 +830,7 @@ class TabularAdjuvantTreatmentPredictor(AbstractHancockPredictor):
         methods. For this predictor the StructuralAggregated data is used.
         """
         data_reader = self._data_reader_factory.make_data_frame_reader(
-            data_type=self._data_reader_factory.data_reader_types.structural_aggregated,
+            data_type=self._data_reader_factory.data_reader_types.merged_feature,
             data_dir=self.args.features_dir,
             data_dir_flag=True
         )
@@ -1021,7 +1021,7 @@ class ICDCodesAdjuvantTreatmentPredictor(TabularAdjuvantTreatmentPredictor):
 
 
 if __name__ == "__main__":
-    main_save_flag = False
+    main_save_flag = True
     main_plot_flag = True
     multi_predictor = TabularAdjuvantTreatmentPredictor(
         save_flag=main_save_flag, plot_flag=main_plot_flag)
