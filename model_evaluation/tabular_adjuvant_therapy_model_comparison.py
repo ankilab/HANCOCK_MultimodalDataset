@@ -183,13 +183,13 @@ class TabularAdjuvantTherapyComparer:
 
         self._plotter.predictor_comparison_table(
             metrics_data=train_metrics[1], row_labels=train_metrics[2],
-            metrics=train_metrics[0], fig_size=(20, 6),
+            metrics_labels=train_metrics[0], fig_size=(20, 6),
             plot_name='comparison_adjuvant_treatment_multimodal_train_only'
         )
 
         self._plotter.predictor_comparison_table(
             metrics_data=test_metrics[1], row_labels=test_metrics[2],
-            metrics=test_metrics[0], fig_size=(20, 6),
+            metrics_labels=test_metrics[0], fig_size=(20, 6),
             plot_name='comparison_adjuvant_treatment_multimodal_test_only'
         )
 

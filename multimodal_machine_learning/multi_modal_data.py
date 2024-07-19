@@ -300,7 +300,7 @@ class PredictionPlotter:
     def predictor_comparison_table(
             self,
             metrics_data: list[list],
-            metrics: list[str],
+            metrics_labels: list[str],
             row_labels: list[str],
             fig_size: tuple[int, int] = (18, 6),
             plot_name: str = 'comparison_adjuvant_treatment'
@@ -308,9 +308,9 @@ class PredictionPlotter:
         fig, ax = plt.subplots(figsize=fig_size)
         _ = ax.axis('tight')
         _ = ax.axis('off')
-        the_table = ax.table(cellText=metrics_data, rowLabels=row_labels, colLabels=metrics, loc='center')
+        the_table = ax.table(cellText=metrics_data, rowLabels=row_labels, colLabels=metrics_labels, loc='center')
         the_table.set_fontsize(10)
-        the_table.auto_set_column_width(col=list(range(len(metrics))))
+        the_table.auto_set_column_width(col=list(range(len(metrics_labels))))
 
         if self.save_flag:
             plt.savefig(self.save_dir / f'{plot_name}.png')
@@ -521,6 +521,11 @@ class TabularAdjuvantTreatmentPredictor(AbstractHancockPredictor):
                          random_state=random_state,
                          predictor_type='adjuvant_treatment_prediction'
                          )
+        self._preprocessor = ColumnPreprocessor(
+            self.df_train.columns[2:], min_max_scaler=True)
+        self._preprocessor = self._preprocessor.fit(
+            pd.concat([self.df_train, self.df_test]
+                      ).drop(['patient_id', 'target'], axis=1))
 
     # ----- Cross validation -----
     def cross_validate(
@@ -743,17 +748,14 @@ class TabularAdjuvantTreatmentPredictor(AbstractHancockPredictor):
         Returns:
             list: List with [[x_train, y_train, x_val, y_val], features] in that order.
         """
-        preprocessor = ColumnPreprocessor(
-            df_train_fold.columns[2:], min_max_scaler=True)
-
-        x_train = preprocessor.fit_transform(
+        x_train = self._preprocessor.transform(
             df_train_fold.drop(["patient_id", "target"], axis=1))
-        x_val = preprocessor.transform(
+        x_val = self._preprocessor.transform(
             df_other_fold.drop(["patient_id", "target"], axis=1))
         y_train = df_train_fold["target"].to_numpy()
         y_val = df_other_fold["target"].to_numpy()
 
-        features = preprocessor.get_feature_names_out()
+        features = self._preprocessor.get_feature_names_out()
 
         # Handle class imbalance
         smote = SMOTE(random_state=np.random.RandomState(self._random_number))
