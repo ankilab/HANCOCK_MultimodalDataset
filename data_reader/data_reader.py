@@ -276,7 +276,7 @@ class BloodDataFrameReader(JsonDataFrameReader):
         return super().return_data_count(columns)
 
 
-class WSIPrimaryTumorDataFrameReader(SubDirDataFrameReader):
+class WSIPrimaryTumorDataFrameReader(FileRelationDataFrameReader):
     """DataReader for the WSI primary tumor data.
     """
 
