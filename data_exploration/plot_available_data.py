@@ -163,6 +163,10 @@ class HancockAvailableDataPlotter:
         chart. Y-axis does not correspond to the patient-id but is before
         sorted by the reversed list of columns. 
         """
+        color_available = sns.color_palette('Set2')[0]
+        color_not_available = sns.color_palette('Dark2')[1]
+        color_not_available_lymph = sns.color_palette('Grays')[1]
+
         merged = self.merged
         merged_plot = merged[merged.columns[1:]]
 
@@ -171,20 +175,18 @@ class HancockAvailableDataPlotter:
         avail_sorted = avail_sorted.T
 
         plt.figure(figsize=(6, 2))
-        ax = sns.heatmap(avail_sorted, cmap=[sns.color_palette("Dark2")[
-            1], sns.color_palette("Set2")[0], (1, 1, 1)], cbar=False)
+        ax = sns.heatmap(
+            avail_sorted, cbar=False,
+            cmap=[color_not_available, color_available, color_not_available_lymph]
+        )
         plt.xticks([1, 100, 200, 300, 400, 500, 600, 700, 763])
         ax.set_xticklabels([1, 100, 200, 300, 400, 500, 600, 700, 763])
         plt.tight_layout()
         ax.hlines(list(range(0, 11)), *ax.get_xlim(), colors="white")
 
-        myColors = [sns.color_palette("Set2")[0], sns.color_palette("Dark2")[
-            1], (1, 1, 1)]
-        cmap = LinearSegmentedColormap.from_list(
-            "Custom", myColors, len(myColors))
-
-        legend_handles = [Patch(facecolor=sns.color_palette("Set2")[0], label="Available"),
-                          Patch(facecolor=sns.color_palette("Dark2")[1], label="Not available")]
+        legend_handles = [Patch(facecolor=color_available, label="Available"),
+                          Patch(facecolor=color_not_available, label="Not available (N/A.)"),
+                          Patch(facecolor=color_not_available_lymph, label="N/A. lymph metastasis missing")]
         plt.legend(handles=legend_handles, loc='center left',
                    bbox_to_anchor=(1, 0.5), frameon=False)
         sns.despine(bottom=False, left=True, offset=5)
@@ -216,7 +218,6 @@ class HancockAvailableDataPlotter:
 
 
 if __name__ == '__main__':
-    parser = ArgumentParser()
     plotter = HancockAvailableDataPlotter()
     plotter.plot_available_data()
     plotter.print_missing_data()
