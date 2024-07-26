@@ -16,10 +16,18 @@ defaultPaths = DefaultPaths()
 defaultFileNames = DefaultFileNames()
 
 
+# noinspection PyDefaultArgument
 class DataFrameReader:
     """The DataFrameReader class reads the HANCOCK data from the directory.
     All individual DataFrameReader's should inherit from this class and implement
     the return_data method.
+
+    Methods:
+        return_data: Returns the data as pandas DataFrame.
+        return_data_count: Returns the count of the data for each patient_id.
+
+    Properties:
+        data (pd.DataFrame): The data from the data directory.
     """
     @property
     def data(self) -> pd.DataFrame:
@@ -53,7 +61,7 @@ class DataFrameReader:
             FileNotFoundError: If the file is not found at the in the initializer
             specified path, the FileNotFoundError is raised.
         """
-        return pd.DataFrame(columns=['patient_id', 'data'])
+        return self.data
 
     def return_data_count(self, columns: list[str] = ['patient_id', 'data']):
         """Returns a pandas data frame only with the count of rows we have 
@@ -77,7 +85,7 @@ class DataFrameReader:
 
 class JsonDataFrameReader(DataFrameReader):
     """The DataFrameReader for the tabular structured data, clinical, 
-    blood and pathological data. It reads an json file from the specified
+    blood and pathological data. It reads a json file from the specified
     data directory and returns it as pandas dataframe.
     """
     @property
@@ -109,10 +117,11 @@ class CSVDataFrameReader(JsonDataFrameReader):
         return self._data.copy()
 
 
+# noinspection PyDefaultArgument
 class FileRelationDataFrameReader(DataFrameReader):
     """The DataFrameReader for the data that is structured in several files and
     where we only want to create a relation between the patient_id and the file.
-    Only the files in the in the initializer specified directory are considered.
+    Only the files in the initializer specified directory are considered.
     """
     @property
     def data(self) -> pd.DataFrame:
@@ -127,21 +136,29 @@ class FileRelationDataFrameReader(DataFrameReader):
         super().__init__(data_dir=data_dir)
         self._columns = ['patient_id', 'file']
 
-    def _get_patient_id_to_file_relation_single_dir(self) -> pd.DataFrame:
+    def _get_patient_id_to_file_relation_single_dir(
+            self, data_dir_path: Path | None = None
+    ) -> pd.DataFrame:
         """Creates a pandas data frame that contains the patient_id and the 
         file path in two columns. Only the files in the initializer
         specified directory are considered.
 
+        Args:
+            data_dir_path(Path | None, optional): The base directory where the
+            files should be searched. If None, the directory given in the constructor
+            will be used.
+
         Returns:
             pd.DataFrame: Data frame with two columns, patient_id and file.
         """
+        use_data_dir = self._data_dir if data_dir_path is None else data_dir_path
         file_list = []
-        for file_name in os.listdir(self._data_dir):
-            if not os.path.isdir(self._data_dir / file_name):
+        for file_name in os.listdir(use_data_dir):
+            if not os.path.isdir(use_data_dir / file_name):
                 patient_id = re.search(r"[0-9]{3}", file_name).group()
                 file_list.append({
                     self._columns[0]: patient_id,
-                    self._columns[1]: self._data_dir / file_name
+                    self._columns[1]: use_data_dir / file_name
                 })
         if not file_list:
             slide_df = pd.DataFrame(columns=self._columns)
@@ -223,7 +240,54 @@ class SubDirDataFrameReader(FileRelationDataFrameReader):
         return self.data
 
 
+class NpzDataFrameReader(DataFrameReader):
+    """The DataFrameReader for npz files.
+
+    Methods:
+        return_data: Returns the data from the npz file.
+        return_data_count: Returns the count of the data for each patient_id.
+
+    Properties:
+        data: The data from the npz file as pandas dataframe.
+    """
+    @property
+    def data(self) -> pd.DataFrame:
+        if self._data is None:
+            self._data = self._get_data()
+        return self._data.copy()
+
+    def __init__(self, data_dir: Path = Path(__file__)):
+        super().__init__(data_dir=data_dir)
+
+    def _get_data(self) -> pd.DataFrame:
+        """Returns the data from the npz file.
+        """
+        npz_data = np.load(str(self._data_dir), allow_pickle=True)
+        patient_ids = npz_data.keys()
+
+        data_ids = []
+        for patient_id in patient_ids:
+            data_ids.append(npz_data[patient_id])
+
+        marker = self._get_marker_from_data_dir()
+
+        return pd.DataFrame({'patient_id': patient_ids, marker: data_ids})
+
+    def _get_marker_from_data_dir(self) -> str:
+        """Returns the marker from the data directory. The file name should be
+        something like 'centertile_dtr_256dim_{marker}.npz'.
+        If the marker is not found in the file name, 'data' is returned.
+        """
+        stem = self._data_dir.stem
+        stem_split = stem.split('_')
+        marker = 'data'
+        if len(stem_split) > 1:
+            marker = stem_split[len(stem_split) -1 ].split('.')[0]
+        return marker
+
+
 # ----- DataReader for the data set -----
+# noinspection PyDefaultArgument
 class PathologicalDataFrameReader(JsonDataFrameReader):
     """DataReader for the pathological structured data.
     """
@@ -250,6 +314,7 @@ class PathologicalDataFrameReader(JsonDataFrameReader):
         return super().return_data_count(columns)
 
 
+# noinspection PyDefaultArgument
 class ClinicalDataFrameReader(JsonDataFrameReader):
     """DataReader for the clinical structured data.
     """
@@ -262,6 +327,7 @@ class ClinicalDataFrameReader(JsonDataFrameReader):
         return super().return_data_count(columns)
 
 
+# noinspection PyDefaultArgument
 class BloodDataFrameReader(JsonDataFrameReader):
     """DataReader for the blood structured data.
     """
@@ -273,6 +339,7 @@ class BloodDataFrameReader(JsonDataFrameReader):
         return super().return_data_count(columns)
 
 
+# noinspection PyDefaultArgument
 class WSIPrimaryTumorDataFrameReader(FileRelationDataFrameReader):
     """DataReader for the WSI primary tumor data.
     """
@@ -299,6 +366,7 @@ class WSIPrimaryTumorDataFrameReader(FileRelationDataFrameReader):
         return super().return_data_count(columns)
 
 
+# noinspection PyDefaultArgument
 class WSILymphNodeDataFrameReader(FileRelationDataFrameReader):
     """DataReader for the WSI lymph node data.
     """
@@ -324,6 +392,7 @@ class WSILymphNodeDataFrameReader(FileRelationDataFrameReader):
         return super().return_data_count(columns)
 
 
+# noinspection PyDefaultArgument
 class TextDataReportsDataFrameReader(FileRelationDataFrameReader):
     """DataReader for the textual report data.
     """
@@ -349,6 +418,7 @@ class TextDataReportsDataFrameReader(FileRelationDataFrameReader):
         return super().return_data_count(columns)
 
 
+# noinspection PyDefaultArgument
 class TMACellDensityDataFrameReader(JsonDataFrameReader):
     """Data Reader for the cell density measurements of the TMA data.
     """
@@ -417,7 +487,7 @@ class FeatureICDCodesDataFrameReader(CSVDataFrameReader):
 
 
 class FeatureTMACellDensityDataFrameReader(CSVDataFrameReader):
-    def __init__(self, data_dir: Path = defaultPaths.feature_celldensity):
+    def __init__(self, data_dir: Path = defaultPaths.feature_cell_density):
         super().__init__(data_dir)
 
 
@@ -487,6 +557,190 @@ class FeatureTabularMergedDataFrameReader(DataFrameReader):
             pd.DataFrame: The merged feature data.
         """
         return self.data
+
+
+class FeatureTmaCd3DataFrameReader(NpzDataFrameReader):
+    """Reader for the TMA CD3 center tile data.
+
+    Methods:
+        return_data: Returns the data from the npz file.
+        return_data_count: Returns the count of the data for each patient_id.
+
+    Properties:
+        data (pd.DataFrame): The data from the npz file as pandas dataframe.
+    """
+    def __init__(self, data_dir: Path = defaultPaths.feature_tma_cd3):
+        super().__init__(data_dir = data_dir)
+
+
+class FeatureTmaCd8DataFrameReader(NpzDataFrameReader):
+    """Reader for the TMA CD3 center tile data.
+
+    Methods:
+        return_data: Returns the data from the npz file.
+        return_data_count: Returns the count of the data for each patient_id.
+
+    Properties:
+        data (pd.DataFrame): The data from the npz file as pandas dataframe.
+    """
+    def __init__(self, data_dir: Path = defaultPaths.feature_tma_cd8):
+        super().__init__(data_dir = data_dir)
+
+
+class FeatureTmaCd56DataFrameReader(NpzDataFrameReader):
+    """Reader for the TMA CD3 center tile data.
+
+    Methods:
+        return_data: Returns the data from the npz file.
+        return_data_count: Returns the count of the data for each patient_id.
+
+    Properties:
+        data (pd.DataFrame): The data from the npz file as pandas dataframe.
+    """
+    def __init__(self, data_dir: Path = defaultPaths.feature_tma_cd56):
+        super().__init__(data_dir = data_dir)
+
+
+class FeatureTmaCd68DataFrameReader(NpzDataFrameReader):
+    """Reader for the TMA CD3 center tile data.
+
+    Methods:
+        return_data: Returns the data from the npz file.
+        return_data_count: Returns the count of the data for each patient_id.
+
+    Properties:
+        data (pd.DataFrame): The data from the npz file as pandas dataframe.
+    """
+    def __init__(self, data_dir: Path = defaultPaths.feature_tma_cd68):
+        super().__init__(data_dir = data_dir)
+
+
+class FeatureTmaCd163DataFrameReader(NpzDataFrameReader):
+    """Reader for the TMA CD3 center tile data.
+
+    Methods:
+        return_data: Returns the data from the npz file.
+        return_data_count: Returns the count of the data for each patient_id.
+
+    Properties:
+        data (pd.DataFrame): The data from the npz file as pandas dataframe.
+    """
+    def __init__(self, data_dir: Path = defaultPaths.feature_tma_cd163):
+        super().__init__(data_dir = data_dir)
+
+
+class FeatureTmaHeDataFrameReader(NpzDataFrameReader):
+    """Reader for the TMA CD3 center tile data.
+
+    Methods:
+        return_data: Returns the data from the npz file.
+        return_data_count: Returns the count of the data for each patient_id.
+
+    Properties:
+        data (pd.DataFrame): The data from the npz file as pandas dataframe.
+    """
+    def __init__(self, data_dir: Path = defaultPaths.feature_tma_he):
+        super().__init__(data_dir = data_dir)
+
+
+class FeatureTmaMhc1DataFrameReader(NpzDataFrameReader):
+    """Reader for the TMA CD3 center tile data.
+
+    Methods:
+        return_data: Returns the data from the npz file.
+        return_data_count: Returns the count of the data for each patient_id.
+
+    Properties:
+        data (pd.DataFrame): The data from the npz file as pandas dataframe.
+    """
+    def __init__(self, data_dir: Path = defaultPaths.feature_tma_cd3):
+        super().__init__(data_dir = data_dir)
+
+
+class FeatureTmaPdl1DataFrameReader(NpzDataFrameReader):
+    """Reader for the TMA CD3 center tile data.
+
+    Methods:
+        return_data: Returns the data from the npz file.
+        return_data_count: Returns the count of the data for each patient_id.
+
+    Properties:
+        data (pd.DataFrame): The data from the npz file as pandas dataframe.
+    """
+    def __init__(self, data_dir: Path = defaultPaths.feature_tma_pdl1):
+        super().__init__(data_dir = data_dir)
+
+
+class FeatureTmaMergedDataFrameReader(DataFrameReader):
+    @property
+    def data(self) -> pd.DataFrame:
+        if self._data is None:
+            self._data = self._get_data()
+        return self._data.copy()
+
+    def __init_(self, data_dir: Path = defaultPaths.features):
+        super().__init__(data_dir=data_dir)
+
+    def _get_data(self, clean_data:bool = False) -> pd.DataFrame:
+        """Reads the data from the npz files and merges them on 'patient_id'.
+
+        Args:
+            clean_data (bool, optional): If True, the data will be cleaned,
+            meaning that NaN values will be replaced with zero vectors.
+
+        Returns:
+            pd.DataFrame: The merged data from the npz files.
+        """
+        data_reader_list = self._create_data_reader_list()
+        data = data_reader_list[0].return_data()
+        for data_reader in data_reader_list[1:]:
+            data = data.merge(
+                data_reader.return_data(),
+                on='patient_id', how='outer'
+            )
+
+        if clean_data:
+            data = self._clean_data(data)
+
+        return data
+
+    def _create_data_reader_list(self) -> list[DataFrameReader]:
+        """Creates a list of data readers for the TMA data.
+        Starts in the self._data_dir but the file names are
+        taken from the defaultFileName class.
+
+        Returns:
+            list[DataFrameReader]: List of data readers for the
+            TMA feature data.
+        """
+        data_reader_list = [FeatureTmaCd3DataFrameReader(
+            data_dir=self._data_dir / defaultFileNames.feature_tma_cd3
+        ), FeatureTmaCd8DataFrameReader(
+            data_dir=self._data_dir / defaultFileNames.feature_tma_cd8
+        ), FeatureTmaCd56DataFrameReader(
+            data_dir=self._data_dir / defaultFileNames.feature_tma_cd56
+        ), FeatureTmaCd68DataFrameReader(
+            data_dir=self._data_dir / defaultFileNames.feature_tma_cd56
+        ), FeatureTmaCd163DataFrameReader(
+            data_dir=self._data_dir / defaultFileNames.feature_tma_cd163
+        ), FeatureTmaHeDataFrameReader(
+            data_dir=self._data_dir / defaultFileNames.feature_tma_he
+        ), FeatureTmaMhc1DataFrameReader(
+            data_dir=self._data_dir / defaultFileNames.feature_tma_mhc1
+        ), FeatureTmaPdl1DataFrameReader(
+            data_dir=self._data_dir / defaultFileNames.feature_tma_pdl1
+        )]
+        return data_reader_list
+
+    def _clean_data(self, data: pd.DataFrame) -> pd.DataFrame:
+        cleaned_data = data.applymap(self._replace_nan_with_zeros)
+        return cleaned_data
+
+    @staticmethod
+    def _replace_nan_with_zeros(x):
+        if pd.isna(x):
+            return np.zeros(shape=(512, ))
+        return x
 
 
 # --- DataReader for the targets ---

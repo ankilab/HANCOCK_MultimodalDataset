@@ -9,6 +9,14 @@ class DefaultFileNames:
         self.feature_blood = 'blood.csv'
         self.feature_icd_codes = 'icd_codes.csv'
         self.feature_cell_density = 'tma_cell_density.csv'
+        self.feature_tma_cd3 = 'centertile_dtr_256dim_CD3.npz'
+        self.feature_tma_cd8 = 'centertile_dtr_256dim_CD8.npz'
+        self.feature_tma_cd56 = 'centertile_dtr_256dim_CD56.npz'
+        self.feature_tma_cd68 = 'centertile_dtr_256dim_CD68.npz'
+        self.feature_tma_cd163 = 'centertile_dtr_256dim_CD163.npz'
+        self.feature_tma_he = 'centertile_dtr_256dim_HE.npz'
+        self.feature_tma_mhc1 = 'centertile_dtr_256dim_MHC1.npz'
+        self.feature_tma_pdl1 = 'centertile_dtr_256dim_PDL1.npz'
 
         # ---- Targets ----
         self.targets = 'targets.csv'
@@ -53,7 +61,15 @@ class DefaultPaths:
         self.feature_patho = self.features / file_names.feature_patho
         self.feature_blood = self.features / file_names.feature_blood
         self.feature_icd_codes = self.features / file_names.feature_icd_codes
-        self.feature_celldensity = self.features / file_names.feature_cell_density
+        self.feature_cell_density = self.features / file_names.feature_cell_density
+        self.feature_tma_cd3 = self.features / file_names.feature_tma_cd3
+        self.feature_tma_cd8 = self.features / file_names.feature_tma_cd8
+        self.feature_tma_cd56 = self.features / file_names.feature_tma_cd56
+        self.feature_tma_cd68 = self.features / file_names.feature_tma_cd68
+        self.feature_tma_cd163 = self.features / file_names.feature_tma_cd163
+        self.feature_tma_he = self.features / file_names.feature_tma_he
+        self.feature_tma_mhc1 = self.features / file_names.feature_tma_mhc1
+        self.feature_tma_pdl1 = self.features / file_names.feature_tma_pdl1
 
         # ---- Targets ----
         self.targets = self.features / file_names.targets
