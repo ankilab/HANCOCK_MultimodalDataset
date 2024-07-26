@@ -32,16 +32,13 @@ class DataFrameReader:
 
     def __init__(self, data_dir: Path = Path(__file__)):
         """The DataReader class reads the HANCOCK data from the directory. It
-        return the data in a pandas DataFrame. For image data it returns the
+        returns the data in a pandas DataFrame. For image data it returns the
         patient_id and the path to the image.
 
         Args:
             data_dir (Path, optional): The absolute path of the file in the case 
             of tabular structured data or the starting directory in case 
             of the image data or textual report data. Defaults to Path(__file__).
-            include_sub_dir (bool, optional): For the image data, if the images are
-            in subdirectories, set this to True to find all the images. Defaults
-            to False.
         """
         self._data_dir = data_dir
         self._data = None
@@ -132,7 +129,7 @@ class FileRelationDataFrameReader(DataFrameReader):
 
     def _get_patient_id_to_file_relation_single_dir(self) -> pd.DataFrame:
         """Creates a pandas data frame that contains the patient_id and the 
-        file path in two columns. Only the files in the in the initializer 
+        file path in two columns. Only the files in the initializer
         specified directory are considered.
 
         Returns:
@@ -146,7 +143,7 @@ class FileRelationDataFrameReader(DataFrameReader):
                     self._columns[0]: patient_id,
                     self._columns[1]: self._data_dir / file_name
                 })
-        if (file_list == []):
+        if not file_list:
             slide_df = pd.DataFrame(columns=self._columns)
         else:
             slide_df = pd.DataFrame(file_list)
@@ -543,8 +540,8 @@ class DataSplitInDataFrameReader(JsonDataFrameReader):
         super().__init__(data_dir)
 
 
-class DataSplitOrypharynxDataFrameReader(JsonDataFrameReader):
-    def __init__(self, data_dir: Path = defaultPaths.data_split_orypharynx):
+class DataSplitOropharynxDataFrameReader(JsonDataFrameReader):
+    def __init__(self, data_dir: Path = defaultPaths.data_split_oropharynx):
         super().__init__(data_dir)
 
 

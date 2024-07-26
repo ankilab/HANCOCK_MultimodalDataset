@@ -18,7 +18,7 @@ class DefaultFileNames:
         self.data_split_clinical = 'DataDictionary_clinical.csv'
         self.data_split_patho = 'DataDictionary_pathological.csv'
         self.data_split_in = 'dataset_split_in.json'
-        self.data_split_orypharynx = 'dataset_split_Oropharynx.json'
+        self.data_split_oropharynx = 'dataset_split_Oropharynx.json'
         self.data_split_out = 'dataset_split_out.json'
         self.data_split_treatment_outcome = 'dataset_split_treatment_outcome.json'
 
@@ -63,8 +63,8 @@ class DefaultPaths:
         self.data_split_clinical = self.data_split / file_names.data_split_clinical
         self.data_split_patho = self.data_split / file_names.data_split_patho
         self.data_split_in = self.data_split / file_names.data_split_in
-        self.data_split_orypharynx = self.data_split / \
-            file_names.data_split_orypharynx
+        self.data_split_oropharynx = self.data_split / \
+                                     file_names.data_split_oropharynx
         self.data_split_out = self.data_split / file_names.data_split_out
         self.data_split_treatment_outcome = self.data_split / \
             file_names.data_split_treatment_outcome

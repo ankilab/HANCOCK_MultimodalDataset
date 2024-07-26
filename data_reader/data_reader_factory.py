@@ -20,7 +20,7 @@ from .data_reader import (
     DataSplitClinicalDataFrameReader,
     DataSplitPathologicalDataFrameReader,
     DataSplitInDataFrameReader,
-    DataSplitOrypharynxDataFrameReader,
+    DataSplitOropharynxDataFrameReader,
     DataSplitOutDataFrameReader,
     DataSplitTreatmentOutcomeDataFrameReader
 )
@@ -222,7 +222,7 @@ class DataFrameReaderFactory:
         elif data_type == self.data_reader_types.data_split_in:
             data_reader = DataSplitInDataFrameReader
         elif data_type == self.data_reader_types.data_split_orypharynx:
-            data_reader = DataSplitOrypharynxDataFrameReader
+            data_reader = DataSplitOropharynxDataFrameReader
         elif data_type == self.data_reader_types.data_split_out:
             data_reader = DataSplitOutDataFrameReader
         elif data_type == self.data_reader_types.data_split_treatment_outcome:
