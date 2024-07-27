@@ -907,28 +907,10 @@ class TabularMergedAdjuvantTreatmentPredictor(AdjuvantTreatmentPredictor):
         return model
 
 
-class ClinicalAdjuvantTreatmentPredictor(AdjuvantTreatmentPredictor):
+class ClinicalAdjuvantTreatmentPredictor(TabularMergedAdjuvantTreatmentPredictor):
     """Class for predicting adjuvant treatments. Here the clinical tabular
     data is used.
     """
-
-    def __init__(self, save_flag: bool = False, plot_flag: bool = False, random_state: int = 42):
-        """
-        Initializes the ClinicalAdjuvantTreatmentPredictor. It can be used to
-        perform adjuvant treatment prediction with the clinical tabular data.
-
-        Args:
-            save_flag (bool, optional): If this is set to True the generated
-            plots will be saved. Defaults to False.
-
-            plot_flag (bool, optional): If this is set to True the generated
-            plots will be shown to the user. Defaults to False.
-
-            random_state (int, optional): To make sure that the outputs are
-            reproducible we initialize all processes that involve randomness
-            with the random_state. Defaults to 42.
-        """
-        super().__init__(save_flag=save_flag, plot_flag=plot_flag, random_state=random_state)
 
     def _prepare_data(self):
         data_reader = self._data_reader_factory.make_data_frame_reader(
@@ -937,29 +919,10 @@ class ClinicalAdjuvantTreatmentPredictor(AdjuvantTreatmentPredictor):
         self._data = data_reader.return_data()
 
 
-class PathologicalAdjuvantTreatmentPredictor(AdjuvantTreatmentPredictor):
+class PathologicalAdjuvantTreatmentPredictor(TabularMergedAdjuvantTreatmentPredictor):
     """Class for predicting adjuvant treatments. Here the pathological tabular
     data is used.
-
     """
-
-    def __init__(self, save_flag: bool = False, plot_flag: bool = False, random_state: int = 42):
-        """
-        Initializes the ClinicalAdjuvantTreatmentPredictor. It can be used to
-        perform adjuvant treatment prediction with the clinical tabular data.
-
-        Args:
-            save_flag (bool, optional): If this is set to True the generated
-            plots will be saved. Defaults to False.
-
-            plot_flag (bool, optional): If this is set to True the generated
-            plots will be shown to the user. Defaults to False.
-
-            random_state (int, optional): To make sure that the outputs are
-            reproducible we initialize all processes that involve randomness
-            with the random_state. Defaults to 42.
-        """
-        super().__init__(save_flag=save_flag, plot_flag=plot_flag, random_state=random_state)
 
     def _prepare_data(self):
         data_reader = self._data_reader_factory.make_data_frame_reader(
@@ -968,28 +931,10 @@ class PathologicalAdjuvantTreatmentPredictor(AdjuvantTreatmentPredictor):
         self._data = data_reader.return_data()
 
 
-class BloodAdjuvantTreatmentPredictor(AdjuvantTreatmentPredictor):
+class BloodAdjuvantTreatmentPredictor(TabularMergedAdjuvantTreatmentPredictor):
     """Class for predicting adjuvant treatments. Here the blood tabular
     data is used.
     """
-
-    def __init__(self, save_flag: bool = False, plot_flag: bool = False, random_state: int = 42):
-        """
-        Initializes the BloodAdjuvantTreatmentPredictor. It can be used to
-        perform adjuvant treatment prediction with the blood tabular data.
-
-        Args:
-            save_flag (bool, optional): If this is set to True the generated
-            plots will be saved. Defaults to False.
-
-            plot_flag (bool, optional): If this is set to True the generated
-            plots will be shown to the user. Defaults to False.
-
-            random_state (int, optional): To make sure that the outputs are
-            reproducible we initialize all processes that involve randomness
-            with the random_state. Defaults to 42.
-        """
-        super().__init__(save_flag=save_flag, plot_flag=plot_flag, random_state=random_state)
 
     def _prepare_data(self):
         data_reader = self._data_reader_factory.make_data_frame_reader(
@@ -998,28 +943,10 @@ class BloodAdjuvantTreatmentPredictor(AdjuvantTreatmentPredictor):
         self._data = data_reader.return_data()
 
 
-class TMACellDensityAdjuvantTreatmentPredictor(AdjuvantTreatmentPredictor):
+class TMACellDensityAdjuvantTreatmentPredictor(TabularMergedAdjuvantTreatmentPredictor):
     """Class for predicting adjuvant treatments. Here the TMA cell density tabular
     data is used.
     """
-
-    def __init__(self, save_flag: bool = False, plot_flag: bool = False, random_state: int = 42):
-        """
-        Initializes the TMACellDensityAdjuvantTreatmentPredictor. It can be used to
-        perform adjuvant treatment prediction with the TMA cell density tabular data.
-
-        Args:
-            save_flag (bool, optional): If this is set to True the generated
-            plots will be saved. Defaults to False.
-
-            plot_flag (bool, optional): If this is set to True the generated
-            plots will be shown to the user. Defaults to False.
-
-            random_state (int, optional): To make sure that the outputs are
-            reproducible we initialize all processes that involve randomness
-            with the random_state. Defaults to 42.
-        """
-        super().__init__(save_flag=save_flag, plot_flag=plot_flag, random_state=random_state)
 
     def _prepare_data(self):
         data_reader = self._data_reader_factory.make_data_frame_reader(
@@ -1028,68 +955,12 @@ class TMACellDensityAdjuvantTreatmentPredictor(AdjuvantTreatmentPredictor):
         self._data = data_reader.return_data()
 
 
-class ICDCodesAdjuvantTreatmentPredictor(AdjuvantTreatmentPredictor):
+class ICDCodesAdjuvantTreatmentPredictor(TabularMergedAdjuvantTreatmentPredictor):
     """Class for predicting adjuvant treatments. Here the ICD codes are
     is used."""
-
-    def __init__(self, save_flag: bool = False, plot_flag: bool = False, random_state: int = 42):
-        """
-        Initializes the ICDCodesAdjuvantTreatmentPredictor. It can be used to
-        perform adjuvant treatment prediction with the ICD Codes data.
-
-        Args:
-            save_flag (bool, optional): If this is set to True the generated
-            plots will be saved. Defaults to False.
-
-            plot_flag (bool, optional): If this is set to True the generated
-            plots will be shown to the user. Defaults to False.
-
-            random_state (int, optional): To make sure that the outputs are
-            reproducible we initialize all processes that involve randomness
-            with the random_state. Defaults to 42.
-        """
-        super().__init__(save_flag=save_flag, plot_flag=plot_flag, random_state=random_state)
 
     def _prepare_data(self):
         data_reader = self._data_reader_factory.make_data_frame_reader(
             data_type=self._data_reader_factory.data_reader_types.icd_codes_feature
         )
         self._data = data_reader.return_data()
-
-
-if __name__ == "__main__":
-    main_save_flag = True
-    main_plot_flag = True
-    multi_predictor = AdjuvantTreatmentPredictor(
-        save_flag=main_save_flag, plot_flag=main_plot_flag)
-    clinical_predictor = ClinicalAdjuvantTreatmentPredictor(
-        save_flag=main_save_flag, plot_flag=main_plot_flag)
-    patho_predictor = PathologicalAdjuvantTreatmentPredictor(
-        save_flag=main_save_flag, plot_flag=main_plot_flag)
-    blood_predictor = BloodAdjuvantTreatmentPredictor(
-        save_flag=main_save_flag, plot_flag=main_plot_flag)
-    tma_cell_density_predictor = TMACellDensityAdjuvantTreatmentPredictor(
-        save_flag=main_save_flag, plot_flag=main_plot_flag)
-    icd_predictor = ICDCodesAdjuvantTreatmentPredictor(
-        save_flag=main_save_flag, plot_flag=main_plot_flag)
-    cross_validation_splits = 10
-
-    data_types = [
-        'multimodal', 'clinical', 'pathological', 'blood', 'cell density', 'text'
-    ]
-    predictors = [
-        multi_predictor, clinical_predictor, patho_predictor, blood_predictor,
-        tma_cell_density_predictor, icd_predictor
-    ]
-
-    for data_type, predictor in zip(data_types, predictors):
-        print(f'Running k-fold cross-validation for {data_type} data ...')
-        _ = predictor.cross_validate(n_splits=cross_validation_splits,
-                                     plot_name='adjuvant_therapy_' + data_type)
-
-    # Train classifier once on multimodal data, show survival curves and bar plot
-    print("Training and testing the final multimodal model...")
-    multi_predictor.train(
-        plot_name='adjuvant_therapy_multimodal', df_train=multi_predictor.df_train,
-        df_other=multi_predictor.df_test
-    )
