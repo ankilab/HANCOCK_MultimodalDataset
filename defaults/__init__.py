@@ -48,7 +48,7 @@ class DefaultPaths:
         self.blood = self.structured_data_dir / "blood_data.json"
         self.blood_ref = self.structured_data_dir / \
             "blood_data_reference_ranges.json"
-        self.celldensity = self.data_dir / \
+        self.cell_density = self.data_dir / \
             "TMA_CellDensityMeasurements" / "TMA_celldensity_measurements.csv"
         self.text_data_dir = self.data_dir / 'TextData'
         self.reports = self.text_data_dir / "reports"

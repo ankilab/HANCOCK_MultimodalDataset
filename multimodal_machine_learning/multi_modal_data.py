@@ -832,7 +832,7 @@ class TabularAdjuvantTreatmentPredictor(AbstractHancockPredictor):
         methods. For this predictor the StructuralAggregated data is used.
         """
         data_reader = self._data_reader_factory.make_data_frame_reader(
-            data_type=self._data_reader_factory.data_reader_types.merged_feature,
+            data_type=self._data_reader_factory.data_reader_types.tabular_merged_feature,
             data_dir=self.args.features_dir,
             data_dir_flag=True
         )

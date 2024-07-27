@@ -13,16 +13,26 @@ from .data_reader import (
     FeatureBloodDataFrameReader,
     FeatureICDCodesDataFrameReader,
     FeatureTMACellDensityDataFrameReader,
-    TargetsDataFrameReader,
-    TargetsAdjuvantPredictionDataFrameReader,
     FeatureTabularMergedDataFrameReader,
+    FeatureTmaCd3DataFrameReader,
+    FeatureTmaCd8DataFrameReader,
+    FeatureTmaCd56DataFrameReader,
+    FeatureTmaCd68DataFrameReader,
+    FeatureTmaCd163DataFrameReader,
+    FeatureTmaHeDataFrameReader,
+    FeatureTmaMhc1DataFrameReader,
+    FeatureTmaPdl1DataFrameReader,
+    FeatureTmaMergedDataFrameReader,
+    FeatureTmaAndTabularMergedDataFrameReader,
     DataSplitBloodDataFrameReader,
     DataSplitClinicalDataFrameReader,
     DataSplitPathologicalDataFrameReader,
     DataSplitInDataFrameReader,
     DataSplitOropharynxDataFrameReader,
     DataSplitOutDataFrameReader,
-    DataSplitTreatmentOutcomeDataFrameReader
+    DataSplitTreatmentOutcomeDataFrameReader,
+    TargetsDataFrameReader,
+    TargetsAdjuvantPredictionDataFrameReader,
 )
 import warnings
 
@@ -44,7 +54,18 @@ class DataReaderTypes:
         self.blood_feature = 'Blood Feature'
         self.icd_codes_feature = 'ICD Codes Feature'
         self.tma_cell_density_feature = 'Feature TMA Cell Density'
-        self.merged_feature = 'Structural Aggregated'
+        self.tabular_merged_feature = 'Structural Aggregated'
+
+        self.tma_cd3_feature = 'TMA CD3'
+        self.tma_cd8_feature = 'TMA CD8'
+        self.tma_cd56_feature = 'TMA CD56'
+        self.tma_cd68_feature = 'TMA CD68'
+        self.tma_cd163_feature = 'TMA CD163'
+        self.tma_he_feature = 'TMA HE'
+        self.tma_mhc1_feature = 'TMA MHC1'
+        self.tma_pdl1_feature = 'TMA PDL1'
+        self.tma_merged_feature = 'TMA Merged'
+        self.tma_tabular_merged_feature = 'TMA and Tabular Merged'
 
         # ---- Targets ----
         self.targets = 'Targets'
@@ -140,7 +161,7 @@ class DataFrameReaderFactory:
             data_reader = TMACellDensityDataFrameReader
         elif data_type == self.data_reader_types.text_reports:
             data_reader = TextDataReportsDataFrameReader
-        elif data_type == self.data_reader_types.merged_feature:
+        elif data_type == self.data_reader_types.tabular_merged_feature:
             data_reader = FeatureTabularMergedDataFrameReader
 
         return data_reader
@@ -171,6 +192,47 @@ class DataFrameReaderFactory:
             data_reader = FeatureICDCodesDataFrameReader
         elif data_type == self.data_reader_types.tma_cell_density_feature:
             data_reader = FeatureTMACellDensityDataFrameReader
+
+        data_reader = self._make_tma_feature_data_frame_reader(data_type, data_reader)
+
+        return data_reader
+
+    def _make_tma_feature_data_frame_reader(
+            self, data_type: str, data_reader: [DataFrameReader]
+    ) -> [DataFrameReader]:
+        """Checks the data_type and returns the appropriate reference to the
+        data reader class. If there is no match between the data_type and
+        the data related data_type's from the DataReaderTypes class, the
+        input data_reader is returned.
+
+        Args:
+            data_type (str): Data type of the data reader that should be returned.
+            data_reader (DataFrameReader): Reference to a data reader class.
+
+        Returns:
+            DataFrameReader: Reference to a data reader class based on the
+            data type.
+        """
+        if data_type == self.data_reader_types.tma_cd3_feature:
+            data_reader = FeatureTmaCd3DataFrameReader
+        elif data_type == self.data_reader_types.tma_cd8_feature:
+            data_reader = FeatureTmaCd8DataFrameReader
+        elif data_type == self.data_reader_types.tma_cd56_feature:
+            data_reader = FeatureTmaCd56DataFrameReader
+        elif data_type == self.data_reader_types.tma_cd68_feature:
+            data_reader = FeatureTmaCd68DataFrameReader
+        elif data_type == self.data_reader_types.tma_cd163_feature:
+            data_reader = FeatureTmaCd163DataFrameReader
+        elif data_type == self.data_reader_types.tma_he_feature:
+            data_reader = FeatureTmaHeDataFrameReader
+        elif data_type == self.data_reader_types.tma_mhc1_feature:
+            data_reader = FeatureTmaMhc1DataFrameReader
+        elif data_type == self.data_reader_types.tma_pdl1_feature:
+            data_reader = FeatureTmaPdl1DataFrameReader
+        elif data_type == self.data_reader_types.tma_merged_feature:
+            data_reader = FeatureTmaMergedDataFrameReader
+        elif data_type == self.data_reader_types.tma_tabular_merged_feature:
+            data_reader = FeatureTmaAndTabularMergedDataFrameReader
 
         return data_reader
 

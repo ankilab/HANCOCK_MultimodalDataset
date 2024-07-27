@@ -27,6 +27,7 @@ from keras.backend import clear_session
 
 from data_exploration.umap_embedding import setup_preprocessing_pipeline
 from utils import get_significance
+from defaults import DefaultPaths
 
 
 SEED = 42
@@ -484,12 +485,26 @@ def visualize_2d_embedding():
 
 
 if __name__ == "__main__":
+    defaultPaths = DefaultPaths()
     parser = ArgumentParser()
-    parser.add_argument("datasplit_directory", type=str, help="Path to directory that contains data splits as JSON files")
-    parser.add_argument("features_directory", type=str, help="Path to directory with extracted features")
-    parser.add_argument("results_directory", type=str, help="Path to directory where results will be saved")
-    parser.add_argument("--tensorboard", action="store_true", help="Enable TensorBoard logging")
-    parser.add_argument("--prefix", dest="prefix", type=str, default="", help="Custom prefix for filenames")
+    parser.add_argument(
+        "datasplit_directory", type=str,
+        help="Path to directory that contains data splits as JSON files",
+        default=defaultPaths.data_split,
+        nargs='?'
+    )
+    parser.add_argument(
+        "features_directory", type=str,
+        help="Path to directory with extracted features",
+        default=defaultPaths.features,
+        nargs='?'
+    )
+    parser.add_argument(
+        "results_directory", type=str,
+        help="Path to directory where results will be saved",
+        default=defaultPaths.results,
+        nargs='?'
+    )
     args = parser.parse_args()
 
     data_dir = Path(args.features_directory)

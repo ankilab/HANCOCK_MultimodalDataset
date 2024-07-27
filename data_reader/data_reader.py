@@ -430,7 +430,7 @@ class TMACellDensityDataFrameReader(JsonDataFrameReader):
 
     def __init__(
         self,
-        data_dir: Path = defaultPaths.celldensity,
+        data_dir: Path = defaultPaths.cell_density,
         tma_name: str = 'TMA CD3'
     ):
         super().__init__(data_dir)
@@ -741,6 +741,28 @@ class FeatureTmaMergedDataFrameReader(DataFrameReader):
         if pd.isna(x):
             return np.zeros(shape=(512, ))
         return x
+
+
+class FeatureTmaAndTabularMergedDataFrameReader(DataFrameReader):
+    @property
+    def data(self) -> pd.DataFrame:
+        if self._data is None:
+            self._data = self._get_data()
+        return self._data.copy()
+
+    def __init__(self, data_dir: Path = defaultPaths.features):
+        super().__init__(data_dir = data_dir)
+
+    def _get_data(self):
+        feature_tma_reader = FeatureTmaMergedDataFrameReader(data_dir=self._data_dir)
+        feature_tabular_reader = FeatureTabularMergedDataFrameReader(data_dir=self._data_dir)
+
+        data = feature_tma_reader.return_data()
+        data = data.merge(
+            feature_tabular_reader.return_data(),
+            on='patient_id', how='outer'
+        )
+        return data
 
 
 # --- DataReader for the targets ---

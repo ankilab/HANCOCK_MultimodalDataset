@@ -84,7 +84,7 @@ class HancockArgumentParser(ArgumentParser):
             "--path_celldensity",
             type=Path,
             help="Absolute path to the cell density measurements file in the specified dataset_dir",
-            default=self._defaultPaths.celldensity,
+            default=self._defaultPaths.cell_density,
             nargs="?"
         )
 
