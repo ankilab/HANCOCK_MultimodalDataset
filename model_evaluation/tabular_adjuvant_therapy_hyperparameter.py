@@ -9,8 +9,8 @@ from sklearn.tree import DecisionTreeClassifier
 import json
 
 sys.path.append(str(Path(__file__).parents[1]))
-from multimodal_machine_learning import TabularAdjuvantTreatmentPredictor
-
+# from multimodal_machine_learning import AdjuvantTreatmentPredictor
+from multimodal_machine_learning import TabularMergedAdjuvantTreatmentPredictor
 
 class AbstractTabularAdjuvantTreatmentModelEvaluator:
     """For Evaluating Hyper-Parameters of Adjuvant Treatment Models
@@ -28,7 +28,7 @@ class AbstractTabularAdjuvantTreatmentModelEvaluator:
             random_state (int, optional): Random state seed for reproducibility. Will be passed to
             all functions classes that contain random events. Defaults to 42.
         """
-        self.predictor = TabularAdjuvantTreatmentPredictor(
+        self.predictor = TabularMergedAdjuvantTreatmentPredictor(
             plot_flag=plot_flag, save_flag=save_flag, random_state=random_state
         )
         self._random_state = random_state
@@ -46,7 +46,7 @@ class AbstractTabularAdjuvantTreatmentModelEvaluator:
             plot_name: str = 'random_search_adjuvant_therapy'
     ) -> dict[str, any]:
         """Performs a random search with cross-validation on the model
-        (call of _create_base_model()) using the hyper-parameter space
+        (call of _create_base_model()) using the hyperparameter space
         defined (call of create_hyper_parameter_space_random()).
 
         Args:
@@ -221,7 +221,7 @@ class RandomForestAbstractTabularAdjuvantTreatmentModelEvaluator(
             plot_name: str = 'random_search_random_forest_adjuvant_therapy_multimodal'
     ) -> dict[str, any]:
         """Performs a random search with cross-validation on the model
-        (call of _create_base_model()) using the hyper-parameter space
+        (call of _create_base_model()) using the hyperparameter space
         defined (call of create_hyper_parameter_space_random()).
 
         Args:
@@ -324,7 +324,7 @@ class SVCAbstractTabularAdjuvantTreatmentModelEvaluator(
             plot_name: str = 'random_search_svc_adjuvant_therapy'
     ) -> dict[str, any]:
         """Performs a random search with cross-validation on the model
-        (call of _create_base_model()) using the hyper-parameter space
+        (call of _create_base_model()) using the hyperparameter space
         defined (call of create_hyper_parameter_space_random()).
 
         Args:
@@ -420,7 +420,7 @@ class AdaBoostAbstractTabularAdjuvantTreatmentModelEvaluator(
             plot_name: str = 'random_search_ada_boost_adjuvant_therapy_multimodal'
     ) -> dict[str, any]:
         """Performs a random search with cross-validation on the model
-        (call of _create_base_model()) using the hyper-parameter space
+        (call of _create_base_model()) using the hyperparameter space
         defined (call of create_hyper_parameter_space_random()).
 
         Args:
@@ -557,7 +557,7 @@ class LogRegressorAbstractTabularAdjuvantTreatmentModelEvaluator(
             plot_name: str = 'random_search_log_regressor_adjuvant_therapy_multimodal'
     ) -> dict[str, any]:
         """Performs a random search with cross-validation on the model
-        (call of _create_base_model()) using the hyper-parameter space
+        (call of _create_base_model()) using the hyperparameter space
         defined (call of create_hyper_parameter_space_random()).
 
         Args:

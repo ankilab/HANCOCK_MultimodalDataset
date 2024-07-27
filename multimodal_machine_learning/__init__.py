@@ -1,3 +1,4 @@
-from .multi_modal_data import TabularAdjuvantTreatmentPredictor
+from .multi_modal_data import AdjuvantTreatmentPredictor
 from .multi_modal_data import PredictionPlotter
+from .multi_modal_data import TabularMergedAdjuvantTreatmentPredictor
 from .custom_preprocessor import ColumnPreprocessor

@@ -7,11 +7,11 @@ import numpy as np
 import pandas as pd
 
 sys.path.append(str(Path(__file__).parents[1]))
-from multimodal_machine_learning import TabularAdjuvantTreatmentPredictor, PredictionPlotter
+from multimodal_machine_learning import TabularMergedAdjuvantTreatmentPredictor, PredictionPlotter
 
 
 class OptimalRandomForestTabularAdjuvantTreatmentPredictor(
-    TabularAdjuvantTreatmentPredictor
+    TabularMergedAdjuvantTreatmentPredictor
 ):
     """
     Optimal Random Forest model for predicting adjuvant therapy on the
@@ -39,7 +39,7 @@ class OptimalRandomForestTabularAdjuvantTreatmentPredictor(
 
 
 class OptimalSVCTabularAdjuvantTreatmentPredictor(
-    TabularAdjuvantTreatmentPredictor
+    TabularMergedAdjuvantTreatmentPredictor
 ):
     """
     Optimal Support Vector Classifier model for predicting adjuvant therapy on the
@@ -69,7 +69,7 @@ class OptimalSVCTabularAdjuvantTreatmentPredictor(
 
 
 class OptimalAdaBoostTabularAdjuvantTreatmentPredictor(
-    TabularAdjuvantTreatmentPredictor
+    TabularMergedAdjuvantTreatmentPredictor
 ):
     """
     Optimal Ada Boost model for predicting adjuvant therapy on the
