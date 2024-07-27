@@ -2,14 +2,20 @@ from sklearn.preprocessing import StandardScaler, MinMaxScaler, OneHotEncoder
 from sklearn.impute import SimpleImputer
 from sklearn.compose import ColumnTransformer
 from sklearn.pipeline import Pipeline
+import pandas as pd
+import numpy as np
 
 from feature_extraction.extract_tabular_features import (
     NOMINAL_FEATURES, ORDINAL_FEATURES, DISCRETE_FEATURES, NUMERICAL_INTEGER_FEATURES
 )
 from feature_extraction.extract_tabular_features import BLOOD_FEATURES
 from feature_extraction.extract_tma_features import TMA_FEATURES
-from data_reader import DataFrameReaderFactory
-# from multimodal_machine_learning import PredictionPlotter
+
+
+TMA_VECTOR_FEATURES = [
+    'HE', 'CD3', 'CD8', 'CD56', 'CD68', 'CD163', 'MHC1', 'PDL1'
+]
+TMA_VECTOR_LENGTH = 512
 
 
 class ColumnPreprocessor(ColumnTransformer):
@@ -25,6 +31,8 @@ class ColumnPreprocessor(ColumnTransformer):
             col for col in columns
             if col in NUMERICAL_INTEGER_FEATURES
         ]
+        self.tma_vector_columns = [col for col in columns
+                                   if col in TMA_VECTOR_FEATURES]
 
         pipeline_categorical = Pipeline(steps=[
             ("imputer", SimpleImputer(strategy="most_frequent")),
@@ -49,5 +57,26 @@ class ColumnPreprocessor(ColumnTransformer):
             verbose=False
         )
 
+    def fit(self, x: pd.DataFrame, y: any = None, **params) -> None:
+        super().fit(x, y, **params)
 
+    def transform(self, x: pd.DataFrame, **params) -> np.ndarray:
+        x_transformed = super().transform(x, **params)
+        x_transformed = pd.DataFrame(x_transformed, columns=self.get_feature_names_out())
 
+        for col in self.tma_vector_columns:
+            col_name = 'remainder__' + col
+            x_transformed[col_name] = x_transformed[col_name].apply(
+                lambda value:
+                np.zeros(shape=(512,))
+                if isinstance(value, float) and np.isnan(value)
+                else value
+            )
+            split_columns = pd.DataFrame(
+                x_transformed[col_name].tolist(),
+                index=x_transformed.index,
+                columns=[f'{i}_{col}' for i in range(TMA_VECTOR_LENGTH)])
+            x_transformed = pd.concat([x_transformed, split_columns], axis=1)
+            x_transformed.drop(col_name, axis=1, inplace=True)
+
+        return x_transformed.values
