@@ -630,7 +630,7 @@ class LogRegressorAbstractTabularAdjuvantTreatmentModelEvaluator(
 if __name__ == "__main__":
     main_plot_flag = True
     main_save_flag = True
-    do_it_flag = False
+    do_it_flag = True
     test_n_splits = 10
     test_n_iter = 100
     if do_it_flag:
