@@ -57,8 +57,9 @@ class ColumnPreprocessor(ColumnTransformer):
             verbose=False
         )
 
-    def fit(self, x: pd.DataFrame, y: any = None, **params) -> None:
+    def fit(self, x: pd.DataFrame, y: any = None, **params) -> ColumnTransformer:
         super().fit(x, y, **params)
+        return self
 
     def transform(self, x: pd.DataFrame, **params) -> np.ndarray:
         x_transformed = super().transform(x, **params)
