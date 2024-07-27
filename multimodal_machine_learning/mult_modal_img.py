@@ -28,6 +28,7 @@ from keras.backend import clear_session
 from data_exploration.umap_embedding import setup_preprocessing_pipeline
 from utils import get_significance
 from defaults import DefaultPaths
+from data_reader import DataFrameReaderFactory
 
 
 SEED = 42
@@ -486,6 +487,11 @@ def visualize_2d_embedding():
 
 if __name__ == "__main__":
     defaultPaths = DefaultPaths()
+    data_reader_factory = DataFrameReaderFactory()
+    data_reader = data_reader_factory.make_data_frame_reader(
+        data_type=data_reader_factory.data_reader_types.tma_merged_feature
+    )
+    my_tma = data_reader.return_data()
     parser = ArgumentParser()
     parser.add_argument(
         "datasplit_directory", type=str,
@@ -573,15 +579,16 @@ if __name__ == "__main__":
     data = data.reset_index(drop=True)
     tma_expanded["patient_id"] = tma["patient_id"]
     data = data.merge(tma_expanded, on="patient_id", how="outer")
+    #
+    # # Get targets and train/test split
+    # target_df = pd.read_json(results_dir/"dataset_split_treatment_outcome.json", dtype={"patient_id": str})
+    # target_df["target"] = target_df["adjuvant_treatment"].apply(lambda x: 0 if x == "none" else 1)
+    # target_train = target_df[target_df.dataset == "training"][["patient_id", "target"]]
+    # target_test = target_df[target_df.dataset == "test"][["patient_id", "target"]]
+    # df_train = target_train.merge(data, on="patient_id", how="inner")
+    # df_test = target_test.merge(data, on="patient_id", how="inner")
 
-    # Get targets and train/test split
-    target_df = pd.read_json(results_dir/"dataset_split_treatment_outcome.json", dtype={"patient_id": str})
-    target_df["target"] = target_df["adjuvant_treatment"].apply(lambda x: 0 if x == "none" else 1)
-    target_train = target_df[target_df.dataset == "training"][["patient_id", "target"]]
-    target_test = target_df[target_df.dataset == "test"][["patient_id", "target"]]
-    df_train = target_train.merge(data, on="patient_id", how="inner")
-    df_test = target_test.merge(data, on="patient_id", how="inner")
-
+    # This was already commented out!
     # Run 10-fold cross-validation
     # true_positive_rates, areas_under_the_curve = cross_validation(df_train)
     #

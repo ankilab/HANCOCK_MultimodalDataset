@@ -678,10 +678,10 @@ class FeatureTmaMergedDataFrameReader(DataFrameReader):
             self._data = self._get_data()
         return self._data.copy()
 
-    def __init_(self, data_dir: Path = defaultPaths.features):
-        super().__init__(data_dir=data_dir)
+    def __init__(self, data_dir: Path = defaultPaths.features):
+        super().__init__(data_dir = data_dir)
 
-    def _get_data(self, clean_data:bool = False) -> pd.DataFrame:
+    def _get_data(self, clean_data:bool = True) -> pd.DataFrame:
         """Reads the data from the npz files and merges them on 'patient_id'.
 
         Args:
@@ -694,7 +694,8 @@ class FeatureTmaMergedDataFrameReader(DataFrameReader):
         data_reader_list = self._create_data_reader_list()
         data = data_reader_list[0].return_data()
         for data_reader in data_reader_list[1:]:
-            data = data.merge(
+            data = pd.merge(
+                data,
                 data_reader.return_data(),
                 on='patient_id', how='outer'
             )
@@ -720,7 +721,7 @@ class FeatureTmaMergedDataFrameReader(DataFrameReader):
         ), FeatureTmaCd56DataFrameReader(
             data_dir=self._data_dir / defaultFileNames.feature_tma_cd56
         ), FeatureTmaCd68DataFrameReader(
-            data_dir=self._data_dir / defaultFileNames.feature_tma_cd56
+            data_dir=self._data_dir / defaultFileNames.feature_tma_cd68
         ), FeatureTmaCd163DataFrameReader(
             data_dir=self._data_dir / defaultFileNames.feature_tma_cd163
         ), FeatureTmaHeDataFrameReader(
@@ -733,12 +734,12 @@ class FeatureTmaMergedDataFrameReader(DataFrameReader):
         return data_reader_list
 
     def _clean_data(self, data: pd.DataFrame) -> pd.DataFrame:
-        cleaned_data = data.applymap(self._replace_nan_with_zeros)
+        cleaned_data = data.map(self._replace_nan_with_zeros)
         return cleaned_data
 
     @staticmethod
     def _replace_nan_with_zeros(x):
-        if pd.isna(x):
+        if isinstance(x, float) and np.isnan(x):
             return np.zeros(shape=(512, ))
         return x
 
