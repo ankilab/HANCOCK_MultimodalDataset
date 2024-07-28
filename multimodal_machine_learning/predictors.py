@@ -14,8 +14,8 @@ import tensorflow as tf
 
 
 from pathlib import Path
-import sys
-sys.path.append(str(Path(__file__).parents[1]))
+# import sys
+# sys.path.append(str(Path(__file__).parents[1]))
 from multimodal_machine_learning.custom_preprocessor import ColumnPreprocessor
 from data_reader import DataFrameReaderFactory
 from argument_parser import HancockArgumentParser
@@ -439,12 +439,12 @@ class AbstractHancockPredictor:
         self._prepare_data_split()
 
     def cross_validate(
-        self, n_splits: int = 10, plot_name: str = 'cross_validate',
+        self, n_splits: int = 10, plot_name: str = 'cross_validate', **kwargs
     ) -> None:
         raise NotImplementedError("Cross-validation not implemented.")
 
     def train(self, df_train: pd.DataFrame = None, df_other: pd.DataFrame = None,
-              plot_name: str = 'train', model_reset: bool = True
+              plot_name: str = 'train', model_reset: bool = True, **kwargs
               ) -> list:
         raise NotImplementedError("Training not implemented.")
 
@@ -506,7 +506,7 @@ class AdjuvantTreatmentPredictor(AbstractHancockPredictor):
         random_state: int = 42
     ):
         """
-        Initializes the TabularAdjuvantTreatmentPredictor. It can be used to
+        Initializes the AdjuvantTreatmentPredictor. It can be used to
         perform adjuvant treatment prediction with the merged tabular data.
 
         Args:
@@ -532,7 +532,7 @@ class AdjuvantTreatmentPredictor(AbstractHancockPredictor):
 
     # ----- Cross validation -----
     def cross_validate(
-        self, n_splits: int = 10, plot_name: str = 'adjuvant_therapy_multimodal',
+        self, n_splits: int = 10, plot_name: str = 'adjuvant_therapy_multimodal', **kwargs
     ) -> list[list]:
         """Performs cross-validation on the training data (df_train) with
         n_split folds. The cross-validation is done with a StratifiedKFold.
@@ -680,7 +680,7 @@ class AdjuvantTreatmentPredictor(AbstractHancockPredictor):
     # ----- Training -----
     def train(
         self, df_train: pd.DataFrame = None, df_other: pd.DataFrame = None,
-        plot_name: str = 'adjuvant_treatment_multimodal', model_reset: bool = True
+        plot_name: str = 'adjuvant_treatment_multimodal', model_reset: bool = True, **kwargs
     ) -> list:
         """This method trains the model on the given data and returns
         performance metrics for the validation data as well as the
@@ -699,6 +699,7 @@ class AdjuvantTreatmentPredictor(AbstractHancockPredictor):
 
              model_reset (bool, optional): If this is set to True the model will be
              reset to None before the training process. Defaults to True.
+
         Returns:
             list: A list with the validation parameters and the data that was used.
             [[fpr, tpr, auc], [x_train, y_train, x_other, y_other, y_pred], features]
@@ -872,9 +873,54 @@ class AdjuvantTreatmentPredictor(AbstractHancockPredictor):
         return model
 
 
-class AttentionAdjuvantTreatmentPredictor(AdjuvantTreatmentPredictor):
+class NeuralNetworkAdjuvantTreatmentPredictor(AdjuvantTreatmentPredictor):
+    """Class for predicting adjuvant treatments with a neural network.
+
+    Methods:
+        cross_validate: Performs cross-validation on the training data.
+        train: Trains the model on the training data and validates on the test data.
+        predict: Predicts the adjuvant treatment for the given data.
+
+    Properties:
+        df_train: The training data.
+        df_test: The test data.
+        model: The model that is used for training and prediction
+    """
+
+    def __init__(self, save_flag: bool = False, plot_flag: bool = False, random_state: int = 42):
+        """
+        Initializes the NeuralNetworkAdjuvantTreatmentPredictor. It can be used to
+        perform adjuvant treatment prediction with the merged tabular and tma data.
+
+        Args:
+            save_flag (bool, optional): If this is set to True the generated
+            plots will be saved. Defaults to False.
+
+            plot_flag (bool, optional): If this is set to True the generated
+            plots will be shown to the user. Defaults to False.
+
+            random_state (int, optional): To make sure that the outputs are
+            reproducible we initialize all processes that involve randomness
+            with the random_state. Defaults to 42.
+        """
+        super().__init__(save_flag=save_flag, plot_flag=plot_flag, random_state=random_state)
+        [[x_train, y_train, x_val, y_val], features] = self.prepare_data_for_model(
+            self.df_train, self.df_test
+        )
+        self._input_dim = x_train.shape[1]
+
     # ---- Cross Validation ----
-    def cross_validate(self, n_splits: int = 10, plot_name: str = 'attention_adjuvant_treatment') -> list[list]:
+    def cross_validate(
+            self, n_splits: int = 10, plot_name: str = 'attention_adjuvant_treatment'
+    ) -> list:
+        """Performs cross-validation on the training data (df_train) with
+        n_split folds. The cross-validation is done with a StratifiedKFold.
+
+        Args:
+            n_splits (int): The number of splits for the cross-validation.
+            Defaults to 10.
+            plot_name (str): The name of the plot that should be saved to disk.
+        """
         tpr_list = []
         auc_list = []
         val_index_list = []
@@ -888,12 +934,35 @@ class AttentionAdjuvantTreatmentPredictor(AdjuvantTreatmentPredictor):
 
         self._plotter.reactivate()
         self._plotter.roc_curve(auc_list, tpr_list, plot_name)
+        raise NotImplementedError('Cross-validation not implemented.')
 
     # ---- Training ----
     def train(self, df_train: pd.DataFrame = None, df_other: pd.DataFrame = None,
-              plot_name: str = 'attention_adjuvant_treatment', model_reset: bool = True) -> list:
-        batch_size = 32
-        epochs = 10
+              plot_name: str = 'attention_adjuvant_treatment', model_reset: bool = True,
+              batch_size: int = 32, epochs: int = 10) -> list:
+        """This method trains the model on the given data and returns
+        performance metrics for the validation data as well as the
+        data that was used for training and validation.
+
+        Args:
+             df_train (pd.DataFrame, optional): The data that should be used
+             to train the model. Should have the columns 'patient_id' and 'target'.
+             Defaults to None and then the self.df_train property is used.
+
+             df_other (pd.DataFrame, optional): The data that should be used to validate
+             the trainings results. Should have the columns 'patient_id' and 'target'.
+
+             Defaults to None and then the self.df_test property.
+             plot_name (str, optional): The name of the plot that should be saved.
+
+             model_reset (bool, optional): If this is set to True the model will be
+             reset to None before the training process. Defaults to True.
+
+             batch_size (int, optional): The batch size for the training process.
+             Defaults to 32.
+
+             epochs (int, optional): The number of epochs for the training process.
+        """
         if df_train is None:
             df_train = self.df_train
         if df_other is None:
@@ -903,13 +972,34 @@ class AttentionAdjuvantTreatmentPredictor(AdjuvantTreatmentPredictor):
 
         [[x_train, y_train, x_other, y_other], features] = self.prepare_data_for_model(
             df_train, df_other)
+
+        self.model.fit(x_train, y_train, epochs=epochs, batch_size=batch_size,
+                       validation_data=(x_other, y_other))
+        loss, accuracy = self.model.evaluate(x_other, y_other)
+        return [loss, accuracy, features]
+
+    def prepare_data_for_model(
+            self, df_train_fold: pd.DataFrame, df_other_fold: pd.DataFrame
+    ) -> list:
+        """Preprocess the input data and creates a numpy array for the labels.
+        Also, over-samples the underrepresented class if necessary.
+
+        Args:
+            df_train_fold (pd.DataFrame): The data intended for training. Must have
+            a column 'patient_id' and 'target'.
+            df_other_fold (pd.DataFrame): The data intended for validating or testing the training process.
+
+        Returns:
+            list: List with [[x_train, y_train, x_other, y_other], features] in that order.
+        """
+        [[x_train, y_train, x_other, y_other], features] = super().prepare_data_for_model(
+            df_train_fold, df_other_fold
+        )
         y_train = tf.keras.utils.to_categorical(y_train, num_classes=2)
         y_other = tf.keras.utils.to_categorical(y_other, num_classes=2)
-        self.model.fit(x_train, y_train, epochs=epochs, batch_size=batch_size)
-                       # validation_data=(x_other, y_other))
-        # loss, accuracy = self.model.evaluate(x_other, y_other)
-        # return [loss, accuracy, features]
-        return [features]
+        x_train = x_train.astype(np.float32)
+        x_other = x_other.astype(np.float32)
+        return [[x_train, y_train, x_other, y_other], features]
 
     # ---- Prediction -----
     def predict(self, data: pd.DataFrame | np.ndarray) -> np.array:
@@ -937,9 +1027,9 @@ class AttentionAdjuvantTreatmentPredictor(AdjuvantTreatmentPredictor):
             lambda x: 0 if x == "none" else 1)
 
     def _create_new_model(self) -> tf.keras.Model:
-        input_dim = self.df_train.shape[1] - 2
         learning_rate = 0.001
-        model = AttentionMLPModel(input_dim)
+
+        model = AttentionMLPModel(self._input_dim)
         model.compile(optimizer=tf.keras.optimizers.Adam(learning_rate=learning_rate),
                       loss='binary_crossentropy',
                       metrics=['accuracy'])
