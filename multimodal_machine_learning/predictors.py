@@ -12,12 +12,14 @@ from lifelines import KaplanMeierFitter, statistics
 from matplotlib import rcParams
 import copy
 import tensorflow as tf
-
+from collections import Counter
+from lime import lime_tabular
 
 from pathlib import Path
 # import sys
 # sys.path.append(str(Path(__file__).parents[1]))
 from multimodal_machine_learning.custom_preprocessor import ColumnPreprocessor
+from multimodal_machine_learning.custom_preprocessor import TMA_VECTOR_LENGTH, TMA_VECTOR_FEATURES
 from data_reader import DataFrameReaderFactory
 from argument_parser import HancockArgumentParser
 from defaults import DefaultFileNames
@@ -318,6 +320,49 @@ class PredictionPlotter:
 
         if self.save_flag:
             plt.savefig(self.save_dir / f'{plot_name}.png')
+        if self.plot_flag:
+            plt.show()
+        else:
+            plt.close()
+
+    def lime_plot(
+            self, feature_names, feature_values, n_features,
+            colormap = 'coolwarm', fig_size = (12, 8), plot_name = 'lime_plot'
+    ) -> None:
+        feature_counts = Counter(feature_names)
+        most_common_features = [feature for feature, _ in feature_counts.most_common(n_features)]
+        filtered_feature_names = [name for name in feature_names if name in most_common_features]
+        filtered_feature_values = [value for name, value in zip(feature_names, feature_values) if
+                                   name in most_common_features]
+        filtered_feature_names = np.array(filtered_feature_names)
+        filtered_feature_values = np.array(filtered_feature_values)
+        df = pd.DataFrame({
+            'Feature Name': filtered_feature_names,
+            'Feature Contribution Value': filtered_feature_values
+        })
+
+        palette = sns.color_palette(colormap, as_cmap=True)
+        # Create scatter plot
+        plt.figure(figsize=fig_size)
+        scatter = sns.scatterplot(
+            data=df,
+            x='Feature Contribution Value',
+            y='Feature Name',
+            hue='Feature Contribution Value',
+            palette=palette,
+            s=100,  # Marker size
+            alpha=0.7
+        )
+
+        plt.ylabel('Feature Name')
+        plt.xlabel('Feature Contribution Value')
+        plt.title(f'LIME Summary Plot - Top {n_features} Most Frequent Features')
+
+        plt.tight_layout()
+
+        if self.save_flag:
+            plt.savefig(self.save_dir / f'{plot_name}.png')
+            plt.savefig(self.save_dir / f'{plot_name}.svg')
         if self.plot_flag:
             plt.show()
         else:
@@ -908,12 +953,28 @@ class AdjuvantTreatmentPredictor(AbstractHancockPredictor):
         y_train = df_train_fold["target"].to_numpy()
         y_val = df_other_fold["target"].to_numpy()
 
-        features = self._preprocessor.get_feature_names_out()
-
         # Handle class imbalance
         smote = SMOTE(random_state=np.random.RandomState(self._random_number))
         x_train, y_train = smote.fit_resample(x_train, y_train)
+
+        features = self._get_feature_names()
         return [[x_train, y_train, x_val, y_val], features]
+
+    def _get_feature_names(self) -> np.ndarray:
+        features = self._preprocessor.get_feature_names_out()
+        feature_names_filtered = [value
+                                  for value in features
+                                  if value.split("__")[1] not in TMA_VECTOR_FEATURES]
+        deleted_tma_features = [value
+                                for value in features
+                                if value not in feature_names_filtered]
+        feature_names_filtered = [value.split("__")[1]
+                                  for value in feature_names_filtered]
+        feature_tma_names = [f'{i}_{marker}' for i in range(0, TMA_VECTOR_LENGTH)
+                             for marker in deleted_tma_features]
+        features = np.concatenate((feature_names_filtered, feature_tma_names))
+        return features
+
 
 
 class AbstractNeuralNetworkAdjuvantTreatmentPredictor(AdjuvantTreatmentPredictor):
@@ -1063,8 +1124,68 @@ class AbstractNeuralNetworkAdjuvantTreatmentPredictor(AdjuvantTreatmentPredictor
 
         if self._plotter.plot_flag or self._plotter.save_flag:
             self._plot_train(df_other, y_pred, plot_name)
+            self._plot_lime(x_train, x_other, y_other, y_pred, features)
 
         return [scores, [x_train, y_train, x_other, y_other], features]
+
+    def _plot_lime(
+            self, x_train: np.ndarray, x_other: np.ndarray,
+            y_other: np.ndarray, y_pred: np.array, features: np.ndarray,
+            plot_name: str = 'attention_adjuvant_treatment_lime') -> None:
+        """Creates the LIME plot with the help of the self._plotter.
+        The plot is a summarization of the single lime plots for each
+        misclassified sample.
+        It will be considered the top 10 features for each sample. In the final
+        plot only the 10 features that were most often in the top 10 features
+        of the single samples are shown. This function is rather slow and should
+        be used with caution if a large x_other is used, because for each sample
+        an individual explainer has to be fitted.
+
+        Args:
+            x_train (np.ndarray): The training data already processed with
+            the prepare_data_for_model method.
+
+            x_other (np.ndarray): The test or validation data already processed with
+            the prepare_data_for_model method.
+
+            y_other (np.ndarray): The ground truth labels for the x_other data.
+            Should be a one-hot encoded array for two classes, as it is returned
+            from the prepare_data_for_model method.
+
+            y_pred (np.array): The predicted labels for the x_other data. Should
+            be only the predictions for class 1 as it is returned by the predict
+            method.
+
+            features (np.ndarray): The feature names of the x_other data. Should
+            be the same as the ones returned from the prepare_data_for_model method.
+
+            plot_name (str, optional): The name of the plot that should be saved.
+        """
+        n_features = 10
+        explainer = lime_tabular.LimeTabularExplainer(
+            x_train, feature_names=features, class_names=['class_0', 'class_1'],
+            verbose=True, mode='classification', random_state=self._random_number
+        )
+        feature_names = []
+        feature_values = []
+
+        for index, (ground_truth, prediction) in enumerate(zip(y_other[:, 1][:5], y_pred[:5])):
+            prediction = (prediction > 0.5).astype(int)
+            if ground_truth != prediction:
+                i = index
+                exp = explainer.explain_instance(x_other[i], self.model.predict, num_features=10)
+                exp_list = exp.as_list()
+                for item in exp_list:
+                    name_split = item[0].split(' ')
+                    feature_names.append(name_split[0])
+                    feature_values.append(item[1])
+
+        feature_values = np.array(feature_values)
+        feature_names = np.array(feature_names)
+        self._plotter.lime_plot(
+            feature_names, feature_values, n_features,
+            colormap='coolwarm', fig_size=(12, 8), plot_name=plot_name
+        )
 
     # ---- Prediction -----
     def predict(self, data: pd.DataFrame | np.ndarray) -> np.array:
@@ -1126,7 +1247,6 @@ class AbstractAttentionMlpAdjuvantTreatmentPredictor(AbstractNeuralNetworkAdjuva
         Use the _data_reader_factory to get the data and set it to the
         self._data attribute of the class.
 
-
     Methods:
         cross_validate: Performs cross-validation on the training data.
         train: Trains the model on the training data and validates on the test data.
@@ -1173,6 +1293,23 @@ class TmaTabularMergedAttentionMlpAdjuvantTreatmentPredictor(
             data_dir_flag=True
         )
         self._data = data_reader.return_data()
+
+    def prepare_data_for_model(
+            self, df_train_fold: pd.DataFrame, df_other_fold: pd.DataFrame
+    ) -> list:
+        [[x_train, y_train, x_other, y_other], features] = super().prepare_data_for_model(df_train_fold, df_other_fold)
+
+        feature_names_filtered = [value
+                                  for value in features
+                                  if value not in TMA_VECTOR_FEATURES]
+        deleted_tma_features = [value
+                                for value in features
+                                if value not in feature_names_filtered]
+        feature_tma_names = [f'{i}_{marker}' for i in range(0, TMA_VECTOR_LENGTH)
+                             for marker in deleted_tma_features]
+        features = np.concatenate((feature_names_filtered, feature_tma_names))
+
+        return [[x_train, y_train, x_other, y_other], features]
 
 
 class TabularMergedAdjuvantTreatmentPredictor(AdjuvantTreatmentPredictor):
