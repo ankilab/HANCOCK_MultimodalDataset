@@ -1,3 +1,4 @@
+import warnings
 import numpy as np
 import pandas as pd
 from imblearn.over_sampling import SMOTE
@@ -543,13 +544,13 @@ class AdjuvantTreatmentPredictor(AbstractHancockPredictor):
             plot_name (str): The name of the plot that should be saved to disk.
 
         Returns:
-            list[list]: A list with [tpr_list, auc_list, shap_values, val_index_list,
-            features_per_fold]
+            list[list]: A list with [tpr_list, auc_list, val_index_list,
+            features_per_fold, shap_values]
             tpr_list: List with the true positive rates for each fold.
             auc_list: List with the AUC scores for each fold.
-            shap_values: List with the SHAP values for each fold.
             val_index_list: List with the indices of the validation data for each fold.
             features_per_fold: List with the ColumnTransformer features for each fold.
+            shap_values: List with the SHAP values for each fold.
         """
         tpr_list = []
         auc_list = []
@@ -575,7 +576,7 @@ class AdjuvantTreatmentPredictor(AbstractHancockPredictor):
                                     self.df_train, plot_name)
         self._plotter.roc_curve(auc_list, tpr_list, plot_name)
 
-        return [tpr_list, auc_list, shap_values, val_index_list, features_per_fold]
+        return [tpr_list, auc_list, val_index_list, features_per_fold, shap_values]
 
     def _cross_validation_single_fold(
             self, df_train_fold: pd.DataFrame, df_val_fold: pd.DataFrame,
@@ -583,7 +584,7 @@ class AdjuvantTreatmentPredictor(AbstractHancockPredictor):
             features_per_fold: list, plot_name: str
     ) -> None:
         """Performs the training for a single fold and adds the results to the
-        corresponding lists. Also resets the self._model property to None.
+        corresponding lists.
 
         Args:
             df_train_fold (pd.DataFrame): The data that should be used for training.
@@ -595,8 +596,31 @@ class AdjuvantTreatmentPredictor(AbstractHancockPredictor):
             plot_name (str): The name of the plot that should be saved to disk
             for the trainings process.
         """
+        train_return = self._cross_validation_single_fold_train_and_add_basic_metrics(
+            df_train_fold, df_val_fold, plot_name, tpr_list, auc_list, features_per_fold
+        )
+        x_val = train_return[1][2]
+        svs = shap.TreeExplainer(self.model).shap_values(x_val)
+        shap_values.append(svs[:, :, 1])  # class = 1 (adjuvant treatment yes)
+
+    def _cross_validation_single_fold_train_and_add_basic_metrics(
+            self, df_train_fold: pd.DataFrame, df_val_fold: pd.DataFrame, plot_name:str,
+            tpr_list: list, auc_list: list, features_per_fold: list
+    ) -> list:
+        """Performs the training for a single fold and adds the basic results to the
+        corresponding lists.
+
+        Args:
+            df_train_fold (pd.DataFrame): The data that should be used for training.
+            df_val_fold (pd.DataFrame): The data that should be used for validation.
+            tpr_list (list): List with the true positive rates for each fold.
+            auc_list (list): List with the AUC scores for each fold.
+            features_per_fold (list): List with the ColumnTransformer features
+            plot_name (str): The name of the plot that should be saved to disk
+            for the trainings process.
+        """
         train_return = self.train(
-            df_train=df_train_fold, df_other=df_val_fold, plot_name=plot_name
+            df_train=df_train_fold, df_other=df_val_fold, plot_name=plot_name, model_reset=True
         )
         tpr = train_return[0][1]
         tpr_list.append(tpr)
@@ -606,10 +630,7 @@ class AdjuvantTreatmentPredictor(AbstractHancockPredictor):
 
         features = train_return[2]
         features_per_fold.append(features)
-
-        x_val = train_return[1][2]
-        svs = shap.TreeExplainer(self.model).shap_values(x_val)
-        shap_values.append(svs[:, :, 1])  # class = 1 (adjuvant treatment yes)
+        return train_return
 
     def _cross_validation_shap(
             self, shap_values: list, features_per_fold: list,
@@ -714,12 +735,7 @@ class AdjuvantTreatmentPredictor(AbstractHancockPredictor):
             features (list): The features from the ColumnTransformer that was used for
             encoding the training data.
         """
-        if df_train is None:
-            df_train = self.df_train
-        if df_other is None:
-            df_other = self.df_test
-        if model_reset:
-            self._model = None
+        df_train, df_other = self._setup_training(df_train, df_other, model_reset)
 
         [[x_train, y_train, x_other, y_other], features] = self.prepare_data_for_model(
             df_train, df_other)
@@ -735,33 +751,31 @@ class AdjuvantTreatmentPredictor(AbstractHancockPredictor):
         return [[fpr, tpr, auc_score],
                 [x_train, y_train, x_other, y_other, y_pred], features]
 
-    def prepare_data_for_model(
-            self, df_train_fold: pd.DataFrame, df_other_fold: pd.DataFrame
-    ) -> list:
-        """Preprocess the input data and creates a numpy array for the labels.
-        Also, over-samples the underrepresented class if necessary.
+    def _setup_training(
+            self, df_train:pd.DataFrame | None, df_other: pd.DataFrame | None, model_reset: bool
+    )-> tuple[pd.DataFrame, pd.DataFrame]:
+        """Checks the df_train and df_other for None values. If this is the case
+        instead the df_train and df_test properties of the class are used. Also resets
+        the model if model_reset is True.
 
         Args:
-            df_train_fold (pd.DataFrame): The data intended for training. Must have
-            a column 'patient_id' and 'target'.
-            df_other_fold (pd.DataFrame): The data intended for validating or testing the training process.
+            df_train (pd.DataFrame | None): The data that should be used for training
+            the model.
+
+            df_other (pd.DataFrame | None): The data that should be used for validation.
+
+            model_reset (bool): If this is set to True the model will be reset to None.
 
         Returns:
-            list: List with [[x_train, y_train, x_val, y_val], features] in that order.
+            tuple[pd.DataFrame, pd.DataFrame]: The training and validation data frames.
         """
-        x_train = self._preprocessor.transform(
-            df_train_fold.drop(["patient_id", "target"], axis=1))
-        x_val = self._preprocessor.transform(
-            df_other_fold.drop(["patient_id", "target"], axis=1))
-        y_train = df_train_fold["target"].to_numpy()
-        y_val = df_other_fold["target"].to_numpy()
-
-        features = self._preprocessor.get_feature_names_out()
-
-        # Handle class imbalance
-        smote = SMOTE(random_state=np.random.RandomState(self._random_number))
-        x_train, y_train = smote.fit_resample(x_train, y_train)
-        return [[x_train, y_train, x_val, y_val], features]
+        if df_train is None:
+            df_train = self.df_train
+        if df_other is None:
+            df_other = self.df_test
+        if model_reset:
+            self._model = None
+        return df_train, df_other
 
     @staticmethod
     def _training_calculate_metrics(y_other: np.array, y_pred: np.array) -> list:
@@ -872,9 +886,50 @@ class AdjuvantTreatmentPredictor(AbstractHancockPredictor):
             n_estimators=800, random_state=np.random.RandomState(self._random_number))
         return model
 
+    # ----- General useful functions -----
+    def prepare_data_for_model(
+            self, df_train_fold: pd.DataFrame, df_other_fold: pd.DataFrame
+    ) -> list:
+        """Preprocess the input data and creates a numpy array for the labels.
+        Also, over-samples the underrepresented class if necessary.
 
-class NeuralNetworkAdjuvantTreatmentPredictor(AdjuvantTreatmentPredictor):
+        Args:
+            df_train_fold (pd.DataFrame): The data intended for training. Must have
+            a column 'patient_id' and 'target'.
+            df_other_fold (pd.DataFrame): The data intended for validating or testing the training process.
+
+        Returns:
+            list: List with [[x_train, y_train, x_val, y_val], features] in that order.
+        """
+        x_train = self._preprocessor.transform(
+            df_train_fold.drop(["patient_id", "target"], axis=1))
+        x_val = self._preprocessor.transform(
+            df_other_fold.drop(["patient_id", "target"], axis=1))
+        y_train = df_train_fold["target"].to_numpy()
+        y_val = df_other_fold["target"].to_numpy()
+
+        features = self._preprocessor.get_feature_names_out()
+
+        # Handle class imbalance
+        smote = SMOTE(random_state=np.random.RandomState(self._random_number))
+        x_train, y_train = smote.fit_resample(x_train, y_train)
+        return [[x_train, y_train, x_val, y_val], features]
+
+
+class AbstractNeuralNetworkAdjuvantTreatmentPredictor(AdjuvantTreatmentPredictor):
     """Class for predicting adjuvant treatments with a neural network.
+    This is an abstract class and will throw a NotImplementedError if it is
+    initialized directly.
+
+    To implement:
+        _create_new_model: Create a new model for the predictor and return it.
+        It should be able to be called with fit and predict methods. So if
+        needed compile it before the return.
+
+        _prepare_data: Prepare the data for the df_tran and df_test properties.
+        Use the _data_reader_factory to get the data and set it to the
+        self._data attribute of the class.
+
 
     Methods:
         cross_validate: Performs cross-validation on the training data.
@@ -911,7 +966,7 @@ class NeuralNetworkAdjuvantTreatmentPredictor(AdjuvantTreatmentPredictor):
 
     # ---- Cross Validation ----
     def cross_validate(
-            self, n_splits: int = 10, plot_name: str = 'attention_adjuvant_treatment'
+            self, n_splits: int = 10, plot_name: str = 'attention_adjuvant_treatment', **kwargs
     ) -> list:
         """Performs cross-validation on the training data (df_train) with
         n_split folds. The cross-validation is done with a StratifiedKFold.
@@ -924,6 +979,7 @@ class NeuralNetworkAdjuvantTreatmentPredictor(AdjuvantTreatmentPredictor):
         tpr_list = []
         auc_list = []
         val_index_list = []
+        features_per_fold = []
 
         cv = StratifiedKFold(n_splits=n_splits, shuffle=True,
                              random_state=np.random.RandomState(self._random_number))
@@ -931,15 +987,30 @@ class NeuralNetworkAdjuvantTreatmentPredictor(AdjuvantTreatmentPredictor):
 
         for train_idx, val_idx in cv.split(self.df_train, self.df_train['target']):
             val_index_list.append(val_idx)
+            df_train_fold = self.df_train.iloc[train_idx]
+            df_val_fold = self.df_train.iloc[val_idx]
+            self._cross_validation_single_fold(
+                df_train_fold, df_val_fold, tpr_list, auc_list, features_per_fold, plot_name
+            )
 
         self._plotter.reactivate()
         self._plotter.roc_curve(auc_list, tpr_list, plot_name)
-        raise NotImplementedError('Cross-validation not implemented.')
+        return [tpr_list, auc_list, val_index_list, features_per_fold]
+
+    def _cross_validation_single_fold(
+            self, df_train_fold: pd.DataFrame, df_val_fold: pd.DataFrame,
+            tpr_list: list, auc_list: list, features_per_fold: list,
+            plot_name: str, **kwargs
+    ) -> None:
+        train_return = self._cross_validation_single_fold_train_and_add_basic_metrics(
+            df_train_fold, df_val_fold, plot_name, tpr_list, auc_list, features_per_fold
+        )
 
     # ---- Training ----
     def train(self, df_train: pd.DataFrame = None, df_other: pd.DataFrame = None,
               plot_name: str = 'attention_adjuvant_treatment', model_reset: bool = True,
-              batch_size: int = 32, epochs: int = 10) -> list:
+              batch_size: int = 32, epochs: int = 10, **kwargs
+    ) -> list:
         """This method trains the model on the given data and returns
         performance metrics for the validation data as well as the
         data that was used for training and validation.
@@ -962,22 +1033,64 @@ class NeuralNetworkAdjuvantTreatmentPredictor(AdjuvantTreatmentPredictor):
              Defaults to 32.
 
              epochs (int, optional): The number of epochs for the training process.
+
+        Returns:
+            list: A list with the validation parameters and the data that was used.
+            [[fpr, tpr, auc], [x_train, y_train, x_other, y_other, y_pred], features]
+            fpr (np.array): False positive rate
+            tpr (np.array): True positive rate
+            auc (float): The AUC score
+            x_train (np.ndarray): The training data encoded
+            y_train (np.array): The training labels
+            x_other (np.ndarray): The validation data encoded
+            y_other (np.array): The validation labels
+            y_pred (np.array): The predicted labels for the validation data
+            features (list): The features from the ColumnTransformer that was used for
+            encoding the training data.
         """
-        if df_train is None:
-            df_train = self.df_train
-        if df_other is None:
-            df_other = self.df_test
-        if model_reset:
-            self._model = None
+        df_train, df_other = self._setup_training(df_train, df_other, model_reset)
 
         [[x_train, y_train, x_other, y_other], features] = self.prepare_data_for_model(
             df_train, df_other)
 
         self.model.fit(x_train, y_train, epochs=epochs, batch_size=batch_size,
                        validation_data=(x_other, y_other))
-        loss, accuracy = self.model.evaluate(x_other, y_other)
-        return [loss, accuracy, features]
 
+        y_pred = self.predict(x_other)
+        # self._training_calculate_metrics expects the predicted probabilities
+        # for class 1 only.
+        scores = self._training_calculate_metrics(y_other[:, 1], y_pred)
+
+        if self._plotter.plot_flag or self._plotter.save_flag:
+            self._plot_train(df_other, y_pred, plot_name)
+
+        return [scores, [x_train, y_train, x_other, y_other], features]
+
+    # ---- Prediction -----
+    def predict(self, data: pd.DataFrame | np.ndarray) -> np.array:
+        y_pred = self.model.predict(data)[:, 1]
+        return y_pred
+
+    # ---- Data Preparation ----
+    def _prepare_data(self) -> None:
+        raise NotImplementedError('Data preparation not implemented')
+
+    def _prepare_data_split(self) -> None:
+        data_split_reader = self._data_reader_factory.make_data_frame_reader(
+            data_type=self._data_reader_factory.data_reader_types.data_split_treatment_outcome,
+            data_dir=self.args.data_split_dir /
+                     self._default_file_names.data_split_treatment_outcome,
+            data_dir_flag=True
+        )
+        self._data_split = data_split_reader.return_data()
+        self._data_split["target"] = self._data_split["adjuvant_treatment"].apply(
+            lambda x: 0 if x == "none" else 1)
+
+    # ---- Model Creation ----
+    def _create_new_model(self) -> tf.keras.Model:
+        raise NotImplementedError('Model creation not implemented')
+
+    # ---- General useful methods ----
     def prepare_data_for_model(
             self, df_train_fold: pd.DataFrame, df_other_fold: pd.DataFrame
     ) -> list:
@@ -1001,12 +1114,58 @@ class NeuralNetworkAdjuvantTreatmentPredictor(AdjuvantTreatmentPredictor):
         x_other = x_other.astype(np.float32)
         return [[x_train, y_train, x_other, y_other], features]
 
-    # ---- Prediction -----
-    def predict(self, data: pd.DataFrame | np.ndarray) -> np.array:
-        y_pred = self.model.predict(data)[:, 1]
-        return y_pred
 
-    # ---- Data Preparation ----
+class AbstractAttentionMlpAdjuvantTreatmentPredictor(AbstractNeuralNetworkAdjuvantTreatmentPredictor):
+    """Class for predicting adjuvant treatments with a multi layer perceptron
+    where the features are fused with a simple attention mechanism.
+    This is an abstract class and will throw a NotImplementedError if it is
+    initialized directly.
+
+    To implement:
+        _prepare_data: Prepare the data for the df_tran and df_test properties.
+        Use the _data_reader_factory to get the data and set it to the
+        self._data attribute of the class.
+
+
+    Methods:
+        cross_validate: Performs cross-validation on the training data.
+        train: Trains the model on the training data and validates on the test data.
+        predict: Predicts the adjuvant treatment for the given data.
+
+    Properties:
+        df_train: The training data.
+        df_test: The test data.
+        model: The model that is used for training and prediction
+    """
+
+    def _create_new_model(self) -> tf.keras.Model:
+        learning_rate = 0.001
+        model = AttentionMLPModel(self._input_dim)
+        model = model.build_model(self._input_dim)
+        model.compile(optimizer=tf.keras.optimizers.Adam(learning_rate=learning_rate),
+                      loss='binary_crossentropy',
+                      metrics=['accuracy'])
+        return model
+
+
+class TmaTabularMergedAttentionMlpAdjuvantTreatmentPredictor(
+    AbstractAttentionMlpAdjuvantTreatmentPredictor
+):
+    """Class for predicting adjuvant treatments with a multi layer perceptron
+    where the features are fused with a simple attention mechanism.
+    This implementation uses the merged tabular and tma feature data.
+
+    Methods:
+        cross_validate: Performs cross-validation on the training data.
+        train: Trains the model on the training data and validates on the test data.
+        predict: Predicts the adjuvant treatment for the given data.
+
+    Properties:
+        df_train: The training data.
+        df_test: The test data.
+        model: The model that is used for training and prediction
+    """
+
     def _prepare_data(self) -> None:
         data_reader = self._data_reader_factory.make_data_frame_reader(
             data_type=self._data_reader_factory.data_reader_types.tma_tabular_merged_feature,
@@ -1014,26 +1173,6 @@ class NeuralNetworkAdjuvantTreatmentPredictor(AdjuvantTreatmentPredictor):
             data_dir_flag=True
         )
         self._data = data_reader.return_data()
-
-    def _prepare_data_split(self) -> None:
-        data_split_reader = self._data_reader_factory.make_data_frame_reader(
-            data_type=self._data_reader_factory.data_reader_types.data_split_treatment_outcome,
-            data_dir=self.args.data_split_dir /
-                     self._default_file_names.data_split_treatment_outcome,
-            data_dir_flag=True
-        )
-        self._data_split = data_split_reader.return_data()
-        self._data_split["target"] = self._data_split["adjuvant_treatment"].apply(
-            lambda x: 0 if x == "none" else 1)
-
-    def _create_new_model(self) -> tf.keras.Model:
-        learning_rate = 0.001
-
-        model = AttentionMLPModel(self._input_dim)
-        model.compile(optimizer=tf.keras.optimizers.Adam(learning_rate=learning_rate),
-                      loss='binary_crossentropy',
-                      metrics=['accuracy'])
-        return model
 
 
 class TabularMergedAdjuvantTreatmentPredictor(AdjuvantTreatmentPredictor):
