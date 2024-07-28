@@ -572,6 +572,11 @@ class FeatureTmaCd3DataFrameReader(NpzDataFrameReader):
     def __init__(self, data_dir: Path = defaultPaths.feature_tma_cd3):
         super().__init__(data_dir = data_dir)
 
+    def return_data(self) -> pd.DataFrame:
+        return_data = self.data
+        return_data['CD3'].values[718] = np.nan
+        return return_data
+
 
 class FeatureTmaCd8DataFrameReader(NpzDataFrameReader):
     """Reader for the TMA CD3 center tile data.
