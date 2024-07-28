@@ -10,6 +10,8 @@ import shap
 from lifelines import KaplanMeierFitter, statistics
 from matplotlib import rcParams
 import copy
+import tensorflow as tf
+
 
 from pathlib import Path
 import sys
@@ -18,6 +20,7 @@ from multimodal_machine_learning.custom_preprocessor import ColumnPreprocessor
 from data_reader import DataFrameReaderFactory
 from argument_parser import HancockArgumentParser
 from defaults import DefaultFileNames
+from multimodal_machine_learning.attention_model import AttentionMLPModel
 
 
 def get_significance(p_value) -> str:
@@ -866,6 +869,80 @@ class AdjuvantTreatmentPredictor(AbstractHancockPredictor):
     def _create_new_model(self) -> RandomForestClassifier:
         model = RandomForestClassifier(
             n_estimators=800, random_state=np.random.RandomState(self._random_number))
+        return model
+
+
+class AttentionAdjuvantTreatmentPredictor(AdjuvantTreatmentPredictor):
+    # ---- Cross Validation ----
+    def cross_validate(self, n_splits: int = 10, plot_name: str = 'attention_adjuvant_treatment') -> list[list]:
+        tpr_list = []
+        auc_list = []
+        val_index_list = []
+
+        cv = StratifiedKFold(n_splits=n_splits, shuffle=True,
+                             random_state=np.random.RandomState(self._random_number))
+        self._plotter.deactivate()
+
+        for train_idx, val_idx in cv.split(self.df_train, self.df_train['target']):
+            val_index_list.append(val_idx)
+
+        self._plotter.reactivate()
+        self._plotter.roc_curve(auc_list, tpr_list, plot_name)
+
+    # ---- Training ----
+    def train(self, df_train: pd.DataFrame = None, df_other: pd.DataFrame = None,
+              plot_name: str = 'attention_adjuvant_treatment', model_reset: bool = True) -> list:
+        batch_size = 32
+        epochs = 10
+        if df_train is None:
+            df_train = self.df_train
+        if df_other is None:
+            df_other = self.df_test
+        if model_reset:
+            self._model = None
+
+        [[x_train, y_train, x_other, y_other], features] = self.prepare_data_for_model(
+            df_train, df_other)
+        y_train = tf.keras.utils.to_categorical(y_train, num_classes=2)
+        y_other = tf.keras.utils.to_categorical(y_other, num_classes=2)
+        self.model.fit(x_train, y_train, epochs=epochs, batch_size=batch_size)
+                       # validation_data=(x_other, y_other))
+        # loss, accuracy = self.model.evaluate(x_other, y_other)
+        # return [loss, accuracy, features]
+        return [features]
+
+    # ---- Prediction -----
+    def predict(self, data: pd.DataFrame | np.ndarray) -> np.array:
+        y_pred = self.model.predict(data)[:, 1]
+        return y_pred
+
+    # ---- Data Preparation ----
+    def _prepare_data(self) -> None:
+        data_reader = self._data_reader_factory.make_data_frame_reader(
+            data_type=self._data_reader_factory.data_reader_types.tma_tabular_merged_feature,
+            data_dir=self.args.features_dir,
+            data_dir_flag=True
+        )
+        self._data = data_reader.return_data()
+
+    def _prepare_data_split(self) -> None:
+        data_split_reader = self._data_reader_factory.make_data_frame_reader(
+            data_type=self._data_reader_factory.data_reader_types.data_split_treatment_outcome,
+            data_dir=self.args.data_split_dir /
+                     self._default_file_names.data_split_treatment_outcome,
+            data_dir_flag=True
+        )
+        self._data_split = data_split_reader.return_data()
+        self._data_split["target"] = self._data_split["adjuvant_treatment"].apply(
+            lambda x: 0 if x == "none" else 1)
+
+    def _create_new_model(self) -> tf.keras.Model:
+        input_dim = self.df_train.shape[1] - 2
+        learning_rate = 0.001
+        model = AttentionMLPModel(input_dim)
+        model.compile(optimizer=tf.keras.optimizers.Adam(learning_rate=learning_rate),
+                      loss='binary_crossentropy',
+                      metrics=['accuracy'])
         return model
 
 
