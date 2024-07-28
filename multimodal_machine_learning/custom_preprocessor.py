@@ -68,15 +68,17 @@ class ColumnPreprocessor(ColumnTransformer):
         for col in self.tma_vector_columns:
             col_name = 'remainder__' + col
             x_transformed[col_name] = x_transformed[col_name].apply(
-                lambda value:
-                np.zeros(shape=(512,))
-                if isinstance(value, float) and np.isnan(value)
-                else value
+                lambda row:
+                np.zeros(512)
+                if isinstance(row, float) and np.isnan(row)
+                else row
             )
+
             split_columns = pd.DataFrame(
-                x_transformed[col_name].tolist(),
+                np.vstack(x_transformed[col_name]),
                 index=x_transformed.index,
                 columns=[f'{i}_{col}' for i in range(TMA_VECTOR_LENGTH)])
+
             x_transformed = pd.concat([x_transformed, split_columns], axis=1)
             x_transformed.drop(col_name, axis=1, inplace=True)
 
