@@ -41,6 +41,4 @@ def adjuvant_treatment_prediction_tabular_only(save_flag=True, plot_flag=True):
     )
 
 if __name__ == '__main__':
-    adjuvant_treatment_prediction_tabular_only(save_flag=False, plot_flag=True)
-
-
+    adjuvant_treatment_prediction_tabular_only(save_flag=True, plot_flag=True)

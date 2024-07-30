@@ -63,7 +63,7 @@ class ColumnPreprocessor(ColumnTransformer):
 
     def transform(self, x: pd.DataFrame, **params) -> np.ndarray:
         x_transformed = super().transform(x, **params)
-        x_transformed = pd.DataFrame(x_transformed, columns=self.get_feature_names_out())
+        x_transformed = pd.DataFrame(x_transformed, columns=super().get_feature_names_out())
 
         for col in self.tma_vector_columns:
             col_name = 'remainder__' + col
@@ -83,3 +83,20 @@ class ColumnPreprocessor(ColumnTransformer):
             x_transformed.drop(col_name, axis=1, inplace=True)
 
         return x_transformed.values
+
+    def get_feature_names_out(self, **kwargs):
+        features = super().get_feature_names_out(**kwargs)
+        feature_names_filtered = [value
+                                  for value in features
+                                  if value.split("__")[1] not in TMA_VECTOR_FEATURES]
+        deleted_tma_features = [value
+                                for value in features
+                                if value not in feature_names_filtered]
+        feature_names_filtered = [value.split("__")[1]
+                                  for value in feature_names_filtered]
+        feature_tma_names = [f'{i}_{marker}' for i in range(0, TMA_VECTOR_LENGTH)
+                             for marker in deleted_tma_features]
+        features = np.concatenate((feature_names_filtered, feature_tma_names))
+        return features
+
+

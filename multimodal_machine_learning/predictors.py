@@ -83,6 +83,8 @@ class PredictionPlotter:
         if self.save_flag:
             plt.savefig(
                 self.save_dir / f"{plot_name}_prediction_bar_plot.svg", bbox_inches="tight")
+            plt.savefig(
+                self.save_dir / f"{plot_name}_prediction_bar_plot.png", bbox_inches="tight")
 
         if self.plot_flag:
             plt.show()
@@ -210,7 +212,7 @@ class PredictionPlotter:
             the data_preprocessed data frame.
         """
         shap.summary_plot(
-            shap_values=np.concatenate(shap_values),
+            shap_values=np.concatenate(shap_values, axis=0),
             features=data_preprocessed.reindex(all_val_folds_idx),
             feature_names=feature_names,
             max_display=12,
@@ -298,6 +300,8 @@ class PredictionPlotter:
         if self.save_flag:
             plt.savefig(
                 self.save_dir / f"roc_treatment_{plot_name}.svg", bbox_inches="tight")
+            plt.savefig(
+                self.save_dir / f"roc_treatment_{plot_name}.png", bbox_inches="tight")
         if self.plot_flag:
             plt.show()
         else:
@@ -326,9 +330,30 @@ class PredictionPlotter:
             plt.close()
 
     def lime_plot(
-            self, feature_names, feature_values, n_features,
-            colormap = 'coolwarm', fig_size = (12, 8), plot_name = 'lime_plot'
+            self, feature_names: np.array, feature_values: np.array,
+            n_features: int,
+            colormap = 'coolwarm', fig_size = (8, 6), plot_name = 'lime_plot'
     ) -> None:
+        """Creates a LIME summary plot for the top n_features most frequent features
+        in the feature_names array.
+
+        Args:
+            feature_names (np.array): The names of the features. Should be matched to
+            the feature_values array. Means it should have the same length.
+
+            feature_values (np.array): The lime score values for the features. Should be
+            matched to the feature_names array. Means it should have the same length.
+
+            n_features (int): The number of most frequent features that should be shown
+            in the LIME summary plot.
+
+            colormap (str, optional): The seaborn colormap that should be used for the plot.
+            Should be a diverging colormap. Defaults to 'coolwarm'.
+
+            fig_size (tuple[int, int], optional): The size of the figure. Defaults to (8, 6).
+
+            plot_name (str, optional): The save name of the plot. Defaults to 'lime_plot'.
+        """
         feature_counts = Counter(feature_names)
         most_common_features = [feature for feature, _ in feature_counts.most_common(n_features)]
         filtered_feature_names = [name for name in feature_names if name in most_common_features]
@@ -957,24 +982,8 @@ class AdjuvantTreatmentPredictor(AbstractHancockPredictor):
         smote = SMOTE(random_state=np.random.RandomState(self._random_number))
         x_train, y_train = smote.fit_resample(x_train, y_train)
 
-        features = self._get_feature_names()
-        return [[x_train, y_train, x_val, y_val], features]
-
-    def _get_feature_names(self) -> np.ndarray:
         features = self._preprocessor.get_feature_names_out()
-        feature_names_filtered = [value
-                                  for value in features
-                                  if value.split("__")[1] not in TMA_VECTOR_FEATURES]
-        deleted_tma_features = [value
-                                for value in features
-                                if value not in feature_names_filtered]
-        feature_names_filtered = [value.split("__")[1]
-                                  for value in feature_names_filtered]
-        feature_tma_names = [f'{i}_{marker}' for i in range(0, TMA_VECTOR_LENGTH)
-                             for marker in deleted_tma_features]
-        features = np.concatenate((feature_names_filtered, feature_tma_names))
-        return features
-
+        return [[x_train, y_train, x_val, y_val], features]
 
 
 class AbstractNeuralNetworkAdjuvantTreatmentPredictor(AdjuvantTreatmentPredictor):
@@ -1169,7 +1178,7 @@ class AbstractNeuralNetworkAdjuvantTreatmentPredictor(AdjuvantTreatmentPredictor
         feature_names = []
         feature_values = []
 
-        for index, (ground_truth, prediction) in enumerate(zip(y_other[:, 1][:5], y_pred[:5])):
+        for index, (ground_truth, prediction) in enumerate(zip(y_other[:, 1], y_pred)):
             prediction = (prediction > 0.5).astype(int)
             if ground_truth != prediction:
                 i = index
