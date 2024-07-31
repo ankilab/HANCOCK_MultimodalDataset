@@ -953,7 +953,12 @@ class AdjuvantTreatmentPredictor(AbstractHancockPredictor):
     # ---- Model creation ----
     def _create_new_model(self) -> RandomForestClassifier:
         model = RandomForestClassifier(
-            n_estimators=800, random_state=np.random.RandomState(self._random_number))
+            n_estimators=600, min_samples_split=5,
+            min_samples_leaf=1, max_leaf_nodes=1000,
+            max_features='sqrt', max_depth=50,
+            criterion='log_loss',
+            random_state=np.random.RandomState(self._random_number)
+        )
         return model
 
     # ----- General useful functions -----
