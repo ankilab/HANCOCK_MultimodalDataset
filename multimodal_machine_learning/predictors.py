@@ -1084,7 +1084,7 @@ class AbstractNeuralNetworkAdjuvantTreatmentPredictor(AdjuvantTreatmentPredictor
     # ---- Training ----
     def train(self, df_train: pd.DataFrame = None, df_other: pd.DataFrame = None,
               plot_name: str = 'attention_adjuvant_treatment', model_reset: bool = True,
-              batch_size: int = 32, epochs: int = 10, **kwargs
+              batch_size: int = 32, epochs: int = 10, lime_flag: bool = True, **kwargs
     ) -> list:
         """This method trains the model on the given data and returns
         performance metrics for the validation data as well as the
@@ -1108,6 +1108,9 @@ class AbstractNeuralNetworkAdjuvantTreatmentPredictor(AdjuvantTreatmentPredictor
              Defaults to 32.
 
              epochs (int, optional): The number of epochs for the training process.
+
+            lime_flag (bool, optional): If this is set to True the LIME plot will be
+            created. Defaults to True.
 
         Returns:
             list: A list with the validation parameters and the data that was used.
@@ -1138,7 +1141,8 @@ class AbstractNeuralNetworkAdjuvantTreatmentPredictor(AdjuvantTreatmentPredictor
 
         if self._plotter.plot_flag or self._plotter.save_flag:
             self._plot_train(df_other, y_pred, plot_name)
-            self._plot_lime(x_train, x_other, y_other, y_pred, features)
+            if lime_flag:
+                self._plot_lime(x_train, x_other, y_other, y_pred, features)
 
         return [scores, [x_train, y_train, x_other, y_other], features]
 
@@ -1308,22 +1312,58 @@ class TmaTabularMergedAttentionMlpAdjuvantTreatmentPredictor(
         )
         self._data = data_reader.return_data()
 
-    def prepare_data_for_model(
-            self, df_train_fold: pd.DataFrame, df_other_fold: pd.DataFrame
-    ) -> list:
-        [[x_train, y_train, x_other, y_other], features] = super().prepare_data_for_model(df_train_fold, df_other_fold)
 
-        feature_names_filtered = [value
-                                  for value in features
-                                  if value not in TMA_VECTOR_FEATURES]
-        deleted_tma_features = [value
-                                for value in features
-                                if value not in feature_names_filtered]
-        feature_tma_names = [f'{i}_{marker}' for i in range(0, TMA_VECTOR_LENGTH)
-                             for marker in deleted_tma_features]
-        features = np.concatenate((feature_names_filtered, feature_tma_names))
+class TmaTabularMergedWithoutPathologicalDataCd3Cd8AdjuvantTreatmentPredictor(
+    AbstractAttentionMlpAdjuvantTreatmentPredictor
+):
+    """Class for predicting adjuvant treatments with a multi layer perceptron
+    where the features are fused with a simple attention mechanism.
+    This implementation uses the merged tabular and tma feature data, but
+    does not use the pathological features as well as the TMA vector
+    features for CD3 and CD8.
 
-        return [[x_train, y_train, x_other, y_other], features]
+    Methods:
+        cross_validate: Performs cross-validation on the training data.
+        train: Trains the model on the training data and validates on the test data.
+        predict: Predicts the adjuvant treatment for the given data.
+
+    Properties:
+        df_train: The training data.
+        df_test: The test data.
+        model: The model that is used for training and prediction
+    """
+
+def _prepare_data(self) -> None:
+    # ToDo: Implement the data reader for this if it is clarified which features should be used.
+    raise NotImplementedError(
+        'Data preparation for class ' +
+        'TmaTabularMergedWithoutPathologicalDataCd3Cd8AdjuvantTreatmentPredictor not implemented!'
+    )
+
+
+class TmaAttentionMlpAdjuvantTreatmentPredictor(AbstractAttentionMlpAdjuvantTreatmentPredictor):
+    """Class for predicting adjuvant treatments with a multi layer perceptron
+    where the features are fused with a simple attention mechanism.
+    This implementation only uses the TMA vector features.
+
+    Methods:
+        cross_validate: Performs cross-validation on the training data.
+        train: Trains the model on the training data and validates on the test data.
+        predict: Predicts the adjuvant treatment for the given data.
+
+    Properties:
+        df_train: The training data.
+        df_test: The test data.
+        model: The model that is used for training and prediction
+    """
+
+    def _prepare_data(self) -> None:
+        data_reader = self._data_reader_factory.make_data_frame_reader(
+            data_type=self._data_reader_factory.data_reader_types.tma_merged_feature,
+            data_dir=self.args.features_dir,
+            data_dir_flag=True
+        )
+        self._data = data_reader.return_data()
 
 
 class TabularMergedAdjuvantTreatmentPredictor(AdjuvantTreatmentPredictor):
