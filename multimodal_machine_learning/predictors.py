@@ -1333,12 +1333,12 @@ class TmaTabularMergedWithoutPathologicalDataCd3Cd8AdjuvantTreatmentPredictor(
         model: The model that is used for training and prediction
     """
 
-def _prepare_data(self) -> None:
-    # ToDo: Implement the data reader for this if it is clarified which features should be used.
-    raise NotImplementedError(
-        'Data preparation for class ' +
-        'TmaTabularMergedWithoutPathologicalDataCd3Cd8AdjuvantTreatmentPredictor not implemented!'
-    )
+    def _prepare_data(self) -> None:
+        # ToDo: Implement the data reader for this if it is clarified which features should be used.
+        raise NotImplementedError(
+            'Data preparation for class ' +
+            'TmaTabularMergedWithoutPathologicalDataCd3Cd8AdjuvantTreatmentPredictor not implemented!'
+        )
 
 
 class TmaAttentionMlpAdjuvantTreatmentPredictor(AbstractAttentionMlpAdjuvantTreatmentPredictor):
