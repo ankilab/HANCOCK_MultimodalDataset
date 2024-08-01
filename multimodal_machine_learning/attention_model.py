@@ -25,7 +25,7 @@ class AttentionMLPModel(tf.keras.Model):
         model = tf.keras.Sequential([
             tf.keras.layers.Dense(128, activation='relu'),
             tf.keras.layers.Dense(64, activation='relu'),
-            tf.keras.layers.Dense(2, activation='softmax')  # Output layer for binary classification
+            tf.keras.layers.Dense(2, activation='softmax')
         ])
         return model
 
