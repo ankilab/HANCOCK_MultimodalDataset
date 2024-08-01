@@ -186,7 +186,7 @@ class HancockAvailableDataPlotter:
 
         legend_handles = [Patch(facecolor=color_available, label="Available"),
                           Patch(facecolor=color_not_available, label="Not available (N/A.)"),
-                          Patch(facecolor=color_not_available_lymph, label="N/A. lymph metastasis missing")]
+                          Patch(facecolor=color_not_available_lymph, label="No lymph resection")]
         plt.legend(handles=legend_handles, loc='center left',
                    bbox_to_anchor=(1, 0.5), frameon=False)
         sns.despine(bottom=False, left=True, offset=5)

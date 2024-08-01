@@ -137,7 +137,7 @@ class FileRelationDataFrameReader(DataFrameReader):
         self._columns = ['patient_id', 'file']
 
     def _get_patient_id_to_file_relation_single_dir(
-            self, data_dir_path: Path | None = None
+            self, data_dir_path: Path = None
     ) -> pd.DataFrame:
         """Creates a pandas data frame that contains the patient_id and the 
         file path in two columns. Only the files in the initializer
