@@ -1,4 +1,3 @@
-import warnings
 import numpy as np
 import pandas as pd
 from imblearn.over_sampling import SMOTE
@@ -16,10 +15,9 @@ from collections import Counter
 from lime import lime_tabular
 
 from pathlib import Path
-# import sys
-# sys.path.append(str(Path(__file__).parents[1]))
+import sys
+sys.path.append(str(Path(__file__).parents[1]))
 from multimodal_machine_learning.custom_preprocessor import ColumnPreprocessor
-from multimodal_machine_learning.custom_preprocessor import TMA_VECTOR_LENGTH, TMA_VECTOR_FEATURES
 from data_reader import DataFrameReaderFactory
 from argument_parser import HancockArgumentParser
 from defaults import DefaultFileNames
@@ -267,7 +265,7 @@ class PredictionPlotter:
             plot_name: str
     ) -> None:
         """Creates the ROC curve for the cross-validation if the self.plot_flag == True
-        it will be shown to the user, if the self.save_flag is True it will be save to disk.
+        it will be shown to the user, if the self.save_flag is True it will be saved to disk.
 
         Args:
             auc_score (np.array): The AUC scores for each fold.
@@ -293,7 +291,6 @@ class PredictionPlotter:
         plt.xlabel("FPR", fontsize=6)
         plt.ylabel("TPR", fontsize=6)
         plt.title(f"{plot_name}")
-        # plt.legend(frameon=False, loc='upper center', bbox_to_anchor=(0.5, -0.2))
         plt.legend(frameon=False, loc="lower right", borderpad=0)
         plt.tight_layout()
         plt.gca().set_aspect("equal")
@@ -369,7 +366,7 @@ class PredictionPlotter:
         palette = sns.color_palette(colormap, as_cmap=True)
         # Create scatter plot
         plt.figure(figsize=fig_size)
-        scatter = sns.scatterplot(
+        _ = sns.scatterplot(
             data=df,
             x='Feature Contribution Value',
             y='Feature Name',
@@ -1034,7 +1031,7 @@ class AbstractNeuralNetworkAdjuvantTreatmentPredictor(AdjuvantTreatmentPredictor
             with the random_state. Defaults to 42.
         """
         super().__init__(save_flag=save_flag, plot_flag=plot_flag, random_state=random_state)
-        [[x_train, y_train, x_val, y_val], features] = self.prepare_data_for_model(
+        [[x_train, _, _, _], _] = self.prepare_data_for_model(
             self.df_train, self.df_test
         )
         self._input_dim = x_train.shape[1]
@@ -1077,7 +1074,7 @@ class AbstractNeuralNetworkAdjuvantTreatmentPredictor(AdjuvantTreatmentPredictor
             tpr_list: list, auc_list: list, features_per_fold: list,
             plot_name: str, **kwargs
     ) -> None:
-        train_return = self._cross_validation_single_fold_train_and_add_basic_metrics(
+        _ = self._cross_validation_single_fold_train_and_add_basic_metrics(
             df_train_fold, df_val_fold, plot_name, tpr_list, auc_list, features_per_fold
         )
 
