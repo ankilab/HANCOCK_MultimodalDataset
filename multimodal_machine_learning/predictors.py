@@ -5,6 +5,7 @@ from sklearn.model_selection import StratifiedKFold
 from sklearn.metrics import roc_curve, roc_auc_score, classification_report
 from sklearn.ensemble import RandomForestClassifier
 import matplotlib.pyplot as plt
+import matplotlib.colors as mcolors
 import seaborn as sns
 import shap
 from lifelines import KaplanMeierFitter, statistics
@@ -364,23 +365,28 @@ class PredictionPlotter:
             'Feature Contribution Value': filtered_feature_values
         })
 
-        palette = sns.color_palette(colormap, as_cmap=True)
-        # Create scatter plot
-        plt.figure(figsize=fig_size)
-        _ = sns.scatterplot(
+        # cmap = mcolors.LinearSegmentedColormap('my_cmap', shap.plots.colors.red_blue)
+        # colors = [shap.plots.colors.red_blue(i / (256 - 1)) for i in range(256)]
+        plt.figure(figsize=(3, 2.6))
+        cmap = sns.color_palette(colormap, as_cmap=True)
+        scatter = sns.scatterplot(
             data=df,
             x='Feature Contribution Value',
             y='Feature Name',
             hue='Feature Contribution Value',
-            palette=palette,
-            s=100,  # Marker size
-            alpha=0.7
+            palette=cmap,
+            s=15,  # Marker size
+            alpha=0.7,
+            legend=False
         )
+        sm = plt.cm.ScalarMappable(cmap=cmap)
+        cbar = plt.colorbar(sm, ax=plt.gca())
 
         plt.ylabel('Feature Name')
         plt.xlabel('Feature Contribution Value')
+        plt.xticks(fontsize=6)
+        plt.yticks(fontsize=6)
         plt.title(f'LIME Summary Plot - Top {n_features} Most Frequent Features')
-
         plt.tight_layout()
 
         if self.save_flag:
@@ -1187,7 +1193,8 @@ class AbstractNeuralNetworkAdjuvantTreatmentPredictor(AdjuvantTreatmentPredictor
         feature_names = []
         feature_values = []
 
-        for index, (ground_truth, prediction) in enumerate(zip(y_other[:, 1], y_pred)):
+        for index, (ground_truth, prediction, data_element) in enumerate(
+                zip(y_other[:, 1], y_pred, x_other)):
             prediction = (prediction > 0.5).astype(int)
             if ground_truth != prediction:
                 i = index
@@ -1202,7 +1209,7 @@ class AbstractNeuralNetworkAdjuvantTreatmentPredictor(AdjuvantTreatmentPredictor
         feature_names = np.array(feature_names)
         self._plotter.lime_plot(
             feature_names, feature_values, n_features,
-            colormap='coolwarm', fig_size=(12, 8), plot_name=plot_name
+            colormap='coolwarm', plot_name=plot_name
         )
 
     # ---- Prediction -----
