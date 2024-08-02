@@ -23,8 +23,8 @@ class AttentionMLPModel(tf.keras.Model):
     @staticmethod
     def create_mlp():
         model = tf.keras.Sequential([
-            tf.keras.layers.Dense(128, activation='relu'),
             tf.keras.layers.Dense(64, activation='relu'),
+            tf.keras.layers.Dense(32, activation='relu'),
             tf.keras.layers.Dense(2, activation='softmax')
         ])
         return model
