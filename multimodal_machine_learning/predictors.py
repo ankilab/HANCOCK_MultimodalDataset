@@ -16,6 +16,7 @@ from lime import lime_tabular
 
 from pathlib import Path
 import sys
+
 sys.path.append(str(Path(__file__).parents[1]))
 from multimodal_machine_learning.custom_preprocessor import ColumnPreprocessor
 from data_reader import DataFrameReaderFactory
@@ -329,7 +330,7 @@ class PredictionPlotter:
     def lime_plot(
             self, feature_names: np.array, feature_values: np.array,
             n_features: int,
-            colormap = 'coolwarm', fig_size = (8, 6), plot_name = 'lime_plot'
+            colormap='coolwarm', fig_size=(3, 1.4), plot_name='lime_plot'
     ) -> None:
         """Creates a LIME summary plot for the top n_features most frequent features
         in the feature_names array.
@@ -396,6 +397,7 @@ class AbstractHancockPredictor:
     project. All predictors should inherit from this class. Do not initialize
     this class directly, as it will throw a NotImplementedError.
     """
+
     @property
     def df_train(self) -> pd.DataFrame:
         """Data frame for the trainings data. Will be eventually split into
@@ -467,8 +469,8 @@ class AbstractHancockPredictor:
         self.model = None
 
     def __init__(
-        self, save_flag: bool = False, plot_flag: bool = False,
-        random_state: int = 42, predictor_type: str = 'None'
+            self, save_flag: bool = False, plot_flag: bool = False,
+            random_state: int = 42, predictor_type: str = 'None'
     ):
         """Creates a new HancockPredictor object. The object should be used
         to train, test and predict the HANCOCK data.
@@ -507,7 +509,7 @@ class AbstractHancockPredictor:
         self._prepare_data_split()
 
     def cross_validate(
-        self, n_splits: int = 10, plot_name: str = 'cross_validate', **kwargs
+            self, n_splits: int = 10, plot_name: str = 'cross_validate', **kwargs
     ) -> None:
         raise NotImplementedError("Cross-validation not implemented.")
 
@@ -570,8 +572,8 @@ class AdjuvantTreatmentPredictor(AbstractHancockPredictor):
     """
 
     def __init__(
-        self, save_flag: bool = False, plot_flag: bool = False,
-        random_state: int = 42
+            self, save_flag: bool = False, plot_flag: bool = False,
+            random_state: int = 42
     ):
         """
         Initializes the AdjuvantTreatmentPredictor. It can be used to
@@ -600,7 +602,7 @@ class AdjuvantTreatmentPredictor(AbstractHancockPredictor):
 
     # ----- Cross validation -----
     def cross_validate(
-        self, n_splits: int = 10, plot_name: str = 'adjuvant_therapy_multimodal', **kwargs
+            self, n_splits: int = 10, plot_name: str = 'adjuvant_therapy_multimodal', **kwargs
     ) -> list[list]:
         """Performs cross-validation on the training data (df_train) with
         n_split folds. The cross-validation is done with a StratifiedKFold.
@@ -671,7 +673,7 @@ class AdjuvantTreatmentPredictor(AbstractHancockPredictor):
         shap_values.append(svs[:, :, 1])  # class = 1 (adjuvant treatment yes)
 
     def _cross_validation_single_fold_train_and_add_basic_metrics(
-            self, df_train_fold: pd.DataFrame, df_val_fold: pd.DataFrame, plot_name:str,
+            self, df_train_fold: pd.DataFrame, df_val_fold: pd.DataFrame, plot_name: str,
             tpr_list: list, auc_list: list, features_per_fold: list
     ) -> list:
         """Performs the training for a single fold and adds the basic results to the
@@ -767,8 +769,8 @@ class AdjuvantTreatmentPredictor(AbstractHancockPredictor):
 
     # ----- Training -----
     def train(
-        self, df_train: pd.DataFrame = None, df_other: pd.DataFrame = None,
-        plot_name: str = 'adjuvant_treatment_multimodal', model_reset: bool = True, **kwargs
+            self, df_train: pd.DataFrame = None, df_other: pd.DataFrame = None,
+            plot_name: str = 'adjuvant_treatment_multimodal', model_reset: bool = True, **kwargs
     ) -> list:
         """This method trains the model on the given data and returns
         performance metrics for the validation data as well as the
@@ -819,8 +821,8 @@ class AdjuvantTreatmentPredictor(AbstractHancockPredictor):
                 [x_train, y_train, x_other, y_other, y_pred], features]
 
     def _setup_training(
-            self, df_train:pd.DataFrame | None, df_other: pd.DataFrame | None, model_reset: bool
-    )-> tuple[pd.DataFrame, pd.DataFrame]:
+            self, df_train: pd.DataFrame | None, df_other: pd.DataFrame | None, model_reset: bool
+    ) -> tuple[pd.DataFrame, pd.DataFrame]:
         """Checks the df_train and df_other for None values. If this is the case
         instead the df_train and df_test properties of the class are used. Also resets
         the model if model_reset is True.
@@ -880,7 +882,7 @@ class AdjuvantTreatmentPredictor(AbstractHancockPredictor):
             tpr = np.interp(x_linspace, fpr, tpr)
             tpr[0] = 0.0
             tpr[-1] = 1.0
-            auc_score = roc_auc_score(y_other, y_pred) 
+            auc_score = roc_auc_score(y_other, y_pred)
         print(
             f'Training Classification Report: \n{classification_report(y_other, y_pred > 0.5)}',
             end='\n\n'
@@ -928,7 +930,7 @@ class AdjuvantTreatmentPredictor(AbstractHancockPredictor):
         data_split_reader = self._data_reader_factory.make_data_frame_reader(
             data_type=self._data_reader_factory.data_reader_types.data_split_treatment_outcome,
             data_dir=self.args.data_split_dir /
-            self._default_file_names.data_split_treatment_outcome,
+                     self._default_file_names.data_split_treatment_outcome,
             data_dir_flag=True
         )
         self._data_split = data_split_reader.return_data()
@@ -1079,9 +1081,10 @@ class AbstractNeuralNetworkAdjuvantTreatmentPredictor(AdjuvantTreatmentPredictor
         )
 
     # ---- Training ----
-    def train(self, df_train: pd.DataFrame = None, df_other: pd.DataFrame = None,
-              plot_name: str = 'attention_adjuvant_treatment', model_reset: bool = True,
-              batch_size: int = 32, epochs: int = 10, lime_flag: bool = False, **kwargs
+    def train(
+            self, df_train: pd.DataFrame = None, df_other: pd.DataFrame = None,
+            plot_name: str = 'attention_adjuvant_treatment', model_reset: bool = True,
+            batch_size: int = 32, epochs: int = 10, lime_flag: bool = False, **kwargs
     ) -> list:
         """This method trains the model on the given data and returns
         performance metrics for the validation data as well as the
@@ -1368,6 +1371,7 @@ class TabularMergedAdjuvantTreatmentPredictor(AdjuvantTreatmentPredictor):
     """Class for predicting adjuvant treatments. Here the merged tabular
     data is used for the prediction.
     """
+
     def _prepare_data(self) -> None:
         data_reader = self._data_reader_factory.make_data_frame_reader(
             data_type=self._data_reader_factory.data_reader_types.tabular_merged_feature,
