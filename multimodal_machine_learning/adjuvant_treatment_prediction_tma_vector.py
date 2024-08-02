@@ -1,6 +1,7 @@
 from multimodal_machine_learning.predictors import (
     TmaTabularMergedAttentionMlpAdjuvantTreatmentPredictor,
     TmaAttentionMlpAdjuvantTreatmentPredictor,
+    TmaTabularMergedWithoutPathologicalDataTmaCellDensityAdjuvantTreatmentPredictor
 )
 
 
@@ -13,15 +14,20 @@ def adjuvant_treatment_prediction_tma_vector_attention(
         ),
         TmaAttentionMlpAdjuvantTreatmentPredictor(
             save_flag=save_flag, plot_flag=plot_flag
+        ),
+        TmaTabularMergedWithoutPathologicalDataTmaCellDensityAdjuvantTreatmentPredictor(
+            save_flag=save_flag, plot_flag=plot_flag
         )
     ]
     plot_base_name = 'attention_mlp_'
     predictor_names = [
         'tma_tabular_merged',
-        'tma'
+        'tma',
+        'tma_tabular_merged_without_patho_tma_cell_density'
     ]
     plot_lime = [
-        True,
+        False,
+        False,
         False
     ]
 

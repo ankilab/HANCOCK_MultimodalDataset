@@ -24,6 +24,7 @@ from .data_reader import (
     FeatureTmaPdl1DataFrameReader,
     FeatureTmaMergedDataFrameReader,
     FeatureTmaAndTabularMergedDataFrameReader,
+    FeatureTmaAndTabularWithoutPathologicalTmaCellDensityDataFrameReader,
     DataSplitBloodDataFrameReader,
     DataSplitClinicalDataFrameReader,
     DataSplitPathologicalDataFrameReader,
@@ -66,6 +67,7 @@ class DataReaderTypes:
         self.tma_pdl1_feature = 'TMA PDL1'
         self.tma_merged_feature = 'TMA Merged'
         self.tma_tabular_merged_feature = 'TMA and Tabular Merged'
+        self.tma_tabular_without_patho_tma_cell_density_feature = 'TMA Tabular without Pathological and TMA cell density'
 
         # ---- Targets ----
         self.targets = 'Targets'
@@ -233,6 +235,8 @@ class DataFrameReaderFactory:
             data_reader = FeatureTmaMergedDataFrameReader
         elif data_type == self.data_reader_types.tma_tabular_merged_feature:
             data_reader = FeatureTmaAndTabularMergedDataFrameReader
+        elif data_type == self.data_reader_types.tma_tabular_without_patho_tma_cell_density_feature:
+            data_reader = FeatureTmaAndTabularWithoutPathologicalTmaCellDensityDataFrameReader
 
         return data_reader
 

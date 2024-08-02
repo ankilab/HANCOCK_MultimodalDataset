@@ -1081,7 +1081,7 @@ class AbstractNeuralNetworkAdjuvantTreatmentPredictor(AdjuvantTreatmentPredictor
     # ---- Training ----
     def train(self, df_train: pd.DataFrame = None, df_other: pd.DataFrame = None,
               plot_name: str = 'attention_adjuvant_treatment', model_reset: bool = True,
-              batch_size: int = 32, epochs: int = 10, lime_flag: bool = True, **kwargs
+              batch_size: int = 32, epochs: int = 10, lime_flag: bool = False, **kwargs
     ) -> list:
         """This method trains the model on the given data and returns
         performance metrics for the validation data as well as the
@@ -1310,7 +1310,7 @@ class TmaTabularMergedAttentionMlpAdjuvantTreatmentPredictor(
         self._data = data_reader.return_data()
 
 
-class TmaTabularMergedWithoutPathologicalDataCd3Cd8AdjuvantTreatmentPredictor(
+class TmaTabularMergedWithoutPathologicalDataTmaCellDensityAdjuvantTreatmentPredictor(
     AbstractAttentionMlpAdjuvantTreatmentPredictor
 ):
     """Class for predicting adjuvant treatments with a multi layer perceptron
@@ -1331,11 +1331,12 @@ class TmaTabularMergedWithoutPathologicalDataCd3Cd8AdjuvantTreatmentPredictor(
     """
 
     def _prepare_data(self) -> None:
-        # ToDo: Implement the data reader for this if it is clarified which features should be used.
-        raise NotImplementedError(
-            'Data preparation for class ' +
-            'TmaTabularMergedWithoutPathologicalDataCd3Cd8AdjuvantTreatmentPredictor not implemented!'
+        data_reader = self._data_reader_factory.make_data_frame_reader(
+            data_type=self._data_reader_factory.data_reader_types.tma_tabular_without_patho_tma_cell_density_feature,
+            data_dir=self.args.features_dir,
+            data_dir_flag=True
         )
+        self._data = data_reader.return_data()
 
 
 class TmaAttentionMlpAdjuvantTreatmentPredictor(AbstractAttentionMlpAdjuvantTreatmentPredictor):

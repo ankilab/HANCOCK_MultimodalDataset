@@ -771,6 +771,39 @@ class FeatureTmaAndTabularMergedDataFrameReader(DataFrameReader):
         return data
 
 
+class FeatureTmaAndTabularWithoutPathologicalTmaCellDensityDataFrameReader(
+    DataFrameReader
+):
+    @property
+    def data(self) -> pd.DataFrame:
+        if self._data is None:
+            self._data = self._get_data()
+        return self._data.copy()
+
+    def __init__(self, data_dir: Path = defaultPaths.features):
+        super().__init__(data_dir = data_dir)
+
+    def _get_data(self):
+        feature_tma_reader = FeatureTmaMergedDataFrameReader(data_dir=self._data_dir)
+        feature_clinical_reader = FeatureClinicalDataFrameReader(
+            data_dir=self._data_dir / defaultFileNames.feature_clinical)
+        feature_blood_reader = FeatureBloodDataFrameReader(
+            data_dir=self._data_dir / defaultFileNames.feature_blood)
+        feature_icd_codes_reader = FeatureICDCodesDataFrameReader(
+            data_dir=self._data_dir / defaultFileNames.feature_icd_codes)
+        data = feature_clinical_reader.return_data()
+        data = data.merge(
+            feature_blood_reader.return_data(),
+            on='patient_id', how='outer')
+        data = data.merge(
+            feature_icd_codes_reader.return_data(),
+            on='patient_id', how='outer')
+        data = data.merge(
+            feature_tma_reader.return_data(),
+            on='patient_id', how='outer')
+        return data
+
+
 # --- DataReader for the targets ---
 class TargetsDataFrameReader(CSVDataFrameReader):
     def __init__(self, data_dir: Path = defaultPaths.targets):
