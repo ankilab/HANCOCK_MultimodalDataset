@@ -78,46 +78,6 @@ class Individual:
         test_points = points.iloc[test_point_idx]
         train_points = points.iloc[train_point_idx]
 
-        # categorical_columns = [
-        #     "smoking_status",
-        #     "primary_tumor_site",
-        #     "histologic_type",
-        #     "hpv_association_p16",
-        #     "grading",
-        #     "resection_status_carcinoma_in_situ",
-        #     "resection_status"
-        # ]
-        # categorical_idx = [df.columns.get_loc(col) - 1 for col in categorical_columns]
-        # numeric_columns = blood.columns[1:].tolist() + tma.columns[1:].tolist() + [
-        #     "age_at_initial_diagnosis",
-        #     "number_of_positive_lymph_nodes",
-        #     "infiltration_depth_in_mm",
-        #     "pT_stage",
-        #     "pN_stage"
-        # ]
-        # numeric_idx = [df.columns.get_loc(col) - 1 for col in numeric_columns]
-        # remaining_columns = [col for col in df.columns[1:] if col not in categorical_columns and col not in numeric_columns]
-        # remaining_idx = [df.columns.get_loc(col) - 1 for col in remaining_columns]
-        #
-        # pipeline_categorical = Pipeline(steps=[
-        #     ("imputer", SimpleImputer(strategy="most_frequent")),
-        #     ("onehot", OneHotEncoder(sparse_output=False, handle_unknown="ignore"))
-        # ])
-        # pipeline_numeric = Pipeline(steps=[
-        #     ("imputer", SimpleImputer(strategy="mean")),
-        #     ("scaler", StandardScaler())
-        # ])
-        # pipeline_encoded = Pipeline(steps=[
-        #     ("imputer", SimpleImputer(strategy="most_frequent"))
-        # ])
-        # preprocessor = ColumnTransformer(
-        #     transformers=[
-        #         ("categorical", pipeline_categorical, categorical_idx),
-        #         ("numeric", pipeline_numeric, numeric_idx),
-        #         ("encoded", pipeline_encoded, remaining_idx)
-        #     ],
-        #     remainder="passthrough"
-        # )
         preprocessor = setup_preprocessing_pipeline(points.columns)
         preprocessor.fit(train_points)
         test_points = preprocessor.transform(test_points)
@@ -275,7 +235,7 @@ class GeneticAlgorithm:
             print(f"Gen {generation}:\tMedian fitness: {median_fitness:.4f}\tMax fitness: {max_fitness:.4f}")
 
             if self.log_name is not None:
-                if generation % 1 == 0:  # TODO % 10
+                if generation % 10 == 0:
                     test_idx = np.nonzero(fittest_individual.chromosome)[0]
                     test_ids = df.iloc[test_idx].patient_id.tolist()
                     temp_df = labels_df.copy()

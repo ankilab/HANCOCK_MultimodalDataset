@@ -140,7 +140,6 @@ class DataGenerator2D(Sequence):
         y = np.ones(self.batch_size, dtype="float32") * (-1)
         X = np.ones((self.batch_size, *self.output_shape), dtype="float32")
 
-        # TODO: Remove hard-coded numbers
         num_markers = 8
         dim = 256
 
@@ -212,15 +211,6 @@ def cross_validation(dataframe, k=10):
         val_gen = DataGenerator2D(X_val, y_val, batch_size=1, output_shape=params["input_shape"], shuffle=False,
                                   tiles_per_patient=2, min_max_scaling=True, min_value=min_value, max_value=max_value,
                                   set_patient_vectors_to_zero=params["exclude_multimodal_patient_vectors"])
-
-        # # Plot embeddings
-        # for x, y in train_gen:
-        #     print(x.shape)
-        #     fig, axes = plt.subplots(nrows=1, ncols=2, figsize=(16, 6))
-        #     for i in range(2):
-        #         ax = axes[i].matshow(x[i, ..., 0], vmin=-1, vmax=1)
-        #     fig.colorbar(ax, ax=axes.ravel().tolist(), shrink=0.9)
-        #     plt.show()
 
         # Build Convolutional Neural Network
         model = ConvNet(
