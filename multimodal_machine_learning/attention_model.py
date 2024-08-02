@@ -58,7 +58,7 @@ class SelfAttentionWithResidual(tf.keras.layers.Layer):
         v = self.W_v(inputs)
 
         attention_scores = tf.matmul(q, k, transpose_b=True)
-        attention_scores /=  tf.cast(self.input_dim, tf.float32)
+        attention_scores /= tf.cast(self.input_dim, tf.float32)
         attention_weights = tf.nn.softmax(attention_scores, axis=-1)
 
         # Apply attention weights to values
@@ -69,7 +69,7 @@ class SelfAttentionWithResidual(tf.keras.layers.Layer):
         )
 
         if return_attention_scores:
-            return output, attention_weights
+            return output, attention_scores
         else:
             return output
 
