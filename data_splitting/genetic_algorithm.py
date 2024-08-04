@@ -11,6 +11,8 @@ import imageio.v2 as io
 from natsort import natsorted
 from pathlib import Path
 import os
+import sys
+sys.path.append(str(Path(__file__).parents[1]))
 from data_exploration.umap_embedding import setup_preprocessing_pipeline, get_umap_embedding
 
 

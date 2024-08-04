@@ -29,12 +29,12 @@ mkdir results
 ```
 Next, set up an Anaconda environment and install the required Python packages:
 ```
-conda create -n hancock_multimodal python=3.9
+conda create -n hancock_multimodal python=3.12
 conda activate hancock_multimodal
 pip install -r requirements.txt
 ```
 
-Our code was tested on Windows. For running the code described the section 
+Our code was tested on Ubuntu-24.04 with an NVIDIA RTX 4060. For running the code described the section 
 [Adjuvant treatment prediction using histology images](#adjuvant-treatment-prediction-using-histology-images),
 TensorFlow 2.16 is used (see `requirements.txt`). Furthermore, [QuPath](https://qupath.github.io/) needs to be installed 
 for the analysis of histology data.
@@ -91,6 +91,30 @@ To reproduce our results described in section
 [Adjuvant treatment prediction using histology images](#adjuvant-treatment-prediction-using-histology-images), 
 it is also required to download Tissue Microarrays (TMAs): `TMA_TumorCenter` and `TMA_Maps`.
 
+### Disclaimer
+We expect the user to use the structure presented in the [Dataset](#dataset) section, 
+and additionally to locate the repository in the same directory as the directory that contains 
+the `Hancock_Dataset'.
+```
+Parent_Directory
+├── Hancock_Dataset
+|   ├── ...
+|
+├── HANCOCK_MultimodalDataset
+|   ├── ...
+```
+
+This makes it easier to run the scripts without specifying the paths to the data directory. 
+If you do not want to follow this structure, you can either change the default paths 
+in the file `./defaults/__init__.py` or set them manually each time the scripts are called. 
+Note that you do not have to set every argument, just the ones that differ from the recommended structure.
+
+To check which options are available, you can run e.g.
+```
+python3 ./data_exploration/plot_available_data.py --help
+```
+The following assumes that the recommended structure is used.
+
 
 ### Data exploration
 We provide a jupyter notebook `exploring_tabular_data.ipynb` for visualizing the structured 
@@ -102,7 +126,7 @@ the structured data (JSON files).
 To visualize which modalities are available for how many out of the 763 patients, run the following script:
 ```
 cd data_exploration
-python plot_available_data.py path/to/Hancock_Dataset ../results
+python3 plot_available_data.py
 ```
 ![2D representation of multimodal features using UMAP](./images/available_data.svg)
 
@@ -124,11 +148,7 @@ Run `create_multimodal_patient_vectors.py` to extract features and create multim
 ```
 cd feature_extraction
 
-python create_multimodal_patient_vectors.py 
-    path/to/Hancock_Dataset/TextData/icd_codes 
-    path/to/Hancock_Dataset/StructuredData 
-    path/to/Hancock_Dataset/TMA_CellDensityMeasurements/TMA_celldensity_measurements.csv
-    ../features
+python3 create_multimodal_patient_vectors.py 
 ```
 
 After running this script, a 2D representation of the multimodal patient vectors can be visualized using the
@@ -155,10 +175,10 @@ The remaining cases are assigned to the training dataset.
 ```
 cd data_splitting
 
-python genetic_algorithm.py ../features ../results in_distribution_test_dataset --in
-python genetic_algorithm.py ../features ../results out_of_distribution_test_dataset --out
-python split_by_tumor_site.py path/to/Hancock_Dataset/StructuredData ../results -s Oropharynx
-python split_by_treatment_outcome.py ../features ../results
+python3 genetic_algorithm.py ../features ../results in_distribution_test_dataset --in
+python3 genetic_algorithm.py ../features ../results out_of_distribution_test_dataset --out
+python3 split_by_tumor_site.py path/to/Hancock_Dataset/StructuredData ../results -s Oropharynx
+python3 split_by_treatment_outcome.py ./../../Hancock_Dataset/StructuredData ../results 
 ```
 
 ## Outcome prediction
@@ -168,9 +188,9 @@ The classifier is trained five times on the different data splits. Plots of the 
 and of Receiver-Operating Characteristic (ROC) curves are saved to the results directory.
 
 ```
-cd multimodal_machine_learning
-python outcome_prediction.py path/to/Hancock_Dataset/DataSplits_DataDictionaries ../features ../results recurrence
-python outcome_prediction.py path/to/Hancock_Dataset/DataSplits_DataDictionaries ../features ../results survival_status
+cd mulitmodal_machine_learning`
+python outcome_prediction.py ./../../Hancock_Dataset/DataSplits_DataDictionaries  ../features ../results recurrence 
+python outcome_prediction.py ./../../Hancock_Dataset/DataSplits_DataDictionaries ../features ../results survival_status
 ```
 
 ![](./images/roc_testsets_recurrence.svg)![](./images/roc_testsets_survival_status.svg)
