@@ -12,7 +12,7 @@ if __name__ == "__main__":
     args = parser.parse_args()
 
     # Get all tma measurement files
-    pattern = Path(args.data_directory).joinpath("*", "tma_measurements", "*.csv")
+    pattern = Path(args.qupath_projects_root_directory).joinpath("*", "tma_measurements", "*.csv")
     files = glob.glob(str(pattern))
 
     # Combine into a single file and save it
