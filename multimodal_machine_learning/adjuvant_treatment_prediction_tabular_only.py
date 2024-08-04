@@ -40,5 +40,6 @@ def adjuvant_treatment_prediction_tabular_only(save_flag=True, plot_flag=True):
         df_other=multi_predictor.df_test
     )
 
+
 if __name__ == '__main__':
     adjuvant_treatment_prediction_tabular_only(save_flag=True, plot_flag=True)
