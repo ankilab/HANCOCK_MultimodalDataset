@@ -25,8 +25,11 @@ from keras.metrics import Precision, Recall
 from keras.utils import set_random_seed
 from keras.backend import clear_session
 
+import sys
+sys.path.append(str(Path(__file__).parents[1]))
 from data_exploration.umap_embedding import setup_preprocessing_pipeline
 from utils import get_significance
+from argument_parser import HancockArgumentParser
 
 
 SEED = 42
@@ -229,8 +232,8 @@ def cross_validation(dataframe, k=10):
             loss="binary_crossentropy",
             metrics=["accuracy", Precision(), Recall()]
         )
-        logger = CSVLogger(filename=f"{args.results_directory}/{args.prefix}convnet_history_fold{fold_idx}.csv")
-        tensorboard = TensorBoard(log_dir=f"{args.results_directory}/tensorboard_logs/{args.prefix}convnet_fold{fold_idx}")
+        logger = CSVLogger(filename=f"{results_dir}/{args.prefix}convnet_history_fold{fold_idx}.csv")
+        tensorboard = TensorBoard(log_dir=f"{results_dir}/tensorboard_logs/{args.prefix}convnet_fold{fold_idx}")
         callbacks = [logger, tensorboard] if args.tensorboard else [logger]
 
         # Class weights
@@ -477,16 +480,18 @@ def visualize_2d_embedding():
 
 
 if __name__ == "__main__":
-    parser = ArgumentParser()
-    parser.add_argument("datasplit_directory", type=str, help="Path to directory that contains data splits as JSON files")
-    parser.add_argument("features_directory", type=str, help="Path to directory with extracted features")
-    parser.add_argument("results_directory", type=str, help="Path to directory where results will be saved")
-    parser.add_argument("--tensorboard", action="store_true", help="Enable TensorBoard logging")
-    parser.add_argument("--prefix", dest="prefix", type=str, default="", help="Custom prefix for filenames")
+    parser = HancockArgumentParser(type='adjuvant_treatment_prediction_convnet')
+    # parser = ArgumentParser()
+    # parser.add_argument("datasplit_directory", type=str, help="Path to directory that contains data splits as JSON files")
+    # parser.add_argument("features_directory", type=str, help="Path to directory with extracted features")
+    # parser.add_argument("results_directory", type=str, help="Path to directory where results will be saved")
+    # parser.add_argument("--tensorboard", action="store_true", help="Enable TensorBoard logging")
+    # parser.add_argument("--prefix", dest="prefix", type=str, default="", help="Custom prefix for filenames")
     args = parser.parse_args()
 
-    data_dir = Path(args.features_directory)
-    results_dir = Path(args.results_directory)
+    data_dir = Path(args.features_dir)
+    results_dir = Path(args.results_dir)
+    data_split_dir = Path(args.data_split_dir)
 
     # Load hyperparameters from json file
     with open("hyperparameters.json", "r") as json_file:
@@ -553,7 +558,7 @@ if __name__ == "__main__":
     data = data.merge(tma_expanded, on="patient_id", how="outer")
 
     # Get targets and train/test split
-    target_df = pd.read_json(results_dir/"dataset_split_treatment_outcome.json", dtype={"patient_id": str})
+    target_df = pd.read_json(data_split_dir / "dataset_split_treatment_outcome.json", dtype={"patient_id": str})
     target_df["target"] = target_df["adjuvant_treatment"].apply(lambda x: 0 if x == "none" else 1)
     target_train = target_df[target_df.dataset == "training"][["patient_id", "target"]]
     target_test = target_df[target_df.dataset == "test"][["patient_id", "target"]]

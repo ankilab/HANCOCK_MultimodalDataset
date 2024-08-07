@@ -37,6 +37,9 @@ class HancockArgumentParser(ArgumentParser):
             self._add_wsi_arguments()
         elif type == 'adjuvant_treatment_prediction':
             self._add_data_split_arguments()
+        elif type == 'adjuvant_treatment_prediction_convnet':
+            self._add_data_split_arguments()
+            self._add_convnet_arguments()
 
     def _add_always_arguments(self):
         self.add_argument("--results_dir", type=Path,
@@ -134,3 +137,7 @@ class HancockArgumentParser(ArgumentParser):
             help="Path to directory that contains data splits as JSON files",
             default=self._defaultPaths.data_split
         )
+
+    def _add_convnet_arguments(self):
+        self.add_argument("--tensorboard", action="store_true", help="Enable TensorBoard logging")
+        self.add_argument("--prefix", dest="prefix", type=str, default="", help="Custom prefix for filenames")

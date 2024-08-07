@@ -34,7 +34,7 @@ conda activate hancock_multimodal
 pip install -r requirements.txt
 ```
 
-Our code was tested on Ubuntu-24.04 with an NVIDIA RTX 4060. For running the code described the section 
+Our code was tested on Ubuntu-24.04. For running the code described the section 
 [Adjuvant treatment prediction using histology images](#adjuvant-treatment-prediction-using-histology-images),
 TensorFlow 2.16 is used (see `requirements.txt`). Furthermore, [QuPath](https://qupath.github.io/) needs to be installed 
 for the analysis of histology data.
@@ -322,7 +322,7 @@ Run `adjuvant_treatment_prediction_convnet.py` to reproduce results of training 
 to predict whether an adjuvant treatment is used:
 ```
 cd multimodal_machine_learning
-python adjuvant_treatment_prediction_convnet.py ../features ../results
+python3 adjuvant_treatment_prediction_convnet.py ./../../Hancock_Dataset/DataSplits_DataDirectory ../features ../results 
 ```
 
 # Reference
