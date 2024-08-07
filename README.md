@@ -34,7 +34,10 @@ conda activate hancock_multimodal
 pip install -r requirements.txt
 ```
 
-Our code was tested on Ubuntu-24.04. For running the code described the section 
+Our code was tested on Ubuntu-24.04 with an NVIDIA RTX 4060 besides the additional section
+[Adjuvant treatment prediction using histology images](#adjuvant-treatment-prediction-using-histology-images) section,
+which was tested on Windows.
+For running the code described the section 
 [Adjuvant treatment prediction using histology images](#adjuvant-treatment-prediction-using-histology-images),
 TensorFlow 2.16 is used (see `requirements.txt`). Furthermore, [QuPath](https://qupath.github.io/) needs to be installed 
 for the analysis of histology data.
@@ -189,8 +192,8 @@ and of Receiver-Operating Characteristic (ROC) curves are saved to the results d
 
 ```
 cd mulitmodal_machine_learning`
-python outcome_prediction.py ./../../Hancock_Dataset/DataSplits_DataDictionaries  ../features ../results recurrence 
-python outcome_prediction.py ./../../Hancock_Dataset/DataSplits_DataDictionaries ../features ../results survival_status
+python3 outcome_prediction.py ./../../Hancock_Dataset/DataSplits_DataDictionaries  ../features ../results recurrence 
+python3 outcome_prediction.py ./../../Hancock_Dataset/DataSplits_DataDictionaries ../features ../results survival_status
 ```
 
 ![](./images/roc_testsets_recurrence.svg)![](./images/roc_testsets_survival_status.svg)
@@ -203,7 +206,7 @@ Kaplan-Meier curves (overall and recurrence-free survival) are plotted for cases
 
 ```
 cd multimodal_machine_learning
-python adjuvant_treatment_prediction.py path/to/Hancock_Dataset/DataSplits_DataDictionaries ../data ../results
+python3 adjuvant_treatment_prediction_tabular_only.py
 ```
 
 ![ROC curve of multimodal model](./images/roc_treatment_Multimodal.svg)
@@ -321,8 +324,20 @@ Next, run `summarize_tma_measurements.py` to create a single file by merging all
 Run `adjuvant_treatment_prediction_convnet.py` to reproduce results of training a Convolutional Neural Network
 to predict whether an adjuvant treatment is used:
 ```
+conda create -n hancock_multimodal_win python=3.9
+conda activate hancock_multimodal_win
+pip install -r windows_requirements.txt
 cd multimodal_machine_learning
-python3 adjuvant_treatment_prediction_convnet.py ./../../Hancock_Dataset/DataSplits_DataDirectory ../features ../results 
+python adjuvant_treatment_prediction_convnet.py
+```
+
+**Step 6 (Alternative): Training and testing a deep neural network**
+Run `adjuvant_treatment_prediction_tma_vector.py` to reproduce results of training 
+an attention-coupled multi-layer perceptron to predict whether an adjuvant treatment is used.
+This was again tested on Ubuntu-24.04 with an NVIDIA RTX 4060.
+```
+cd multimodal_machine_learning
+python3 adjuvant_treatment_prediction_tma_vector.py
 ```
 
 # Reference
