@@ -55,7 +55,7 @@ def extract_image_features(tile_dir, backbone, layer, dim, num_tiles_per_patient
     target_shape = num_tiles_per_patient * dim
     for key, val in savez_dict_concat.items():
         if len(val) == 1:
-            patient_dtrs = np.concatenate([val])
+            patient_dtrs = val[0]
         else:
             patient_dtrs = np.concatenate(val)
         if patient_dtrs.shape[0] > target_shape:
