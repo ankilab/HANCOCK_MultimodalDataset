@@ -8,6 +8,7 @@ import pandas as pd
 
 sys.path.append(str(Path(__file__).parents[1]))
 from multimodal_machine_learning import TabularMergedAdjuvantTreatmentPredictor, PredictionPlotter
+from multimodal_machine_learning.predictors import TmaTabularMergedAttentionMlpAdjuvantTreatmentPredictor
 
 
 class OptimalRandomForestTabularAdjuvantTreatmentPredictor(
@@ -128,9 +129,13 @@ class TabularAdjuvantTherapyComparer:
                 save_flag=False, plot_flag=False,
                 random_state=random_state
             ),
+            TmaTabularMergedAttentionMlpAdjuvantTreatmentPredictor(
+                save_flag=False, plot_flag=False,
+                random_state=random_state
+            )
         ]
-        self._predictor_names = ['Random Forest', 'Ada Boost', 'Support Vector Classifier']
-        self._predictor_short_names = ['RF', 'Ada', 'SVC']
+        self._predictor_names = ['Random Forest', 'Ada Boost', 'Support Vector Classifier', 'MLP']
+        self._predictor_short_names = ['RF', 'Ada', 'SVC', 'MLP']
         self._save_flag = save_flag
         self._plot_flag = plot_flag
         self._random_state = random_state
