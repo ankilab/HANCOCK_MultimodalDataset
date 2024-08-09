@@ -1,3 +1,6 @@
+import sys
+from pathlib import Path
+sys.path.append(str(Path(__file__).parents[1]))
 from multimodal_machine_learning.predictors import (
     TmaTabularMergedAttentionMlpAdjuvantTreatmentPredictor,
     TmaAttentionMlpAdjuvantTreatmentPredictor,
