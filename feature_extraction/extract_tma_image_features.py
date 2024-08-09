@@ -82,8 +82,8 @@ if __name__ == "__main__":
     for sub_dir in os.listdir(root_dir):
         # Only continue if the QuPath project directory already contains the "tiles" directory
         if "tiles" in os.listdir(root_dir/sub_dir):
-            marker = re.search(r"(CD[0-9]+|MHC1|PDL1)", sub_dir)
-            # Only continue if the QuPath project name contains a marker (CD3, CD8, ..., PDL1, MHC1)
+            marker = re.search(r"(CD[0-9]+|MHC1|PDL1|HE)", sub_dir)
+            # The QuPath project name needs to contain one of the markers CD3, CD8, ..., PDL1, MHC1, HE
             if marker is not None:
                 marker = marker.group()
 
