@@ -26,7 +26,7 @@ def adjuvant_treatment_prediction_tma_vector_attention(
         'tma_tabular_merged_without_patho_tma_cell_density'
     ]
     plot_lime = [
-        False,
+        True,
         False,
         False
     ]

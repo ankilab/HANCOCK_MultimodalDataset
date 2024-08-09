@@ -654,7 +654,7 @@ class FeatureTmaMhc1DataFrameReader(NpzDataFrameReader):
         data (pd.DataFrame): The data from the npz file as pandas dataframe.
     """
     def __init__(self, data_dir: Path = defaultPaths.feature_tma_cd3):
-        super().__init__(data_dir = data_dir)
+        super().__init__(data_dir=data_dir)
 
 
 class FeatureTmaPdl1DataFrameReader(NpzDataFrameReader):
@@ -668,7 +668,7 @@ class FeatureTmaPdl1DataFrameReader(NpzDataFrameReader):
         data (pd.DataFrame): The data from the npz file as pandas dataframe.
     """
     def __init__(self, data_dir: Path = defaultPaths.feature_tma_pdl1):
-        super().__init__(data_dir = data_dir)
+        super().__init__(data_dir=data_dir)
 
 
 class FeatureTmaMergedDataFrameReader(DataFrameReader):
@@ -679,7 +679,7 @@ class FeatureTmaMergedDataFrameReader(DataFrameReader):
         return self._data.copy()
 
     def __init__(self, data_dir: Path = defaultPaths.features):
-        super().__init__(data_dir = data_dir)
+        super().__init__(data_dir=data_dir)
 
     def _get_data(self, clean_data:bool = True) -> pd.DataFrame:
         """Reads the data from the npz files and merges them on 'patient_id'.
@@ -752,7 +752,7 @@ class FeatureTmaAndTabularMergedDataFrameReader(DataFrameReader):
         return self._data.copy()
 
     def __init__(self, data_dir: Path = defaultPaths.features):
-        super().__init__(data_dir = data_dir)
+        super().__init__(data_dir=data_dir)
 
     def _get_data(self):
         feature_tma_reader = FeatureTmaMergedDataFrameReader(data_dir=self._data_dir)
@@ -776,7 +776,7 @@ class FeatureTmaAndTabularWithoutPathologicalTmaCellDensityDataFrameReader(
         return self._data.copy()
 
     def __init__(self, data_dir: Path = defaultPaths.features):
-        super().__init__(data_dir = data_dir)
+        super().__init__(data_dir=data_dir)
 
     def _get_data(self):
         feature_tma_reader = FeatureTmaMergedDataFrameReader(data_dir=self._data_dir)
