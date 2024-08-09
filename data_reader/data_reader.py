@@ -570,12 +570,7 @@ class FeatureTmaCd3DataFrameReader(NpzDataFrameReader):
         data (pd.DataFrame): The data from the npz file as pandas dataframe.
     """
     def __init__(self, data_dir: Path = defaultPaths.feature_tma_cd3):
-        super().__init__(data_dir = data_dir)
-
-    def return_data(self) -> pd.DataFrame:
-        return_data = self.data
-        return_data['CD3'].values[718] = np.nan
-        return return_data
+        super().__init__(data_dir=data_dir)
 
 
 class FeatureTmaCd8DataFrameReader(NpzDataFrameReader):
@@ -589,7 +584,7 @@ class FeatureTmaCd8DataFrameReader(NpzDataFrameReader):
         data (pd.DataFrame): The data from the npz file as pandas dataframe.
     """
     def __init__(self, data_dir: Path = defaultPaths.feature_tma_cd8):
-        super().__init__(data_dir = data_dir)
+        super().__init__(data_dir=data_dir)
 
 
 class FeatureTmaCd56DataFrameReader(NpzDataFrameReader):
@@ -603,7 +598,7 @@ class FeatureTmaCd56DataFrameReader(NpzDataFrameReader):
         data (pd.DataFrame): The data from the npz file as pandas dataframe.
     """
     def __init__(self, data_dir: Path = defaultPaths.feature_tma_cd56):
-        super().__init__(data_dir = data_dir)
+        super().__init__(data_dir=data_dir)
 
 
 class FeatureTmaCd68DataFrameReader(NpzDataFrameReader):
@@ -617,7 +612,7 @@ class FeatureTmaCd68DataFrameReader(NpzDataFrameReader):
         data (pd.DataFrame): The data from the npz file as pandas dataframe.
     """
     def __init__(self, data_dir: Path = defaultPaths.feature_tma_cd68):
-        super().__init__(data_dir = data_dir)
+        super().__init__(data_dir=data_dir)
 
 
 class FeatureTmaCd163DataFrameReader(NpzDataFrameReader):
@@ -631,7 +626,7 @@ class FeatureTmaCd163DataFrameReader(NpzDataFrameReader):
         data (pd.DataFrame): The data from the npz file as pandas dataframe.
     """
     def __init__(self, data_dir: Path = defaultPaths.feature_tma_cd163):
-        super().__init__(data_dir = data_dir)
+        super().__init__(data_dir=data_dir)
 
 
 class FeatureTmaHeDataFrameReader(NpzDataFrameReader):
@@ -645,7 +640,7 @@ class FeatureTmaHeDataFrameReader(NpzDataFrameReader):
         data (pd.DataFrame): The data from the npz file as pandas dataframe.
     """
     def __init__(self, data_dir: Path = defaultPaths.feature_tma_he):
-        super().__init__(data_dir = data_dir)
+        super().__init__(data_dir=data_dir)
 
 
 class FeatureTmaMhc1DataFrameReader(NpzDataFrameReader):

@@ -19,12 +19,11 @@ multimodal data handling, feature extraction, and generating train/test dataset 
 
 
 ## Setup
-To set up the environment, first clone this repository to your local machine and create directories for storing
-extracted features and results:
+To set up the environment, first clone this repository to your local machine and create a directory for storing
+the results:
 ```
 git clone https://github.com/ankilab/HANCOCK_MultimodalDataset.git
 cd HANCOCK_MultimodalDataset
-mkdir features
 mkdir results
 ```
 Next, set up an Anaconda environment and install the required Python packages:
@@ -35,7 +34,7 @@ pip install -r requirements.txt
 ```
 
 Our code was tested on Ubuntu-24.04 with an NVIDIA RTX 4060 besides the additional section
-[Adjuvant treatment prediction using histology images](#adjuvant-treatment-prediction-using-histology-images) section,
+[Adjuvant treatment prediction using histology images](#adjuvant-treatment-prediction-using-histology-images),
 which was tested on Windows.
 For running the code described the section 
 [Adjuvant treatment prediction using histology images](#adjuvant-treatment-prediction-using-histology-images),
@@ -94,6 +93,12 @@ To reproduce our results described in section
 [Adjuvant treatment prediction using histology images](#adjuvant-treatment-prediction-using-histology-images), 
 it is also required to download Tissue Microarrays (TMAs): `TMA_TumorCenter` and `TMA_Maps`.
 
+However, if one is only interested in reproducing the final predictions (adjuvant therapy and outcome) and 
+does not want to reproduce the feature extraction and data splitting, it is possible to rely solely on the 
+features found in the [`features`](features) directory of this repository together with the additional to be downloaded
+[`DataSplits_DataDictionaries`](https://data.fau.de/public/24/87/322108724/DataSplits_DataDictionaries.zip) from the 
+dataset.
+
 ### Disclaimer
 We expect the user to use the structure presented in the [Dataset](#dataset) section, 
 and additionally to locate the repository in the same directory as the directory that contains 
@@ -135,6 +140,7 @@ python3 plot_available_data.py
 
 
 ## Multimodal feature extraction
+This step is optional, as we already provide the extracted features in the `feature' directory. 
 
 To better understand the multimodal data, we extracted features from different modalities and concatenated them to
 vectors, termed multimodal patient vectors. These vectors were used for the following:
@@ -161,6 +167,9 @@ jupyter notebook `umap_visualization.ipynb` in the `data_exploration` folder.
 
 
 ## Generating data splits
+Performing this step is optional, as we provide the data splits on the download page of the 
+[HANCOCK dataset](https://data.fau.de/public/24/87/322108724/DataSplits_DataDictionaries.zip).
+
 We implemented a genetic algorithm to find different data splits, where the data is split into a training and a test set.
 You can directly use the data splits provided in our dataset, in "DataSplits_DataDictionaries".
 
@@ -215,6 +224,8 @@ python3 adjuvant_treatment_prediction_tabular_only.py
 
 
 ## Adjuvant treatment prediction using histology images
+Steps one through four presented in this section are optional, as we make the features extracted by these steps 
+available in the [`features`](features) directory.
 
 We used the open-source histology software QuPath for analyzing TMAs. 
 The folder [qupath_scripts](qupath_scripts) contains code that can be executed in QuPath's script editor. 

@@ -9,14 +9,14 @@ class DefaultFileNames:
         self.feature_blood = 'blood.csv'
         self.feature_icd_codes = 'icd_codes.csv'
         self.feature_cell_density = 'tma_cell_density.csv'
-        self.feature_tma_cd3 = 'centertile_dtr_256dim_CD3.npz'
-        self.feature_tma_cd8 = 'centertile_dtr_256dim_CD8.npz'
-        self.feature_tma_cd56 = 'centertile_dtr_256dim_CD56.npz'
-        self.feature_tma_cd68 = 'centertile_dtr_256dim_CD68.npz'
-        self.feature_tma_cd163 = 'centertile_dtr_256dim_CD163.npz'
-        self.feature_tma_he = 'centertile_dtr_256dim_HE.npz'
-        self.feature_tma_mhc1 = 'centertile_dtr_256dim_MHC1.npz'
-        self.feature_tma_pdl1 = 'centertile_dtr_256dim_PDL1.npz'
+        self.feature_tma_cd3 = 'tma_tile_dtr_256_CD3.npz'
+        self.feature_tma_cd8 = 'tma_tile_dtr_256_CD8.npz'
+        self.feature_tma_cd56 = 'tma_tile_dtr_256_CD56.npz'
+        self.feature_tma_cd68 = 'tma_tile_dtr_256_CD68.npz'
+        self.feature_tma_cd163 = 'tma_tile_dtr_256_CD163.npz'
+        self.feature_tma_he = 'tma_tile_dtr_256_HE.npz'
+        self.feature_tma_mhc1 = 'tma_tile_dtr_256_MHC1.npz'
+        self.feature_tma_pdl1 = 'tma_tile_dtr_256_PDL1.npz'
 
         # ---- Targets ----
         self.targets = 'targets.csv'
@@ -53,7 +53,7 @@ class DefaultPaths:
         self.text_data_dir = self.data_dir / 'TextData'
         self.reports = self.text_data_dir / "reports"
         self.icd_codes = self.text_data_dir / 'icd_codes'
-        self.wsi_tumor = self.data_dir / '..' / 'WSI_PrimaryTumor'
+        self.wsi_tumor = self.data_dir / 'WSI_PrimaryTumor'
         self.wsi_lymph_node = self.data_dir / 'WSI_LymphNode'
 
         # --- Features -----
