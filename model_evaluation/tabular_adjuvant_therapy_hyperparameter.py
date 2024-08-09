@@ -9,7 +9,6 @@ from sklearn.tree import DecisionTreeClassifier
 import json
 
 sys.path.append(str(Path(__file__).parents[1]))
-# from multimodal_machine_learning import AdjuvantTreatmentPredictor
 from multimodal_machine_learning import TabularMergedAdjuvantTreatmentPredictor
 
 class AbstractTabularAdjuvantTreatmentModelEvaluator:
