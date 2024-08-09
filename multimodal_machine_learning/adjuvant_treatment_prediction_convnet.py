@@ -481,12 +481,6 @@ def visualize_2d_embedding():
 
 if __name__ == "__main__":
     parser = HancockArgumentParser(type='adjuvant_treatment_prediction_convnet')
-    # parser = ArgumentParser()
-    # parser.add_argument("datasplit_directory", type=str, help="Path to directory that contains data splits as JSON files")
-    # parser.add_argument("features_directory", type=str, help="Path to directory with extracted features")
-    # parser.add_argument("results_directory", type=str, help="Path to directory where results will be saved")
-    # parser.add_argument("--tensorboard", action="store_true", help="Enable TensorBoard logging")
-    # parser.add_argument("--prefix", dest="prefix", type=str, default="", help="Custom prefix for filenames")
     args = parser.parse_args()
 
     data_dir = Path(args.features_dir)
@@ -519,7 +513,7 @@ if __name__ == "__main__":
     embedding_dim = params["dtr_embedding_dim"]
     markers = ["HE", "CD3", "CD8", "CD56", "CD68", "CD163", "MHC1", "PDL1"]
     for marker in markers:
-        file = data_dir/f"centertile_dtr_{embedding_dim}dim_{marker}.npz"
+        file = data_dir/f"tma_tile_dtr_{embedding_dim}_{marker}.npz"
         npz_data = np.load(str(file), allow_pickle=True)
         patient_ids = npz_data.keys()
 
