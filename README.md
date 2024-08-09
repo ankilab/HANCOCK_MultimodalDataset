@@ -200,7 +200,7 @@ The classifier is trained five times on the different data splits. Plots of the 
 and of Receiver-Operating Characteristic (ROC) curves are saved to the results directory.
 
 ```
-cd mulitmodal_machine_learning`
+cd mulitmodal_machine_learning
 python3 outcome_prediction.py ./../../Hancock_Dataset/DataSplits_DataDictionaries  ../features ../results recurrence 
 python3 outcome_prediction.py ./../../Hancock_Dataset/DataSplits_DataDictionaries ../features ../results survival_status
 ```
