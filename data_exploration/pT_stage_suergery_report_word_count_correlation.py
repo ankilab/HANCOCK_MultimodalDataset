@@ -23,6 +23,10 @@ def assign_stage(row: pd.Series) -> int | None:
     """
     Assigns an integer value to the pT stage of the tumor. There are 4 stages
     that are encoded. The row should contain a column 'pT_stage'.
+
+    Args:
+        row (pd.Series): A row of a pandas DataFrame. The row should 
+        contain a column 'pT_stage'.
     """
     stage_1 = ['pT1', 'pT1a', 'pT1b']
     stage_2 = ['pT2']
@@ -84,8 +88,9 @@ class CorrelationSurgeryReportWordCountAndPtStage():
         surgery report in german and the tumor pT stage with the specified
         correlation method. Valid options are {‘pearson’, ‘kendall’, ‘spearman’}
 
-        method (str, optional): The correlation method used. 
-        Defaults to 'spearman'.
+        Args:
+            method (str, optional): The correlation method used. 
+            Defaults to 'spearman'.
         """
         if self._data_frame is None:
             self._data_frame = self._create_data_frame()
