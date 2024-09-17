@@ -58,7 +58,7 @@ class CorrelationSurgeryReportWordCountAndTumorGrading():
                             on='patient_id', how='left')
         df_new['stage'] = df_new.apply(assign_stage, axis=1)
         df_new.drop(['file', 'pT_stage'], axis=1, inplace=True)
-        df_new = df_new.dropna(subset=['stage'])
+        df_new = df_new.dropna(subset=['stage'])        
         return df_new
     
     def return_correlation_score(self, method: str = 'spearman') -> float:
