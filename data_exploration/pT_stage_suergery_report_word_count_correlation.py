@@ -31,7 +31,11 @@ def assign_stage(row: pd.Series) -> int | None:
         return None
 
 
-class CorrelationSurgeryReportWordCountAndTumorGrading():
+class CorrelationSurgeryReportWordCountAndPtStage():
+    """
+    This class calculates the correlation coefficient between the word count 
+    of the surgery report in german and the tumor pT stage.
+    """
     def __init__(self):
         self.argumentParser = HancockArgumentParser(type='grading_correlation')
         self.args = self.argumentParser.parse_args()
@@ -50,6 +54,10 @@ class CorrelationSurgeryReportWordCountAndTumorGrading():
         self._data_frame = None
         
     def _create_data_frame(self) -> pd.DataFrame:
+        """
+        Helper function to create the data frame that contains the pT 
+        stage encoded in a single integer column 'stage' and the word count.
+        """
         df_text = self.data_reader_text.return_data()
         df_patho = self.data_reader_patho.return_data()
         df_new = df_text.copy()
@@ -62,6 +70,14 @@ class CorrelationSurgeryReportWordCountAndTumorGrading():
         return df_new
     
     def return_correlation_score(self, method: str = 'spearman') -> float:
+        """
+        Returns the correlation coefficient between the word count of the
+        surgery report in german and the tumor pT stage with the specified
+        correlation method. Valid options are {‘pearson’, ‘kendall’, ‘spearman’}
+
+        method (str, optional): The correlation method used. 
+        Defaults to 'spearman'.
+        """
         if self._data_frame is None:
             self._data_frame = self._create_data_frame()
             
@@ -72,7 +88,7 @@ class CorrelationSurgeryReportWordCountAndTumorGrading():
         
 
 if __name__ == '__main__':
-    correlation = CorrelationSurgeryReportWordCountAndTumorGrading()
+    correlation = CorrelationSurgeryReportWordCountAndPtStage()
     pearson = correlation.return_correlation_score(method='pearson')
     spearman = correlation.return_correlation_score(method='spearman')
     correlation_data = pd.DataFrame({'Coefficient': ['Spearman', 'Pearson'],
