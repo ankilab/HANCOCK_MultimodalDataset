@@ -9,12 +9,21 @@ from data_reader import DataFrameReaderFactory
 
 
 def count_words(file_path: Path):
+    """
+    Returns the number of words in a text file.
+
+    file_path (pathlib.Path): Path of the text file to be read.
+    """
     with open(file_path, 'r') as file:
         text = file.read()
         return len(text.split())
     
     
 def assign_stage(row: pd.Series) -> int | None:
+    """
+    Assigns an integer value to the pT stage of the tumor. There are 4 stages
+    that are encoded. The row should contain a column 'pT_stage'.
+    """
     stage_1 = ['pT1', 'pT1a', 'pT1b']
     stage_2 = ['pT2']
     stage_3 = ['pT3']
