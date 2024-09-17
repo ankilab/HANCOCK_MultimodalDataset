@@ -17,3 +17,4 @@ scikit-learn==1.5.1
 tqdm==4.66.4
 plotly==5.23.0
 kaleido==0.2.1
+tabluate==0.9.0
