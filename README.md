@@ -331,15 +331,14 @@ for every single TMA, you can set the variable `tma_map_dir` in the script.
 Next, run `summarize_tma_measurements.py` to create a single file by merging all TMA measurement files from step 4.
 
 **Step 5: Training and testing a deep neural network**
+> [!WARNING]
+> Unfortunately, this step currently breaks after the predictions are done in the visualization part, because the DeepExplainer from the Shap library is [broken](https://github.com/shap/shap/issues/3681). 
 
 Run `adjuvant_treatment_prediction_convnet.py` to reproduce results of training a Convolutional Neural Network
 to predict whether an adjuvant treatment is used:
 ```
-conda create -n hancock_multimodal_win python=3.9
-conda activate hancock_multimodal_win
-pip install -r windows_requirements.txt
 cd multimodal_machine_learning
-python adjuvant_treatment_prediction_convnet.py
+python3 adjuvant_treatment_prediction_convnet.py
 ```
 
 **Step 6 (Alternative): Training and testing a deep neural network**
