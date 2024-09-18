@@ -25,7 +25,7 @@ class HancockArgumentParser(ArgumentParser):
         super().__init__(**kwargs)
         self._defaultPaths = DefaultPaths()
         self._add_always_arguments()
-        if type == 'feature_extraction' or 'grading_correlation':
+        if type == 'feature_extraction' or type == 'grading_correlation':
             self._add_structured_arguments()
             self._add_tma_cell_density_arguments()
             self._add_text_data_arguments()
