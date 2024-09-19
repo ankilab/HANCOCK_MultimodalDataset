@@ -83,7 +83,9 @@ Hancock_Dataset
 ├── TMA_Maps
 ├── WSI_LymphNode
 ├── WSI_PrimaryTumor_Annotations
-└── WSI_PrimaryTumor_[Site]
+|
+|── WSI_PrimaryTumor
+|   └── WSI_PrimaryTumor_[Site]
 ```
 
 However, it is sufficient to download the following folders for reproducing most results from our paper:
