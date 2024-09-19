@@ -121,7 +121,7 @@ python3 ./data_exploration/plot_available_data.py --help
 The following assumes that the recommended structure is used.
 
 
-## Data exploration
+### Data exploration
 We provide a jupyter notebook `exploring_tabular_data.ipynb` for visualizing the structured 
 (clinical, pathological, and blood) data.
 The jupyter notebook `survival_analysis.ipynb` can be used to reproduce Kaplan-Meier curves.
