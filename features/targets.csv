@@ -1,0 +1,764 @@
+patient_id,recurrence,days_to_recurrence,survival_status,survival_status_with_cause,days_to_last_information,rfs_event,days_to_rfs_event
+001,no,,living,living,2258,0,2230
+002,yes,357.0,living,living,1753,1,341
+003,no,,living,living,851,0,831
+004,no,,living,living,2996,0,2982
+005,yes,1202.0,deceased,deceased not tumor specific,2819,1,1163
+006,no,,living,living,991,0,943
+007,no,,living,living,1149,0,1126
+008,no,,living,living,69,0,40
+009,no,,living,living,1617,0,1596
+010,no,,living,living,1462,0,1430
+011,no,,living,living,1785,0,1768
+012,yes,974.0,deceased,deceased not tumor specific,2395,1,937
+013,yes,256.0,deceased,deceased tumor specific,326,1,211
+014,no,,living,living,1843,0,1810
+015,yes,374.0,living,living,526,1,354
+016,yes,238.0,deceased,deceased tumor specific,336,1,219
+017,yes,459.0,living,living,487,1,431
+018,no,,living,living,2794,0,2782
+019,no,,deceased,deceased not tumor specific,165,1,148
+020,no,,living,living,2610,0,2595
+021,yes,817.0,living,living,830,1,770
+022,no,,living,living,4670,0,4653
+023,no,,living,living,204,0,128
+024,no,,living,living,1552,0,1523
+025,no,,living,living,3284,0,3268
+026,no,,living,living,2442,0,2410
+027,no,,deceased,deceased not tumor specific,3735,1,3707
+028,yes,650.0,living,living,2688,1,575
+029,no,,deceased,deceased not tumor specific,733,1,714
+030,no,,living,living,2490,0,2451
+031,no,,living,living,4032,0,4003
+032,no,,living,living,1679,0,1666
+033,no,,living,living,3023,0,3015
+034,no,,living,living,1924,0,1895
+035,no,,living,living,168,0,142
+036,yes,419.0,living,living,2337,1,389
+037,no,,living,living,539,0,515
+038,no,,living,living,2932,0,2893
+039,yes,471.0,deceased,deceased tumor specific,471,1,405
+040,yes,89.0,deceased,deceased tumor specific,556,1,79
+041,no,,living,living,1454,0,1423
+042,no,,living,living,1821,0,1756
+043,yes,281.0,living,living,2309,1,221
+044,no,,living,living,953,0,926
+045,no,,living,living,3187,0,3131
+046,no,,deceased,deceased not tumor specific,124,1,82
+047,no,,living,living,4228,0,4204
+048,no,,deceased,deceased tumor specific,255,1,236
+049,yes,1314.0,living,living,1420,1,1300
+050,yes,1382.0,deceased,deceased tumor specific,1782,1,1382
+051,no,,living,living,1476,0,1444
+052,no,,deceased,deceased not tumor specific,844,1,826
+053,no,,living,living,4260,0,4260
+054,no,,living,living,155,0,144
+055,no,,living,living,1185,0,1174
+056,yes,263.0,deceased,deceased tumor specific,375,1,218
+057,no,,living,living,1854,0,1819
+058,no,,deceased,deceased tumor specific,153,1,143
+059,no,,living,living,4006,0,3962
+060,no,,living,living,743,0,717
+061,no,,deceased,deceased tumor specific,161,1,112
+062,no,,living,living,537,0,532
+063,no,,living,living,1258,0,1248
+064,no,,living,living,1087,0,1062
+065,yes,923.0,living,living,1203,1,897
+066,no,,deceased,deceased tumor specific,358,1,349
+067,no,,deceased,deceased not tumor specific,972,1,935
+068,no,,living,living,68,0,48
+069,no,,living,living,59,0,59
+070,no,,living,living,536,0,518
+071,yes,127.0,deceased,deceased tumor specific,718,1,99
+072,no,,living,living,2511,0,2466
+073,no,,living,living,3232,0,3218
+074,no,,living,living,2219,0,2211
+075,no,,living,living,2442,0,2410
+076,no,,living,living,1843,0,1791
+077,no,,living,living,2575,0,2551
+078,no,,living,living,400,0,393
+079,no,,living,living,481,0,428
+080,no,,living,living,680,0,650
+081,no,,deceased,deceased tumor specific,980,1,948
+082,no,,living,living,1059,0,1013
+083,no,,living,living,979,0,964
+084,no,,living,living,350,0,323
+085,no,,living,living,142,0,67
+086,no,,living,living,2079,0,2053
+087,no,,living,living,798,0,778
+088,no,,deceased,deceased tumor specific,105,1,61
+089,yes,117.0,deceased,deceased not tumor specific,350,1,69
+090,no,,living,living,1018,0,1004
+091,no,,living,living,901,0,849
+092,no,,living,living,1209,0,1170
+093,no,,living,living,3722,0,3682
+094,no,,living,living,719,0,683
+095,no,,living,living,4233,0,4205
+096,no,,deceased,deceased not tumor specific,695,1,-24
+097,no,,living,living,131,0,118
+098,no,,deceased,deceased not tumor specific,2257,1,2257
+099,yes,468.0,living,living,709,1,468
+100,no,,living,living,847,0,823
+101,yes,420.0,deceased,deceased tumor specific,604,1,392
+102,yes,999.0,living,living,1830,1,987
+103,no,,deceased,deceased tumor specific,752,1,733
+104,yes,243.0,deceased,deceased tumor specific,677,1,184
+105,yes,147.0,living,living,2702,1,107
+106,no,,deceased,deceased not tumor specific,3133,1,3083
+107,no,,living,living,2176,0,2149
+108,no,,living,living,1400,0,1390
+109,no,,living,living,1870,0,1842
+110,no,,living,living,57,0,57
+111,no,,deceased,deceased not tumor specific,1298,1,1258
+112,no,,living,living,3287,0,3274
+113,no,,deceased,deceased tumor specific,102,1,75
+114,no,,deceased,deceased not tumor specific,713,1,672
+115,no,,living,living,2267,0,2228
+116,no,,living,living,584,0,574
+117,no,,living,living,73,0,56
+118,no,,deceased,deceased tumor specific,64,1,33
+119,no,,living,living,2984,0,2984
+120,no,,living,living,1293,0,1275
+121,no,,living,living,3204,0,3166
+122,no,,deceased,deceased,2829,1,2809
+123,no,,living,living,699,0,659
+124,no,,living,living,1463,0,1428
+125,no,,deceased,deceased not tumor specific,2755,1,2736
+126,no,,deceased,deceased not tumor specific,2264,1,2224
+127,no,,living,living,2396,0,2375
+128,yes,772.0,living,living,2970,1,749
+129,no,,deceased,deceased not tumor specific,3824,1,3790
+130,no,,living,living,1945,0,1910
+131,no,,living,living,156,0,133
+132,no,,deceased,deceased not tumor specific,744,1,711
+133,yes,115.0,deceased,deceased tumor specific,549,1,52
+134,no,,living,living,639,0,639
+135,no,,living,living,1408,0,1375
+136,no,,deceased,deceased not tumor specific,1205,1,1180
+137,no,,deceased,deceased not tumor specific,1183,1,1173
+138,no,,living,living,2186,0,2176
+139,no,,deceased,deceased not tumor specific,3470,1,3442
+140,no,,living,living,1931,0,1916
+141,no,,deceased,deceased not tumor specific,3012,1,3004
+142,no,,living,living,2739,0,2725
+143,yes,492.0,living,living,2139,1,478
+144,no,,deceased,deceased not tumor specific,2961,1,2927
+145,no,,living,living,1181,0,1163
+146,yes,254.0,living,living,1484,1,226
+147,no,,deceased,deceased tumor specific,191,1,187
+148,no,,living,living,115,0,77
+149,no,,living,living,1806,0,1797
+150,no,,living,living,240,0,229
+151,no,,living,living,87,0,56
+152,yes,1519.0,living,living,1526,1,1498
+153,yes,196.0,living,living,1146,1,143
+154,no,,deceased,deceased tumor specific,449,1,-52
+155,no,,living,living,1484,0,1457
+156,no,,living,living,636,0,582
+157,no,,living,living,411,0,394
+158,yes,308.0,living,living,954,1,286
+159,no,,living,living,1760,0,1736
+160,no,,living,living,4234,0,4209
+161,no,,deceased,deceased not tumor specific,1107,1,1080
+162,no,,living,living,1896,0,1896
+163,no,,living,living,966,0,943
+164,no,,living,living,148,0,140
+165,yes,3522.0,deceased,deceased tumor specific,3766,1,3489
+166,no,,living,living,1022,0,1013
+167,no,,deceased,deceased not tumor specific,757,1,729
+168,no,,living,living,995,0,964
+169,no,,living,living,35,0,16
+170,yes,301.0,deceased,deceased tumor specific,398,1,274
+171,yes,636.0,living,living,1055,1,586
+172,no,,living,living,1504,0,1476
+173,no,,deceased,deceased tumor specific,2453,1,2415
+174,no,,living,living,157,0,157
+175,no,,deceased,deceased not tumor specific,2814,1,2814
+176,yes,412.0,deceased,deceased tumor specific,706,1,398
+177,no,,living,living,380,0,322
+178,no,,living,living,222,0,214
+179,yes,2275.0,living,living,2275,1,2275
+180,no,,living,living,419,1,-68
+181,yes,133.0,deceased,deceased tumor specific,612,1,112
+182,no,,living,living,2442,1,-1
+183,no,,living,living,164,0,98
+184,no,,living,living,1360,0,1335
+185,no,,living,living,674,0,659
+186,no,,living,living,1636,0,1617
+187,no,,living,living,1520,0,1453
+188,yes,196.0,deceased,deceased tumor specific,318,1,184
+189,no,,living,living,1896,0,1862
+190,no,,deceased,deceased not tumor specific,3038,1,3002
+191,no,,living,living,1310,0,1283
+192,no,,deceased,deceased not tumor specific,1314,1,1269
+193,no,,deceased,deceased not tumor specific,1007,1,978
+194,no,,living,living,2379,0,2326
+195,no,,living,living,1000,0,937
+196,no,,living,living,102,0,74
+197,no,,living,living,306,0,306
+198,no,,living,living,195,0,188
+199,no,,deceased,deceased tumor specific,273,1,234
+200,no,,living,living,1799,0,1774
+201,no,,deceased,deceased not tumor specific,426,1,411
+202,no,,living,living,485,0,455
+203,no,,living,living,484,0,464
+204,no,,living,living,121,0,91
+205,no,,living,living,2311,0,2274
+206,no,,living,living,2366,0,2337
+207,no,,living,living,1337,0,1304
+208,no,,living,living,284,0,270
+209,no,,living,living,2679,0,2679
+210,no,,living,living,789,0,761
+211,yes,501.0,deceased,deceased tumor specific,1183,1,473
+212,no,,living,living,2174,0,2132
+213,no,,living,living,488,0,459
+214,no,,deceased,deceased tumor specific,15,1,2
+215,no,,living,living,3043,0,3023
+216,no,,deceased,deceased not tumor specific,1110,1,1069
+217,no,,living,living,43,0,43
+218,yes,229.0,deceased,deceased tumor specific,229,1,174
+219,yes,339.0,living,living,937,1,301
+220,no,,deceased,deceased not tumor specific,253,1,247
+221,no,,living,living,2533,0,2506
+222,no,,living,living,3788,0,3761
+223,no,,living,living,835,0,819
+224,no,,living,living,1301,0,1272
+225,no,,deceased,deceased not tumor specific,652,1,635
+226,no,,living,living,896,0,876
+227,no,,living,living,342,0,319
+228,no,,deceased,deceased tumor specific,29,1,6
+229,no,,living,living,3629,0,3629
+230,no,,deceased,deceased not tumor specific,305,1,290
+231,no,,deceased,deceased tumor specific,72,1,24
+232,no,,deceased,deceased not tumor specific,2445,1,2392
+233,no,,living,living,919,0,919
+234,no,,deceased,deceased tumor specific,54,1,20
+235,no,,living,living,1223,0,1185
+236,no,,living,living,1185,0,1157
+237,no,,living,living,212,0,170
+238,yes,2269.0,living,living,2472,1,2253
+239,no,,living,living,596,0,570
+240,no,,living,living,954,0,931
+241,no,,living,living,2428,0,2372
+242,no,,living,living,125,0,103
+243,no,,living,living,849,0,814
+244,no,,living,living,2030,0,1993
+245,no,,living,living,1629,0,1619
+246,no,,living,living,3024,0,2996
+247,no,,living,living,1161,0,1139
+248,no,,living,living,1958,0,1937
+249,no,,deceased,deceased tumor specific,1551,1,1504
+250,no,,deceased,deceased tumor specific,78,1,47
+251,no,,living,living,2997,0,2997
+252,no,,living,living,1631,0,1619
+253,yes,88.0,deceased,deceased tumor specific,244,1,65
+254,no,,living,living,2331,0,2261
+255,no,,deceased,deceased not tumor specific,967,1,961
+256,no,,living,living,1610,0,1574
+257,no,,living,living,2249,0,2207
+258,no,,living,living,2064,0,2030
+259,no,,living,living,1108,0,1097
+260,no,,living,living,301,0,284
+261,yes,2885.0,living,living,3423,1,2838
+262,no,,living,living,3197,0,3148
+263,yes,147.0,deceased,deceased tumor specific,802,1,102
+264,yes,60.0,deceased,deceased tumor specific,78,1,38
+265,no,,living,living,293,0,265
+266,yes,259.0,living,living,348,1,204
+267,no,,deceased,deceased not tumor specific,1039,1,992
+268,no,,living,living,1796,0,1758
+269,no,,living,living,1716,0,1701
+270,no,,living,living,1109,0,1060
+271,no,,living,living,1832,0,1798
+272,no,,living,living,32,0,14
+273,no,,living,living,742,0,723
+274,no,,living,living,1745,0,1714
+275,no,,living,living,1818,0,1818
+276,no,,living,living,1888,0,1875
+277,no,,living,living,251,0,223
+278,yes,264.0,deceased,deceased tumor specific,633,1,245
+279,no,,living,living,2308,0,2300
+280,no,,living,living,1365,0,1343
+281,no,,living,living,1372,0,1345
+282,no,,living,living,2350,0,2331
+283,no,,living,living,4097,0,4097
+284,no,,deceased,deceased not tumor specific,2415,1,2368
+285,no,,living,living,2086,0,2043
+286,no,,living,living,2919,0,2884
+287,no,,deceased,deceased,368,1,327
+288,no,,living,living,1075,0,1075
+289,yes,713.0,living,living,740,1,682
+290,no,,living,living,2824,0,2789
+291,no,,living,living,1401,1,-7
+292,no,,deceased,deceased not tumor specific,468,1,389
+293,no,,living,living,2682,0,2654
+294,yes,204.0,living,living,2135,1,190
+295,yes,191.0,deceased,deceased not tumor specific,196,1,174
+296,no,,deceased,deceased not tumor specific,55,1,25
+297,no,,deceased,deceased tumor specific,127,1,114
+298,yes,161.0,deceased,deceased tumor specific,170,1,132
+299,no,,living,living,1379,0,1340
+300,yes,187.0,living,living,211,1,147
+301,yes,261.0,deceased,deceased tumor specific,335,1,230
+302,yes,700.0,living,living,700,1,643
+303,yes,383.0,living,living,503,1,370
+304,yes,1563.0,deceased,deceased tumor specific,2076,1,1546
+305,yes,546.0,living,living,547,1,538
+306,yes,274.0,living,living,2773,1,267
+307,no,,living,living,3325,0,3299
+308,yes,743.0,living,living,802,1,724
+309,no,,deceased,deceased not tumor specific,1996,1,1996
+310,no,,living,living,748,0,716
+311,no,,deceased,deceased tumor specific,1574,1,1529
+312,no,,deceased,deceased tumor specific,478,1,415
+313,no,,living,living,607,0,594
+314,yes,720.0,deceased,deceased tumor specific,1080,1,693
+315,no,,living,living,1679,0,1660
+316,yes,359.0,deceased,deceased tumor specific,827,1,345
+317,yes,200.0,living,living,1838,1,180
+318,no,,living,living,880,0,867
+319,no,,living,living,2608,0,2535
+320,no,,living,living,38,1,0
+321,no,,living,living,4963,0,4936
+322,no,,living,living,1941,0,1937
+323,no,,living,living,1378,0,1358
+324,yes,609.0,deceased,deceased tumor specific,708,1,546
+325,yes,185.0,deceased,deceased tumor specific,1147,1,161
+326,yes,438.0,deceased,deceased tumor specific,838,1,426
+327,no,,living,living,1316,0,1295
+328,yes,384.0,deceased,deceased not tumor specific,784,1,367
+329,no,,living,living,1811,0,1740
+330,no,,deceased,deceased not tumor specific,367,1,357
+331,yes,945.0,living,living,3046,1,911
+332,yes,175.0,living,living,178,1,147
+333,no,,deceased,deceased tumor specific,999,1,959
+334,yes,567.0,deceased,deceased tumor specific,645,1,544
+335,no,,deceased,deceased not tumor specific,942,1,922
+336,no,,living,living,1901,0,1876
+337,yes,258.0,living,living,1828,1,210
+338,no,,living,living,1547,1,-18
+339,no,,living,living,1629,0,1612
+340,yes,287.0,deceased,deceased tumor specific,1753,1,262
+341,no,,living,living,1879,0,1870
+342,no,,deceased,deceased not tumor specific,1599,1,1579
+343,no,,living,living,2254,0,2254
+344,no,,living,living,2330,0,2319
+345,no,,deceased,deceased not tumor specific,2822,1,2757
+346,no,,living,living,1479,0,1436
+347,no,,living,living,1838,0,1810
+348,no,,living,living,3060,0,3023
+349,yes,64.0,deceased,deceased tumor specific,796,1,48
+350,no,,living,living,3007,0,3007
+351,no,,living,living,242,0,201
+352,no,,living,living,1211,0,1198
+353,no,,living,living,2233,0,2191
+354,no,,living,living,1456,0,1442
+355,no,,living,living,29,0,16
+356,yes,328.0,living,living,1521,1,301
+357,no,,living,living,1685,0,1667
+358,no,,living,living,2372,0,2341
+359,yes,1210.0,living,living,1399,1,1178
+360,no,,living,living,1612,0,1595
+361,no,,living,living,1553,0,1541
+362,no,,living,living,2494,0,2480
+363,no,,living,living,1699,0,1687
+364,no,,living,living,2845,0,2798
+365,no,,living,living,225,0,201
+366,no,,living,living,2612,0,2589
+367,no,,living,living,2217,0,2210
+368,yes,1484.0,living,living,1748,1,1448
+369,no,,deceased,deceased tumor specific,3760,1,3743
+370,yes,54.0,living,living,1797,1,54
+371,no,,living,living,3751,0,3726
+372,no,,living,living,2475,0,2441
+373,no,,living,living,920,0,878
+374,no,,living,living,196,0,138
+375,no,,living,living,1251,0,1232
+376,no,,living,living,1370,0,1360
+377,no,,deceased,deceased not tumor specific,1342,1,1304
+378,no,,living,living,849,0,834
+379,no,,deceased,deceased,106,1,46
+380,no,,living,living,56,0,13
+381,yes,945.0,deceased,deceased tumor specific,1177,1,920
+382,yes,94.0,deceased,deceased tumor specific,965,1,66
+383,yes,1305.0,deceased,deceased tumor specific,1479,1,1301
+384,yes,169.0,deceased,deceased tumor specific,291,1,44
+385,yes,86.0,deceased,deceased tumor specific,562,1,51
+386,no,,living,living,362,0,299
+387,no,,living,living,315,0,289
+388,no,,living,living,148,0,117
+389,no,,living,living,3088,0,3053
+390,no,,living,living,1751,0,1751
+391,yes,670.0,deceased,deceased tumor specific,1072,1,652
+392,no,,living,living,1128,0,1099
+393,no,,living,living,2499,0,2463
+394,no,,living,living,350,0,337
+395,no,,living,living,222,0,143
+396,no,,living,living,2737,0,2704
+397,no,,living,living,2149,0,2106
+398,no,,living,living,2578,0,2568
+399,no,,deceased,deceased tumor specific,113,1,55
+400,no,,living,living,335,0,318
+401,no,,living,living,931,0,918
+402,no,,living,living,2728,0,2696
+403,yes,804.0,deceased,deceased tumor specific,842,1,761
+404,no,,living,living,1346,0,1325
+405,no,,living,living,954,1,-49
+406,no,,living,living,234,0,231
+407,no,,living,living,1220,0,1199
+408,no,,living,living,1054,0,1043
+409,no,,living,living,1676,0,1624
+410,no,,living,living,2911,0,2891
+411,no,,living,living,2428,0,2378
+412,no,,living,living,2436,0,2410
+413,no,,living,living,2789,0,2760
+414,no,,living,living,960,0,940
+415,yes,353.0,deceased,deceased tumor specific,705,1,349
+416,no,,living,living,24,0,9
+417,no,,deceased,deceased tumor specific,145,1,134
+418,yes,388.0,deceased,deceased tumor specific,548,1,363
+419,no,,living,living,2669,0,2654
+420,no,,living,living,2853,0,2851
+421,yes,405.0,deceased,deceased tumor specific,891,1,393
+422,no,,living,living,1185,0,1164
+423,no,,living,living,3037,0,3005
+424,yes,135.0,deceased,deceased not tumor specific,414,1,92
+425,no,,living,living,261,0,237
+426,no,,living,living,415,0,392
+427,no,,living,living,2810,0,2794
+428,no,,living,living,1121,0,980
+429,yes,696.0,living,living,1835,1,681
+430,no,,living,living,1720,0,1694
+431,no,,living,living,1323,0,1314
+432,yes,237.0,living,living,1230,1,204
+433,yes,1118.0,deceased,deceased tumor specific,2194,1,1094
+434,yes,683.0,deceased,deceased tumor specific,1418,1,-4
+435,no,,deceased,deceased tumor specific,413,1,375
+436,yes,250.0,deceased,deceased tumor specific,515,1,212
+437,yes,182.0,deceased,deceased tumor specific,1684,1,152
+438,no,,living,living,247,0,219
+439,yes,309.0,living,living,392,1,275
+440,no,,deceased,deceased,180,1,111
+441,no,,living,living,2807,0,2781
+442,no,,living,living,729,0,716
+443,no,,living,living,2744,0,2743
+444,no,,deceased,deceased tumor specific,2038,1,2013
+445,no,,living,living,660,0,618
+446,no,,living,living,1811,0,1749
+447,no,,living,living,1641,0,1614
+448,no,,living,living,4801,0,4773
+449,no,,living,living,842,0,811
+450,no,,living,living,510,0,498
+451,no,,deceased,deceased not tumor specific,2167,1,2150
+452,no,,living,living,2695,0,2695
+453,no,,living,living,2310,0,2295
+454,no,,living,living,3053,0,3034
+455,no,,living,living,47,0,47
+456,no,,living,living,1041,0,1041
+457,no,,living,living,117,0,105
+458,no,,living,living,290,0,245
+459,no,,deceased,deceased not tumor specific,1160,1,1160
+460,no,,deceased,deceased not tumor specific,38,1,8
+461,yes,1919.0,living,living,2751,1,1897
+462,no,,living,living,2169,0,2121
+463,no,,deceased,deceased not tumor specific,939,1,917
+464,yes,129.0,deceased,deceased tumor specific,2147,1,128
+465,no,,living,living,1955,0,1884
+466,yes,224.0,deceased,deceased tumor specific,692,1,202
+467,no,,living,living,2260,0,2248
+468,yes,1807.0,living,living,1873,1,1772
+469,no,,living,living,1496,0,1472
+470,yes,1279.0,living,living,2996,1,1250
+471,no,,living,living,98,0,73
+472,no,,living,living,1771,0,1758
+473,no,,living,living,242,0,192
+474,no,,living,living,155,0,151
+475,no,,living,living,3275,0,3257
+476,no,,living,living,1092,0,1092
+477,yes,926.0,living,living,1440,1,92
+478,no,,living,living,1673,0,1604
+479,no,,living,living,2040,0,2031
+480,no,,living,living,1011,0,993
+481,no,,living,living,154,0,126
+482,no,,living,living,3222,0,3222
+483,no,,living,living,4118,0,4072
+484,yes,427.0,living,living,546,1,403
+485,no,,living,living,2512,0,2493
+486,no,,deceased,deceased not tumor specific,4500,1,4500
+487,no,,living,living,1045,0,1045
+488,no,,living,living,2584,0,2555
+489,no,,living,living,49,0,43
+490,no,,living,living,1494,0,1476
+491,no,,living,living,1129,0,1108
+492,no,,living,living,3124,0,3113
+493,no,,living,living,1843,0,1843
+494,no,,living,living,2312,0,2284
+495,no,,living,living,1059,0,1028
+496,no,,living,living,1106,0,1095
+497,no,,living,living,124,0,100
+498,no,,living,living,1347,0,1347
+499,no,,living,living,775,0,720
+500,no,,living,living,2502,0,2473
+501,no,,deceased,deceased not tumor specific,48,1,33
+502,yes,518.0,living,living,3077,1,455
+503,no,,living,living,1941,0,1938
+504,no,,living,living,1581,0,1567
+505,no,,living,living,334,0,301
+506,yes,947.0,deceased,deceased tumor specific,1711,1,947
+507,yes,58.0,deceased,deceased not tumor specific,175,1,42
+508,no,,living,living,306,0,282
+509,no,,living,living,3337,0,3311
+510,yes,356.0,deceased,deceased tumor specific,454,1,283
+511,no,,living,living,982,0,953
+512,no,,deceased,deceased tumor specific,103,1,81
+513,no,,deceased,deceased not tumor specific,1022,1,976
+514,no,,living,living,595,0,573
+515,no,,living,living,3581,0,3581
+516,no,,deceased,deceased not tumor specific,207,1,207
+517,no,,living,living,282,0,100
+518,no,,living,living,99,0,76
+519,no,,living,living,1357,0,1290
+520,yes,285.0,living,living,823,1,279
+521,yes,49.0,deceased,deceased tumor specific,133,1,43
+522,no,,living,living,247,0,231
+523,no,,living,living,1358,0,1317
+524,no,,living,living,1090,0,1071
+525,no,,living,living,1675,0,1675
+526,yes,343.0,deceased,deceased tumor specific,525,1,309
+527,no,,deceased,deceased not tumor specific,3728,1,3728
+528,no,,living,living,3178,0,3131
+529,no,,living,living,1003,0,981
+530,yes,460.0,living,living,1453,1,441
+531,no,,living,living,2578,0,2561
+532,no,,living,living,3232,0,3213
+533,no,,deceased,deceased not tumor specific,89,1,35
+534,no,,living,living,2455,0,2410
+535,no,,living,living,1004,0,998
+536,no,,living,living,1133,0,1125
+537,no,,living,living,522,0,522
+538,yes,138.0,living,living,141,1,110
+539,yes,132.0,living,living,661,1,105
+540,no,,living,living,1409,0,1364
+541,yes,286.0,deceased,deceased tumor specific,299,1,252
+542,no,,deceased,deceased not tumor specific,1546,1,1520
+543,no,,living,living,2055,0,2041
+544,no,,deceased,deceased not tumor specific,47,1,18
+545,no,,living,living,2400,0,2381
+546,no,,living,living,441,0,398
+547,no,,living,living,2540,0,2515
+548,no,,living,living,770,0,721
+549,yes,370.0,living,living,370,1,344
+550,no,,deceased,deceased not tumor specific,104,1,47
+551,yes,1192.0,living,living,1543,1,1172
+552,no,,living,living,4515,0,4497
+553,yes,2200.0,living,living,2326,1,2177
+554,yes,189.0,deceased,deceased tumor specific,256,1,189
+555,yes,100.0,deceased,deceased tumor specific,642,1,52
+556,no,,living,living,1447,0,1447
+557,no,,living,living,1329,0,1304
+558,no,,living,living,926,0,906
+559,no,,living,living,965,0,948
+560,no,,living,living,3549,0,3534
+561,no,,living,living,44,0,19
+562,no,,living,living,776,0,735
+563,no,,living,living,1885,0,1849
+564,no,,living,living,1363,0,1345
+565,no,,living,living,1798,0,1764
+566,no,,living,living,405,0,393
+567,no,,living,living,2876,0,2876
+568,no,,living,living,2786,0,2767
+569,no,,living,living,75,0,44
+570,yes,412.0,living,living,433,1,373
+571,no,,deceased,deceased not tumor specific,723,1,708
+572,yes,1069.0,living,living,2771,1,1045
+573,yes,892.0,deceased,deceased tumor specific,955,1,855
+574,no,,living,living,1299,0,1287
+575,no,,living,living,3486,0,3464
+576,no,,deceased,deceased not tumor specific,983,1,953
+577,no,,living,living,3031,0,3001
+578,no,,living,living,914,0,914
+579,yes,510.0,deceased,deceased tumor specific,694,1,499
+580,no,,living,living,1735,0,1729
+581,no,,living,living,1771,0,1762
+582,no,,living,living,2569,0,2541
+583,yes,68.0,living,living,342,1,43
+584,no,,deceased,deceased not tumor specific,1189,1,1137
+585,no,,living,living,1311,0,1293
+586,yes,504.0,living,living,1219,1,504
+587,no,,living,living,530,0,489
+588,yes,153.0,living,living,153,1,139
+589,no,,deceased,deceased not tumor specific,1474,1,1441
+590,no,,living,living,3973,0,3956
+591,yes,230.0,living,living,1159,1,205
+592,no,,living,living,54,0,30
+593,no,,living,living,1069,0,1052
+594,yes,1123.0,living,living,1419,1,1112
+595,no,,living,living,644,0,621
+596,no,,living,living,344,0,296
+597,no,,living,living,222,0,194
+598,no,,living,living,798,0,779
+599,no,,living,living,2693,0,2679
+600,no,,living,living,3198,0,3164
+601,no,,living,living,3017,0,2989
+602,yes,254.0,living,living,640,1,223
+603,no,,deceased,deceased not tumor specific,1848,1,1790
+604,yes,398.0,deceased,deceased tumor specific,584,1,373
+605,no,,living,living,1271,0,1253
+606,no,,deceased,deceased not tumor specific,1359,1,1321
+607,yes,1083.0,deceased,deceased tumor specific,1522,1,1015
+608,no,,living,living,2379,0,2333
+609,no,,living,living,3571,0,3536
+610,no,,living,living,1498,0,1477
+611,no,,living,living,2327,0,2312
+612,no,,living,living,222,0,222
+613,no,,deceased,deceased not tumor specific,1625,1,1612
+614,yes,1021.0,deceased,deceased not tumor specific,2131,1,938
+615,no,,living,living,3352,0,3319
+616,yes,304.0,deceased,deceased tumor specific,577,1,277
+617,yes,1190.0,living,living,1436,1,1162
+618,no,,living,living,2436,0,2422
+619,no,,living,living,1775,0,1764
+620,no,,living,living,460,0,448
+621,yes,476.0,living,living,1023,1,426
+622,yes,2056.0,living,living,3716,1,2029
+623,no,,living,living,2861,0,2849
+624,no,,living,living,2640,0,2625
+625,yes,344.0,deceased,deceased tumor specific,374,1,-28
+626,no,,living,living,21,0,0
+627,no,,living,living,2463,0,2428
+628,no,,living,living,3302,0,3274
+629,yes,231.0,living,living,693,1,191
+630,yes,79.0,living,living,3073,1,57
+631,yes,259.0,deceased,deceased tumor specific,707,1,230
+632,yes,1967.0,living,living,2163,1,1920
+633,yes,101.0,deceased,deceased tumor specific,114,1,87
+634,no,,living,living,2569,0,2545
+635,yes,160.0,living,living,1383,1,145
+636,no,,living,living,3202,0,3164
+637,no,,living,living,175,0,167
+638,no,,living,living,2901,0,2897
+639,no,,living,living,801,0,778
+640,no,,living,living,23,0,15
+641,no,,living,living,2913,0,2902
+642,no,,living,living,1203,0,1178
+643,no,,deceased,deceased,540,1,533
+644,no,,living,living,1145,0,1113
+645,yes,287.0,deceased,deceased tumor specific,379,1,190
+646,no,,living,living,3517,0,3487
+647,no,,living,living,1747,0,1730
+648,yes,247.0,living,living,511,1,205
+649,no,,deceased,deceased not tumor specific,4221,1,4185
+650,no,,deceased,deceased not tumor specific,1617,1,1581
+651,no,,living,living,323,0,292
+652,no,,living,living,3169,0,3151
+653,yes,1345.0,deceased,deceased tumor specific,2959,1,1275
+654,no,,deceased,deceased not tumor specific,1954,1,1940
+655,no,,living,living,1064,0,1050
+656,no,,deceased,deceased not tumor specific,651,1,625
+657,no,,living,living,2366,0,2340
+658,no,,living,living,1706,0,1687
+659,no,,living,living,1959,0,1948
+660,no,,living,living,2605,0,2604
+661,no,,living,living,3600,0,3575
+662,yes,95.0,deceased,deceased,857,1,73
+663,no,,living,living,1803,0,1803
+664,no,,living,living,142,0,142
+665,no,,deceased,deceased not tumor specific,2474,1,2451
+666,no,,living,living,888,0,855
+667,no,,deceased,deceased tumor specific,728,1,703
+668,no,,deceased,deceased not tumor specific,1142,1,1131
+669,no,,living,living,2383,0,2357
+670,no,,living,living,1805,0,1805
+671,yes,285.0,deceased,deceased tumor specific,890,1,250
+672,no,,deceased,deceased tumor specific,866,1,815
+673,no,,deceased,deceased not tumor specific,3295,1,3293
+674,no,,living,living,9,0,5
+675,no,,deceased,deceased not tumor specific,1862,1,1828
+676,no,,living,living,238,0,237
+677,no,,living,living,575,0,506
+678,no,,living,living,1432,0,1419
+679,yes,434.0,living,living,664,1,407
+680,yes,345.0,deceased,deceased tumor specific,408,1,289
+681,yes,300.0,living,living,733,1,278
+682,no,,deceased,deceased not tumor specific,276,1,171
+683,no,,living,living,709,0,700
+684,no,,living,living,1651,0,1645
+685,no,,living,living,706,0,695
+686,no,,living,living,433,0,391
+687,no,,living,living,1540,0,1530
+688,no,,living,living,811,0,751
+689,no,,living,living,2625,0,2596
+690,no,,living,living,1400,0,1388
+691,yes,1169.0,deceased,deceased tumor specific,1669,1,1103
+692,no,,living,living,25,0,10
+693,yes,3002.0,deceased,deceased tumor specific,3085,1,2995
+694,yes,74.0,deceased,deceased not tumor specific,124,1,57
+695,no,,living,living,1357,0,1329
+696,no,,living,living,763,0,735
+697,no,,living,living,374,0,341
+698,no,,living,living,1834,0,1806
+699,no,,living,living,203,0,168
+700,yes,398.0,deceased,deceased tumor specific,1492,1,373
+701,yes,1430.0,living,living,1582,1,1430
+702,yes,269.0,living,living,2282,1,255
+703,yes,659.0,living,living,823,1,644
+704,yes,311.0,deceased,deceased tumor specific,1626,1,286
+705,no,,living,living,2106,0,2024
+706,no,,living,living,1517,0,1467
+707,no,,living,living,1784,0,1761
+708,no,,deceased,deceased not tumor specific,368,1,324
+709,yes,199.0,deceased,deceased tumor specific,424,1,171
+710,no,,deceased,deceased tumor specific,233,1,184
+711,no,,living,living,1914,0,1865
+712,no,,living,living,2189,0,2168
+713,yes,1372.0,living,living,2107,1,1323
+714,yes,778.0,deceased,deceased tumor specific,1087,1,719
+715,no,,living,living,1031,0,1022
+716,no,,living,living,2332,0,2332
+717,no,,deceased,deceased not tumor specific,373,1,352
+718,no,,living,living,728,0,700
+719,yes,91.0,living,living,1363,1,83
+720,no,,deceased,deceased,1237,1,1183
+721,yes,852.0,deceased,deceased,1330,1,181
+722,yes,590.0,deceased,deceased tumor specific,605,1,541
+723,no,,living,living,751,0,724
+724,no,,deceased,deceased tumor specific,1276,1,1234
+725,yes,250.0,living,living,997,1,191
+726,no,,living,living,1988,0,1942
+727,yes,447.0,deceased,deceased tumor specific,788,1,-40
+728,no,,deceased,deceased not tumor specific,206,1,206
+729,yes,508.0,deceased,deceased tumor specific,1041,1,470
+730,no,,living,living,1091,0,1087
+731,yes,362.0,living,living,908,1,340
+732,no,,deceased,deceased not tumor specific,2660,1,2618
+733,no,,living,living,5163,0,5150
+734,yes,548.0,living,living,1576,1,525
+735,yes,356.0,deceased,deceased tumor specific,372,1,335
+736,yes,187.0,living,living,1667,1,161
+737,no,,living,living,716,0,693
+738,no,,living,living,1967,0,1945
+739,no,,living,living,463,0,431
+740,yes,252.0,deceased,deceased tumor specific,537,1,211
+741,no,,deceased,deceased not tumor specific,167,1,136
+742,no,,living,living,1999,0,1979
+743,no,,deceased,deceased not tumor specific,3072,1,3040
+744,no,,living,living,431,0,397
+745,no,,living,living,1855,0,1832
+746,no,,living,living,1646,0,1608
+747,yes,579.0,living,living,1654,1,568
+748,yes,363.0,deceased,deceased tumor specific,474,1,357
+749,no,,living,living,38,0,18
+750,no,,living,living,758,0,747
+751,no,,deceased,deceased not tumor specific,2270,1,2239
+752,no,,living,living,2848,0,2822
+753,no,,deceased,deceased not tumor specific,920,1,892
+754,no,,deceased,deceased tumor specific,174,1,146
+755,no,,living,living,511,0,495
+756,no,,living,living,336,0,315
+757,no,,living,living,292,0,246
+758,no,,living,living,3253,0,3234
+759,yes,690.0,deceased,deceased tumor specific,1000,1,593
+760,yes,132.0,deceased,deceased,484,1,94
+761,yes,606.0,deceased,deceased tumor specific,1082,1,553
+762,no,,living,living,1644,0,1644
+763,no,,living,living,1689,0,1673

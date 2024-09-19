@@ -9,6 +9,8 @@ from sklearn.ensemble import RandomForestClassifier
 from matplotlib import rcParams
 import matplotlib.pyplot as plt
 import seaborn as sns
+import sys
+sys.path.append(str(Path(__file__).parents[1]))
 from data_exploration.umap_embedding import setup_preprocessing_pipeline, get_umap_embedding
 
 
