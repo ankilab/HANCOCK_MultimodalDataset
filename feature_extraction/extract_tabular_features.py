@@ -51,6 +51,19 @@ BLOOD_FEATURES = [
     "Platelet distribution width [Entitic volume] in Blood by Automated count"
 ]
 
+NUMERICAL_INTEGER_FEATURES = [
+    'sex', 'primarily_metastasis', 'perinodal_invasion',
+    'lymphovascular_invasion_L', 'vascular_invasion_V',
+    'perineural_invasion_Pn', 'carcinoma_in_situ',
+    'c020', 'c021', 'c022', 'c028', 'c029', 'c048',
+    'c051', 'c052', 'c058', 'c068', 'c090', 'c091',
+    'c098', 'c099', 'c100', 'c102', 'c108', 'c109',
+    'c111', 'c130', 'c131', 'c132', 'c138', 'c139',
+    'c148', 'c320', 'c321', 'c322', 'c323', 'c328',
+    'c329', 'c770', 'c778', 'c800', 'd000', 'd370',
+    'd380', 'r590', 'r599', 't810'
+]
+
 
 def get_binary_features(df_original, verbose=0):
     if verbose == 1:
