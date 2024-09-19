@@ -82,7 +82,7 @@ if __name__ == "__main__":
     # Create dimensions
     treatment_dim = go.parcats.Dimension(values=df.first_treatment_modality, label="first treatment")
     adjuvant_dim = go.parcats.Dimension(
-        values=df.adjuvant_treatment, categoryorder="array", label="adjuvant treatment",
+        values=df.adjuvant_treatment, categoryorder="array", label="adjuvant therapy",
         categoryarray=["none", "radiotherapy", "systemic therapy", "radiochemotherapy"]
     )
     event_dim = go.parcats.Dimension(
