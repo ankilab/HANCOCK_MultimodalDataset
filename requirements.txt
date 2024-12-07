@@ -1,15 +1,12 @@
-matplotlib==3.9.0
 seaborn==0.13.2
-pandas==2.2.2
-numpy==1.26.4
+pandas==2.2.3
 pathlib==1.0.1
-lifelines==0.29.0
-umap-learn==0.5.6
+lifelines==0.30.0
 imbalanced-learn==0.12.3
 shap~=0.46.0
 utils==1.0.2
-keras==3.4.1
-tensorflow[and-cuda]==2.16.2
+keras==3.6.0
+tensorflow[and-cuda]==2.18.0
 lime==0.2.0.1
 natsort==8.4.0
 imageio==2.34.2
@@ -19,3 +16,21 @@ plotly==5.23.0
 kaleido==0.2.1
 tabulate==0.9.0
 scikit-learn==1.5.1
+numpy==2.0.2
+umap-learn==0.5.6
+numpy==2.0.2
+umap-learn==0.5.6
+matplotlib==3.9.2
+seaborn==0.13.2
+chromadb==0.5.18
+
+# For the sentence transformers that are used as encoders we need torch
+# but then we can not anymore use tensorflow
+# torch==2.5.1
+# torchvision==0.20.1
+# torchaudio==2.5.1
+# transformers==4.46.1
+# nltk==3.9.1
+# openai==1.53.0
+
+

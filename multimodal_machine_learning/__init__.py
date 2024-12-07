@@ -1,4 +1,2 @@
-from .predictors import AdjuvantTreatmentPredictor
-from .predictors import PredictionPlotter
-from .predictors import TabularMergedAdjuvantTreatmentPredictor
-from .custom_preprocessor import ColumnPreprocessor
+from .custom_preprocessor import HancockTabularPreprocessor
+from .custom_preprocessor import HancockStandardPreprocessor

@@ -200,9 +200,9 @@ The classifier is trained five times on the different data splits. Plots of the 
 and of Receiver-Operating Characteristic (ROC) curves are saved to the results directory.
 
 ```
-cd mulitmodal_machine_learning
-python3 outcome_prediction.py ./../../Hancock_Dataset/DataSplits_DataDictionaries  ../features ../results recurrence 
-python3 outcome_prediction.py ./../../Hancock_Dataset/DataSplits_DataDictionaries ../features ../results survival_status
+cd mulitmodal_machine_learning/execution
+python3 outcome_prediction.py ./../../../Hancock_Dataset/DataSplits_DataDictionaries  ../../features ../../results recurrence 
+python3 outcome_prediction.py ./../../../Hancock_Dataset/DataSplits_DataDictionaries ../../features ../../results survival_status
 ```
 
 ![](./images/roc_testsets_recurrence.svg)![](./images/roc_testsets_survival_status.svg)
@@ -214,7 +214,7 @@ using [shap](https://github.com/shap/shap) values and a summary plot.
 Kaplan-Meier curves (overall and recurrence-free survival) are plotted for cases grouped by predictions.
 
 ```
-cd multimodal_machine_learning
+cd multimodal_machine_learning/execution
 python3 adjuvant_treatment_prediction_tabular_only.py
 ```
 
@@ -337,7 +337,7 @@ Next, run `summarize_tma_measurements.py` to create a single file by merging all
 Run `adjuvant_treatment_prediction_convnet.py` to reproduce results of training a Convolutional Neural Network
 to predict whether an adjuvant treatment is used:
 ```
-cd multimodal_machine_learning
+cd multimodal_machine_learning/execution
 python3 adjuvant_treatment_prediction_convnet.py
 ```
 
@@ -346,7 +346,7 @@ Run `adjuvant_treatment_prediction_tma_vector.py` to reproduce results of traini
 an attention-coupled multi-layer perceptron to predict whether an adjuvant treatment is used.
 This was again tested on Ubuntu-24.04 with an NVIDIA RTX 4060.
 ```
-cd multimodal_machine_learning
+cd multimodal_machine_learning/execution
 python3 adjuvant_treatment_prediction_tma_vector.py
 ```
 

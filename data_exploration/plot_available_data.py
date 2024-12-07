@@ -3,6 +3,7 @@ import matplotlib.pyplot as plt
 from matplotlib.patches import Patch
 from matplotlib import rcParams
 import seaborn as sns
+import numpy as np
 from argparse import ArgumentParser
 from pathlib import Path
 import sys
@@ -35,9 +36,13 @@ class HancockAvailableDataPlotter:
             self._merged = self._get_available_data()
         return self._merged.copy()
 
+    @merged.setter
+    def merged(self, value: pd.DataFrame) -> None:
+        self._merged = value
+
     def __init__(self):
         self._argumentParser = HancockArgumentParser(
-            type='plot_available_data')
+            file_type='plot_available_data')
         self._create_absolute_paths(self._argumentParser)
         self._create_data_reader()
 
@@ -158,7 +163,7 @@ class HancockAvailableDataPlotter:
         return merged_copy
 
     def plot_available_data(self) -> None:
-        """Plots the available data for each patient in a horizontal bar 
+        """Plots the available data for each patient in a horizontal bar
         chart. Y-axis does not correspond to the patient-id but is before
         sorted by the reversed list of columns. 
         """
@@ -172,20 +177,34 @@ class HancockAvailableDataPlotter:
         avail_sorted = merged_plot.sort_values(
             by=list(reversed(merged_plot.columns)), ascending=True)
         avail_sorted = avail_sorted.T
-
-        plt.figure(figsize=(6, 2))
-        ax = sns.heatmap(
+        if len(np.unique(avail_sorted)) == 3:
+            plt.figure(figsize=(6, 2))
+            ax = sns.heatmap(
             avail_sorted, cbar=False,
             cmap=[color_not_available, color_available, color_not_available_lymph]
-        )
+            )
+            # plt.xticks([1, 100, 200, 300, 400, 500, 600, 700, 763])
+            # ax.set_xticklabels([1, 100, 200, 300, 400, 500, 600, 700, 763])
+            # plt.tight_layout()
+            # ax.hlines(list(range(0, 11)), *ax.get_xlim(), colors="white")
+
+            legend_handles = [Patch(facecolor=color_available, label="Available"),
+                              Patch(facecolor=color_not_available, label="Not available (N/A.)"),
+                              Patch(facecolor=color_not_available_lymph, label="No lymph node resection")]
+        else:
+            plt.figure(figsize=(6, 2))
+            ax = sns.heatmap(
+                avail_sorted, cbar=False,
+                cmap=[color_not_available, color_available]
+            )
+
+            legend_handles = [Patch(facecolor=color_available, label="Available"),
+                              Patch(facecolor=color_not_available, label="Not available (N/A.)")]
+
         plt.xticks([1, 100, 200, 300, 400, 500, 600, 700, 763])
         ax.set_xticklabels([1, 100, 200, 300, 400, 500, 600, 700, 763])
         plt.tight_layout()
         ax.hlines(list(range(0, 11)), *ax.get_xlim(), colors="white")
-
-        legend_handles = [Patch(facecolor=color_available, label="Available"),
-                          Patch(facecolor=color_not_available, label="Not available (N/A.)"),
-                          Patch(facecolor=color_not_available_lymph, label="No lymph node resection")]
         plt.legend(handles=legend_handles, loc='center left',
                    bbox_to_anchor=(1, 0.5), frameon=False)
         sns.despine(bottom=False, left=True, offset=5)

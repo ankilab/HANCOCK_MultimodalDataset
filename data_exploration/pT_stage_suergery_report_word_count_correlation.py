@@ -50,7 +50,7 @@ class CorrelationSurgeryReportWordCountAndPtStage():
     of the surgery report in german and the tumor pT stage.
     """
     def __init__(self):
-        self.argumentParser = HancockArgumentParser(type='grading_correlation')
+        self.argumentParser = HancockArgumentParser(file_type='grading_correlation')
         self.args = self.argumentParser.parse_args()
         self._data_reader_factory = DataFrameReaderFactory()
         self.data_reader_text = self._data_reader_factory.make_data_frame_reader(

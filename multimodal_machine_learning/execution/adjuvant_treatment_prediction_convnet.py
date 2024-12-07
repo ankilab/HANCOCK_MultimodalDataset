@@ -1,3 +1,6 @@
+# ====================================================================================================================
+# Imports
+# ====================================================================================================================
 from argparse import ArgumentParser
 from pathlib import Path
 import os
@@ -26,14 +29,29 @@ from keras.utils import set_random_seed
 from keras.backend import clear_session
 
 import sys
-sys.path.append(str(Path(__file__).parents[1]))
+sys.path.append(str(Path(__file__).parents[2]))
 from data_exploration.umap_embedding import setup_preprocessing_pipeline
-from utils import get_significance
 from argument_parser import HancockArgumentParser
 
 
+# ====================================================================================================================
+# Global Variables
+# ====================================================================================================================
 SEED = 42
 
+
+# ====================================================================================================================
+# Helper Functions
+# ====================================================================================================================
+def get_significance(p_value):
+    if p_value <= 0.001:
+        return "$p\\leq$0.001 (***)"
+    elif p_value <= 0.01:
+        return "$p\\leq$0.01 (**)"
+    elif p_value <= 0.05:
+        return "$p\\leq$0.05 (*)"
+    else:
+        return f"$p=${p_value:.3f}"
 
 def ConvBlock(x, filters, norm):
     # Conv -> (Norm) -> ReLu
@@ -480,7 +498,7 @@ def visualize_2d_embedding():
 
 
 if __name__ == "__main__":
-    parser = HancockArgumentParser(type='adjuvant_treatment_prediction_convnet')
+    parser = HancockArgumentParser(file_type='adjuvant_treatment_prediction_convnet')
     args = parser.parse_args()
 
     data_dir = Path(args.features_dir)

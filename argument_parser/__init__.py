@@ -12,32 +12,34 @@ class HancockArgumentParser(ArgumentParser):
     for the specific use case. Takes in the initializer the type of 
     the script that calls to reduce the number of arguments available. 
     """
-    def __init__(self, type: str = 'None', **kwargs):
+    def __init__(self, file_type: str = 'None', **kwargs):
         """Argument parser for the Hancock project. Sets always a 
         default option in case not all arguments are provided, or needed 
         for the specific use case. 
 
         Args:
-            type (str, optional): The type of script calling. Should 
+            file_type (str, optional): The type of script calling. Should 
             be used to reduce the number of available arguments that 
             should not be used. Defaults to 'None'.
         """
         super().__init__(**kwargs)
         self._defaultPaths = DefaultPaths()
         self._add_always_arguments()
-        if type == 'feature_extraction' or type == 'grading_correlation':
+        if file_type == 'feature_extraction' or file_type == 'grading_correlation':
             self._add_structured_arguments()
             self._add_tma_cell_density_arguments()
             self._add_text_data_arguments()
             self._add_feature_extraction_arguments()
-        elif type == 'plot_available_data':
+        elif file_type == 'plot_available_data':
             self._add_structured_arguments()
             self._add_tma_cell_density_arguments()
             self._add_text_data_arguments()
             self._add_wsi_arguments()
-        elif type == 'adjuvant_treatment_prediction':
+        elif (file_type == 'adjuvant_treatment_prediction' or
+              file_type == 'survival_status_prediction' or
+              file_type == 'recurrence_prediction'):
             self._add_data_split_arguments()
-        elif type == 'adjuvant_treatment_prediction_convnet':
+        elif file_type == 'adjuvant_treatment_prediction_convnet':
             self._add_data_split_arguments()
             self._add_convnet_arguments()
 

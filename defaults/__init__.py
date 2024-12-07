@@ -1,7 +1,7 @@
 from pathlib import Path
 
 
-class DefaultFileNames:
+class DefaultNames:
     def __init__(self):
         # ---- Features ----
         self.feature_clinical = 'clinical.csv'
@@ -30,10 +30,24 @@ class DefaultFileNames:
         self.data_split_out = 'dataset_split_out.json'
         self.data_split_treatment_outcome = 'dataset_split_treatment_outcome.json'
 
+        # ---- Encodings ----
+        self.encodings_surgery_report = 'surgery_report_encodings'
+        self.encodings_surgery_report_bio_clinical_bert = self.encodings_surgery_report + '_bio_clinical_bert_encodings'
+        self.encodings_surgery_report_pub_med_bert = self.encodings_surgery_report + '_pub_med_bert_encodings'
+        self.encodings_surgery_report_text_embedding_3_large = self.encodings_surgery_report + '_text_embedding_3_large'
+        self.encodings_tabular_merged = 'tabular_merged'
+        self.encodings_tma_cores = 'tma_core_encodings'
+        self.encodings_primary_tumor = 'primary_tumor_encodings'
+
+        self.encodings_file_extension = '.npy'
+        self.encoding_db_name = 'encodings_chroma_db'
+        self.encoding_column_name = 'encoding'
+        self.similarity_column_name = 'similarity'
+
 
 class DefaultPaths:
     def __init__(self):
-        file_names = DefaultFileNames()
+        file_names = DefaultNames()
         
         # --- Base paths
         self.results = Path(__file__).parents[1] / 'results'
@@ -50,8 +64,15 @@ class DefaultPaths:
             "blood_data_reference_ranges.json"
         self.cell_density = self.data_dir / \
             "TMA_CellDensityMeasurements" / "TMA_celldensity_measurements.csv"
+
         self.text_data_dir = self.data_dir / 'TextData'
+        self.reports_histories = self.text_data_dir / 'histories'
+        self.reports_histories_english = self.text_data_dir / 'histories_english'
         self.reports = self.text_data_dir / "reports"
+        self.reports_english = self.text_data_dir / 'reports_english'
+        self.reports_description = self.text_data_dir / 'surgery_descriptions'
+        self.reports_description_english = self.text_data_dir / 'surgery_descriptions_english'
+
         self.icd_codes = self.text_data_dir / 'icd_codes'
         self.wsi_tumor = self.data_dir / 'WSI_PrimaryTumor'
         self.wsi_lymph_node = self.data_dir / 'WSI_LymphNode'
@@ -84,6 +105,15 @@ class DefaultPaths:
         self.data_split_out = self.data_split / file_names.data_split_out
         self.data_split_treatment_outcome = self.data_split / \
             file_names.data_split_treatment_outcome
+
+        # ---- Encodings ----
+        self.encodings_base = self.results / 'encodings'
+        self.encodings_comparison = self.encodings_base / 'comparison'
+        self.encodings_db_path = self.encodings_base / file_names.encoding_db_name
+
+        self.encodings_tma_cores = self.encodings_base / 'TMA_Cores'
+        self.encodings_wsi = self.encodings_base / 'WSI'
+        self.encodings_primary_tumor = self.encodings_wsi / 'Primary_Tumor'
 
 
     

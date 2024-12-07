@@ -18,7 +18,7 @@ TMA_VECTOR_FEATURES = [
 TMA_VECTOR_LENGTH = 512
 
 
-class ColumnPreprocessor(ColumnTransformer):
+class HancockTabularPreprocessor(ColumnTransformer):
     def __init__(self, columns: list[str], min_max_scaler: bool = False):
         self.columns = columns
         self.min_max_scaler = min_max_scaler
@@ -61,7 +61,7 @@ class ColumnPreprocessor(ColumnTransformer):
         super().fit(x, y, **params)
         return self
 
-    def transform(self, x: pd.DataFrame, **params) -> np.ndarray:
+    def transform(self, x: pd.DataFrame | pd.Series, **params) -> np.ndarray:
         x_transformed = super().transform(x, **params)
         x_transformed = pd.DataFrame(x_transformed, columns=super().get_feature_names_out())
 
@@ -99,4 +99,17 @@ class ColumnPreprocessor(ColumnTransformer):
         features = np.concatenate((feature_names_filtered, feature_tma_names))
         return features
 
+
+class HancockStandardPreprocessor(ColumnTransformer):
+    """
+    Preprocessor for using in Hancock Predictor Model's.
+    Does not do anything to the data, just passes it through.
+    """
+    def __init__(self, min_max_scaler: bool = False):
+        super().__init__(
+            transformers=[],
+            remainder="passthrough",
+            verbose=False
+        )
+        self.min_max_scaler = min_max_scaler
 

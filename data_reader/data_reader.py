@@ -8,12 +8,12 @@ import numpy as np
 sys.path.append(str(Path(__file__).parents[1]))
 from defaults import (
     DefaultPaths,
-    DefaultFileNames
+    DefaultNames
 )
 
 
-defaultPaths = DefaultPaths()
-defaultFileNames = DefaultFileNames()
+default_paths = DefaultPaths()
+default_names = DefaultNames()
 
 
 # noinspection PyDefaultArgument
@@ -292,7 +292,7 @@ class PathologicalDataFrameReader(JsonDataFrameReader):
     """DataReader for the pathological structured data.
     """
 
-    def __init__(self, data_dir: Path = defaultPaths.patho):
+    def __init__(self, data_dir: Path = default_paths.patho):
         super().__init__(data_dir)
 
     def return_data_count(
@@ -319,7 +319,7 @@ class ClinicalDataFrameReader(JsonDataFrameReader):
     """DataReader for the clinical structured data.
     """
 
-    def __init__(self, data_dir: Path = defaultPaths.clinical):
+    def __init__(self, data_dir: Path = default_paths.clinical):
         super().__init__(data_dir)
 
     def return_data_count(
@@ -332,7 +332,7 @@ class BloodDataFrameReader(JsonDataFrameReader):
     """DataReader for the blood structured data.
     """
 
-    def __init__(self, data_dir: Path = defaultPaths.blood):
+    def __init__(self, data_dir: Path = default_paths.blood):
         super().__init__(data_dir)
 
     def return_data_count(self, columns: list[str] = ['patient_id', 'Blood data']):
@@ -344,7 +344,7 @@ class WSIPrimaryTumorDataFrameReader(FileRelationDataFrameReader):
     """DataReader for the WSI primary tumor data.
     """
 
-    def __init__(self, data_dir: Path = defaultPaths.wsi_tumor):
+    def __init__(self, data_dir: Path = default_paths.wsi_tumor):
         super().__init__(data_dir)
         self._columns = ['patient_id', 'WSI Primary tumor']
 
@@ -371,7 +371,7 @@ class WSILymphNodeDataFrameReader(FileRelationDataFrameReader):
     """DataReader for the WSI lymph node data.
     """
 
-    def __init__(self, data_dir: Path = defaultPaths.wsi_lymph_node):
+    def __init__(self, data_dir: Path = default_paths.wsi_lymph_node):
         super().__init__(data_dir)
 
     def return_data_count(
@@ -397,7 +397,7 @@ class TextDataReportsDataFrameReader(FileRelationDataFrameReader):
     """DataReader for the textual report data.
     """
 
-    def __init__(self, data_dir: Path = defaultPaths.reports):
+    def __init__(self, data_dir: Path = default_paths.reports):
         super().__init__(data_dir)
 
     def return_data_count(
@@ -418,6 +418,86 @@ class TextDataReportsDataFrameReader(FileRelationDataFrameReader):
         return super().return_data_count(columns)
 
 
+class SurgeryReportsEnglishDataFrameReader(TextDataReportsDataFrameReader):
+    """Data Reader for the surgery reports in English.
+    """
+    def __init__(self, data_dir: Path = default_paths.reports_english):
+        super().__init__(data_dir)
+
+
+# noinspection PyDefaultArgument
+class SurgeryHistoriesEnglishDataFrameReader(FileRelationDataFrameReader):
+    def __init__(self, data_dir: Path = default_paths.reports_histories_english):
+        super().__init__(data_dir)
+
+
+class SurgeryDescriptionEnglishDataFrameReader(FileRelationDataFrameReader):
+    def __init__(self, data_dir: Path = default_paths.reports_description_english):
+        super().__init__(data_dir)
+
+
+# noinspection PyDefaultArgument
+class SurgeryReportsEnglishMergedDataFrameReader(DataFrameReader):
+    @property
+    def data(self):
+        if self._data is None:
+            self._data = self._merge_data()
+        return self._data.copy()
+
+    def __init__(
+            self, data_dir: Path = default_paths.text_data_dir):
+        """
+        Data Frame reader for the surgery reports in English, contains
+        a column for the surgery report itself, the histories and the description.
+
+        Args:
+            data_dir (Path, optional): The data directory where the
+            main reports dictionary can be found. There should be three subdirectories
+            in this directory containing the reports_english, histories_english and
+            surgery_description_english. Defaults to defaultPaths.text_data_dir.
+        """
+        super().__init__(data_dir)
+        self._target = None
+        self._prepare_data_reader()
+
+    def _prepare_data_reader(self):
+        self._surgery_report_history_reader = SurgeryHistoriesEnglishDataFrameReader(
+            data_dir=self._data_dir / default_paths.reports_histories_english.name
+        )
+        self._surgery_report_reader = SurgeryReportsEnglishDataFrameReader(
+            data_dir=self._data_dir / default_paths.reports_english.name
+        )
+        self._surgery_report_description_english_reader = SurgeryDescriptionEnglishDataFrameReader(
+            data_dir=self._data_dir / default_paths.reports_description_english.name
+        )
+
+    def _merge_data(self) -> pd.DataFrame:
+        """
+        Merges the surgery reports, histories and descriptions in English to a single dataframe on
+        patient_id.
+        """
+        df = self._surgery_report_history_reader.return_data()
+        df = df.rename(columns={'file': 'Surgery history'})
+        df = df.merge(self._surgery_report_reader.return_data(),
+                      on='patient_id', how='outer')
+        df = df.rename(columns={'file': 'Surgery report'})
+        df = df.merge(self._surgery_report_description_english_reader.return_data(),
+                        on='patient_id', how='outer')
+        df = df.rename(columns={'file': 'Surgery description'})
+        return df
+
+    def return_data_count(
+            self, columns: list[str] = ['patient_id', 'Surgery history', 'Surgery report', 'Surgery description']
+    ) -> pd.DataFrame:
+        df = self._surgery_report_history_reader.return_data_count(columns=columns[0:2])
+        df = df.merge(self._surgery_report_reader.return_data_count(columns=[columns[0], columns[2]]),
+                      on='patient_id', how='outer')
+        df = df.merge(self._surgery_report_description_english_reader.return_data_count(columns=[columns[0], columns[3]]),
+                      on='patient_id', how='outer')
+        return df
+
+
+
 # noinspection PyDefaultArgument
 class TMACellDensityDataFrameReader(JsonDataFrameReader):
     """Data Reader for the cell density measurements of the TMA data.
@@ -430,7 +510,7 @@ class TMACellDensityDataFrameReader(JsonDataFrameReader):
 
     def __init__(
         self,
-        data_dir: Path = defaultPaths.cell_density,
+        data_dir: Path = default_paths.cell_density,
         tma_name: str = 'TMA CD3'
     ):
         super().__init__(data_dir)
@@ -467,27 +547,27 @@ class TMACellDensityDataFrameReader(JsonDataFrameReader):
 
 # ----- DataReader for the generated features -----
 class FeatureClinicalDataFrameReader(CSVDataFrameReader):
-    def __init__(self, data_dir: Path = defaultPaths.feature_clinical):
+    def __init__(self, data_dir: Path = default_paths.feature_clinical):
         super().__init__(data_dir)
 
 
 class FeaturePathologicalDataFrameReader(CSVDataFrameReader):
-    def __init__(self, data_dir: Path = defaultPaths.feature_patho):
+    def __init__(self, data_dir: Path = default_paths.feature_patho):
         super().__init__(data_dir)
 
 
 class FeatureBloodDataFrameReader(CSVDataFrameReader):
-    def __init__(self, data_dir: Path = defaultPaths.feature_blood):
+    def __init__(self, data_dir: Path = default_paths.feature_blood):
         super().__init__(data_dir)
 
 
 class FeatureICDCodesDataFrameReader(CSVDataFrameReader):
-    def __init__(self, data_dir: Path = defaultPaths.feature_icd_codes):
+    def __init__(self, data_dir: Path = default_paths.feature_icd_codes):
         super().__init__(data_dir)
 
 
 class FeatureTMACellDensityDataFrameReader(CSVDataFrameReader):
-    def __init__(self, data_dir: Path = defaultPaths.feature_cell_density):
+    def __init__(self, data_dir: Path = default_paths.feature_cell_density):
         super().__init__(data_dir)
 
 
@@ -498,7 +578,7 @@ class FeatureTabularMergedDataFrameReader(DataFrameReader):
             self._data = self._merge_data()
         return self._data.copy()
 
-    def __init__(self, data_dir: Path = defaultPaths.features):
+    def __init__(self, data_dir: Path = default_paths.features):
         """Data frame reader for the feature data from clinical, pathological,
         blood, icd codes and tma cell density. The data is merged on 'patient_id'.
         Assumes that the file names are the same as in the DefaultPaths class.
@@ -516,19 +596,19 @@ class FeatureTabularMergedDataFrameReader(DataFrameReader):
 
     def _prepare_data_reader(self):
         self.feature_clinical_reader = FeatureClinicalDataFrameReader(
-            data_dir=self._data_dir / defaultFileNames.feature_clinical
+            data_dir=self._data_dir / default_names.feature_clinical
         )
         self.feature_patho_reader = FeaturePathologicalDataFrameReader(
-            data_dir=self._data_dir / defaultFileNames.feature_patho
+            data_dir=self._data_dir / default_names.feature_patho
         )
         self.feature_blood_reader = FeatureBloodDataFrameReader(
-            data_dir=self._data_dir / defaultFileNames.feature_blood
+            data_dir=self._data_dir / default_names.feature_blood
         )
         self.feature_icd_codes_reader = FeatureICDCodesDataFrameReader(
-            data_dir=self._data_dir / defaultFileNames.feature_icd_codes
+            data_dir=self._data_dir / default_names.feature_icd_codes
         )
         self.feature_cell_density_reader = FeatureTMACellDensityDataFrameReader(
-            data_dir=self._data_dir / defaultFileNames.feature_cell_density
+            data_dir=self._data_dir / default_names.feature_cell_density
         )
 
     def _merge_data(self) -> pd.DataFrame:
@@ -569,7 +649,7 @@ class FeatureTmaCd3DataFrameReader(NpzDataFrameReader):
     Properties:
         data (pd.DataFrame): The data from the npz file as pandas dataframe.
     """
-    def __init__(self, data_dir: Path = defaultPaths.feature_tma_cd3):
+    def __init__(self, data_dir: Path = default_paths.feature_tma_cd3):
         super().__init__(data_dir=data_dir)
 
 
@@ -583,7 +663,7 @@ class FeatureTmaCd8DataFrameReader(NpzDataFrameReader):
     Properties:
         data (pd.DataFrame): The data from the npz file as pandas dataframe.
     """
-    def __init__(self, data_dir: Path = defaultPaths.feature_tma_cd8):
+    def __init__(self, data_dir: Path = default_paths.feature_tma_cd8):
         super().__init__(data_dir=data_dir)
 
 
@@ -597,7 +677,7 @@ class FeatureTmaCd56DataFrameReader(NpzDataFrameReader):
     Properties:
         data (pd.DataFrame): The data from the npz file as pandas dataframe.
     """
-    def __init__(self, data_dir: Path = defaultPaths.feature_tma_cd56):
+    def __init__(self, data_dir: Path = default_paths.feature_tma_cd56):
         super().__init__(data_dir=data_dir)
 
 
@@ -611,7 +691,7 @@ class FeatureTmaCd68DataFrameReader(NpzDataFrameReader):
     Properties:
         data (pd.DataFrame): The data from the npz file as pandas dataframe.
     """
-    def __init__(self, data_dir: Path = defaultPaths.feature_tma_cd68):
+    def __init__(self, data_dir: Path = default_paths.feature_tma_cd68):
         super().__init__(data_dir=data_dir)
 
 
@@ -625,7 +705,7 @@ class FeatureTmaCd163DataFrameReader(NpzDataFrameReader):
     Properties:
         data (pd.DataFrame): The data from the npz file as pandas dataframe.
     """
-    def __init__(self, data_dir: Path = defaultPaths.feature_tma_cd163):
+    def __init__(self, data_dir: Path = default_paths.feature_tma_cd163):
         super().__init__(data_dir=data_dir)
 
 
@@ -639,7 +719,7 @@ class FeatureTmaHeDataFrameReader(NpzDataFrameReader):
     Properties:
         data (pd.DataFrame): The data from the npz file as pandas dataframe.
     """
-    def __init__(self, data_dir: Path = defaultPaths.feature_tma_he):
+    def __init__(self, data_dir: Path = default_paths.feature_tma_he):
         super().__init__(data_dir=data_dir)
 
 
@@ -653,7 +733,7 @@ class FeatureTmaMhc1DataFrameReader(NpzDataFrameReader):
     Properties:
         data (pd.DataFrame): The data from the npz file as pandas dataframe.
     """
-    def __init__(self, data_dir: Path = defaultPaths.feature_tma_cd3):
+    def __init__(self, data_dir: Path = default_paths.feature_tma_cd3):
         super().__init__(data_dir=data_dir)
 
 
@@ -667,7 +747,7 @@ class FeatureTmaPdl1DataFrameReader(NpzDataFrameReader):
     Properties:
         data (pd.DataFrame): The data from the npz file as pandas dataframe.
     """
-    def __init__(self, data_dir: Path = defaultPaths.feature_tma_pdl1):
+    def __init__(self, data_dir: Path = default_paths.feature_tma_pdl1):
         super().__init__(data_dir=data_dir)
 
 
@@ -678,7 +758,7 @@ class FeatureTmaMergedDataFrameReader(DataFrameReader):
             self._data = self._get_data()
         return self._data.copy()
 
-    def __init__(self, data_dir: Path = defaultPaths.features):
+    def __init__(self, data_dir: Path = default_paths.features):
         super().__init__(data_dir=data_dir)
 
     def _get_data(self, clean_data:bool = True) -> pd.DataFrame:
@@ -715,21 +795,21 @@ class FeatureTmaMergedDataFrameReader(DataFrameReader):
             TMA feature data.
         """
         data_reader_list = [FeatureTmaCd3DataFrameReader(
-            data_dir=self._data_dir / defaultFileNames.feature_tma_cd3
+            data_dir=self._data_dir / default_names.feature_tma_cd3
         ), FeatureTmaCd8DataFrameReader(
-            data_dir=self._data_dir / defaultFileNames.feature_tma_cd8
+            data_dir=self._data_dir / default_names.feature_tma_cd8
         ), FeatureTmaCd56DataFrameReader(
-            data_dir=self._data_dir / defaultFileNames.feature_tma_cd56
+            data_dir=self._data_dir / default_names.feature_tma_cd56
         ), FeatureTmaCd68DataFrameReader(
-            data_dir=self._data_dir / defaultFileNames.feature_tma_cd68
+            data_dir=self._data_dir / default_names.feature_tma_cd68
         ), FeatureTmaCd163DataFrameReader(
-            data_dir=self._data_dir / defaultFileNames.feature_tma_cd163
+            data_dir=self._data_dir / default_names.feature_tma_cd163
         ), FeatureTmaHeDataFrameReader(
-            data_dir=self._data_dir / defaultFileNames.feature_tma_he
+            data_dir=self._data_dir / default_names.feature_tma_he
         ), FeatureTmaMhc1DataFrameReader(
-            data_dir=self._data_dir / defaultFileNames.feature_tma_mhc1
+            data_dir=self._data_dir / default_names.feature_tma_mhc1
         ), FeatureTmaPdl1DataFrameReader(
-            data_dir=self._data_dir / defaultFileNames.feature_tma_pdl1
+            data_dir=self._data_dir / default_names.feature_tma_pdl1
         )]
         return data_reader_list
 
@@ -751,7 +831,7 @@ class FeatureTmaAndTabularMergedDataFrameReader(DataFrameReader):
             self._data = self._get_data()
         return self._data.copy()
 
-    def __init__(self, data_dir: Path = defaultPaths.features):
+    def __init__(self, data_dir: Path = default_paths.features):
         super().__init__(data_dir=data_dir)
 
     def _get_data(self):
@@ -775,17 +855,17 @@ class FeatureTmaAndTabularWithoutPathologicalTmaCellDensityDataFrameReader(
             self._data = self._get_data()
         return self._data.copy()
 
-    def __init__(self, data_dir: Path = defaultPaths.features):
+    def __init__(self, data_dir: Path = default_paths.features):
         super().__init__(data_dir=data_dir)
 
     def _get_data(self):
         feature_tma_reader = FeatureTmaMergedDataFrameReader(data_dir=self._data_dir)
         feature_clinical_reader = FeatureClinicalDataFrameReader(
-            data_dir=self._data_dir / defaultFileNames.feature_clinical)
+            data_dir=self._data_dir / default_names.feature_clinical)
         feature_blood_reader = FeatureBloodDataFrameReader(
-            data_dir=self._data_dir / defaultFileNames.feature_blood)
+            data_dir=self._data_dir / default_names.feature_blood)
         feature_icd_codes_reader = FeatureICDCodesDataFrameReader(
-            data_dir=self._data_dir / defaultFileNames.feature_icd_codes)
+            data_dir=self._data_dir / default_names.feature_icd_codes)
         data = feature_clinical_reader.return_data()
         data = data.merge(
             feature_blood_reader.return_data(),
@@ -801,7 +881,7 @@ class FeatureTmaAndTabularWithoutPathologicalTmaCellDensityDataFrameReader(
 
 # --- DataReader for the targets ---
 class TargetsDataFrameReader(CSVDataFrameReader):
-    def __init__(self, data_dir: Path = defaultPaths.targets):
+    def __init__(self, data_dir: Path = default_paths.targets):
         super().__init__(data_dir)
 
 
@@ -812,7 +892,7 @@ class TargetsAdjuvantPredictionDataFrameReader(CSVDataFrameReader):
             self._data = self._create_data()
         return self._data.copy()
 
-    def __init__(self, data_dir: Path = defaultPaths.targets):
+    def __init__(self, data_dir: Path = default_paths.targets):
         super().__init__(data_dir)
 
     def _create_data(self):
@@ -831,35 +911,35 @@ class TargetsAdjuvantPredictionDataFrameReader(CSVDataFrameReader):
 
 # -- DataReader for data splits
 class DataSplitBloodDataFrameReader(CSVDataFrameReader):
-    def __init__(self, data_dir: Path = defaultPaths.data_split_blood):
+    def __init__(self, data_dir: Path = default_paths.data_split_blood):
         super().__init__(data_dir)
 
 
 class DataSplitClinicalDataFrameReader(CSVDataFrameReader):
-    def __init__(self, data_dir: Path = defaultPaths.data_split_clinical):
+    def __init__(self, data_dir: Path = default_paths.data_split_clinical):
         super().__init__(data_dir)
 
 
 class DataSplitPathologicalDataFrameReader(CSVDataFrameReader):
-    def __init__(self, data_dir: Path = defaultPaths.data_split_patho):
+    def __init__(self, data_dir: Path = default_paths.data_split_patho):
         super().__init__(data_dir)
 
 
 class DataSplitInDataFrameReader(JsonDataFrameReader):
-    def __init__(self, data_dir: Path = defaultPaths.data_split_in):
+    def __init__(self, data_dir: Path = default_paths.data_split_in):
         super().__init__(data_dir)
 
 
 class DataSplitOropharynxDataFrameReader(JsonDataFrameReader):
-    def __init__(self, data_dir: Path = defaultPaths.data_split_oropharynx):
+    def __init__(self, data_dir: Path = default_paths.data_split_oropharynx):
         super().__init__(data_dir)
 
 
 class DataSplitOutDataFrameReader(JsonDataFrameReader):
-    def __init__(self, data_dir: Path = defaultPaths.data_split_out):
+    def __init__(self, data_dir: Path = default_paths.data_split_out):
         super().__init__(data_dir)
 
 
 class DataSplitTreatmentOutcomeDataFrameReader(JsonDataFrameReader):
-    def __init__(self, data_dir: Path = defaultPaths.data_split_treatment_outcome):
+    def __init__(self, data_dir: Path = default_paths.data_split_treatment_outcome):
         super().__init__(data_dir)
