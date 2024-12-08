@@ -30,7 +30,7 @@ def save_numpy_compressed(patient_ids, features, file_path):
 
 
 if __name__ == "__main__":
-    parser = HancockArgumentParser(type='feature_extraction')
+    parser = HancockArgumentParser(file_type='feature_extraction')
     args = parser.parse_args()
     dest_dir = Path(args.features_dir)
 

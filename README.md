@@ -39,7 +39,6 @@ For running the code described the section
 TensorFlow 2.16 is used (see `requirements.txt`). Furthermore, [QuPath](https://qupath.github.io/) needs to be installed 
 for the analysis of histology data.
 
-
 ## Dataset
 The dataset can be explored and downloaded at our project website: https://hancock.research.fau.eu/
 
@@ -91,6 +90,36 @@ However, it is sufficient to download the following folders for reproducing most
 `StructuredData`, `TextData`, `DataSplits_DataDictionaries`, `TMA_CellDensityMeasurements`.
 
 However, if one is only interested in reproducing the final predictions (outcome) and 
+does not want to reproduce the feature extraction and data splitting, it is possible to rely solely on the 
+features found in the [`features`](features) directory of this repository together with the additional to be downloaded
+[`DataSplits_DataDictionaries`](https://data.fau.de/public/24/87/322108724/DataSplits_DataDictionaries.zip) from the 
+dataset.
+
+### Disclaimer
+We expect the user to use the structure presented in the [Dataset](#dataset) section, 
+and additionally to locate the repository in the same directory as the directory that contains 
+the `Hancock_Dataset'.
+```
+Parent_Directory
+├── Hancock_Dataset
+|   ├── ...
+|
+├── HANCOCK_MultimodalDataset
+|   ├── ...
+```
+
+This makes it easier to run the scripts without specifying the paths to the data directory. 
+If you do not want to follow this structure, you can either change the default paths 
+in the file `./defaults/__init__.py` or set them manually each time the scripts are called. 
+Note that you do not have to set every argument, just the ones that differ from the recommended structure.
+
+To check which options are available, you can run e.g.
+```
+python3 ./data_exploration/plot_available_data.py --help
+```
+The following assumes that the recommended structure is used.
+
+However, if one is only interested in reproducing the final predictions (adjuvant therapy and outcome) and 
 does not want to reproduce the feature extraction and data splitting, it is possible to rely solely on the 
 features found in the [`features`](features) directory of this repository together with the additional to be downloaded
 [`DataSplits_DataDictionaries`](https://data.fau.de/public/24/87/322108724/DataSplits_DataDictionaries.zip) from the 
@@ -198,12 +227,118 @@ The classifier is trained five times on the different data splits. Plots of the 
 and of Receiver-Operating Characteristic (ROC) curves are saved to the results directory.
 
 ```
-cd mulitmodal_machine_learning
-python3 outcome_prediction.py ./../../Hancock_Dataset/DataSplits_DataDictionaries  ../features ../results recurrence 
-python3 outcome_prediction.py ./../../Hancock_Dataset/DataSplits_DataDictionaries ../features ../results survival_status
+cd mulitmodal_machine_learning/execution
+python3 outcome_prediction.py ./../../../Hancock_Dataset/DataSplits_DataDictionaries  ../../features ../../results recurrence 
+python3 outcome_prediction.py ./../../../Hancock_Dataset/DataSplits_DataDictionaries ../../features ../../results survival_status
 ```
 
+![](./images/roc_testsets_recurrence.svg)![](./images/roc_testsets_survival_status.svg)
+
+## Additional Information Tissue Micro Arrays (TMAs)
+> [!NOTE]
+> This section describes the optional process of using the TMA files provided in the HANCOCK data set, along with the 
+> TMA Maps also provided, to extract TMA cores and perform immune cell counting.
+
+We used the open-source histology software QuPath for analyzing TMAs. 
+The folder [qupath_scripts](qupath_scripts) contains code that can be executed in QuPath's script editor. 
+You can run the following scripts for all TMAs at once by selecting <kbd>Run</kbd>><kbd>Run for project</kbd>.
+For more information about scripting in QuPath, check the [documentation](https://qupath.readthedocs.io/en/stable/docs/scripting/overview.html).
+
+**Step 1: Creating QuPath projects**
+
+Create one empty directory for each immunohistochemistry marker, named "TMA_CD3", "TMA_CD8", "TMA_CD56", and so on:
+```
+QuPathProjectsDirectory
+├── TMA_CD3
+├── TMA_CD8
+├── TMA_CD56
+├── TMA_CD68
+├── TMA_CD163
+├── TMA_HE
+├── TMA_MHC1
+└── TMA_PDL1
+```
+Next, create a QuPath project from each of these folders and import the corresponding TMAs.
+For example, click <kbd>Create Project</kbd>, select the directory "TMA_CD3" and import all SVS files from the folder "Hancock_Dataset/TMA_TumorCenter/CD3".
+> [!IMPORTANT]  
+> Set "Rotate Image" to 180 degrees for all TMAs in QuPath's import dialog.
+
+
+**Step 2: TMA dearraying**
+
 ![Receiver Operating Curve Recurrence](./images/roc_testsets_recurrence.svg)![Receiver Operating Curve Status](./images/roc_testsets_survival_status.svg)
+
+Next, open `import_tma_map.groovy` in the script editor and click <kbd>Run for project</kbd> to import the TMA maps. 
+When prompted, select the folder "TMA_Maps" provided in our dataset. The patient ID can then be found as "Case ID" in QuPath.
+
+> [!NOTE]
+> Each TMA contains tissue cores of several patients. 
+> In QuPath, **TMA maps** must be imported to assign patient IDs to tissue cores.
+> You can run our scripts (see [qupath_scripts](qupath_scripts)) which automate the required steps for dearraying and
+> importing TMA maps.
+> 
+> However, if you would like to manually analyze a TMA, you can perform the following steps:
+> 
+> 1) With a TMA opened in QuPath, run the TMA dearrayer (<kbd>TMA</kbd>><kbd>TMA dearrayer</kbd>) with a core diameter of 1.9 mm, 
+> column labels 1-6 and row labels 1-12 
+> 2) A grid has been created and might need manual adjustments 
+> 3) A TMA map e.g. "TMA_Map_block1.csv" contains the core coordinates of the 12 x 6 grid and patient IDs (Case IDs)
+> 4) Click <kbd>File</kbd>><kbd>TMA data</kbd>><kbd>Import TMA map</kbd>><kbd>Import data</kbd> and select the TMA map
+> 5) Each TMA core is now associated with the correct patient ID
+>
+> ![TMA dearraying in QuPath](./images/qupath_tma_dearraying.png)
+> ![Importing TMA maps in QuPath](./images/qupath_importing_tma_maps.png)
+> 
+> For learning more about TMA dearraying, we recommend reading
+> [this guide](https://github.com/qupath/qupath/wiki/TMA-CD3-analysis).
+
+
+**Step 3: Extracting tiles**
+
+Next, run `export_centertiles_from_tma_cores.groovy` to extract one tile from the center of each TMA core. The images
+are saved as PNG files to the directory `path/to/your_qupath_project/tiles`. Each tile's filename is built as follows:
+`<patient_id>_core<core_index>_tile.png`
+
+
+
+**Step 4: Extracting image features**
+
+To extract features from images (TMA core tiles), run `extract_tma_image_features.py`.
+We use [deeptexture](https://github.com/dakomura/deep_texture_histology) for feature extraction. This package requires
+Python version <= 3.8.15. Therefore, we recommend to run this script in another environment.
+```
+conda create -n deeptexture_env python=3.8.15
+conda activate deeptexture_env
+pip install deeptexture tqdm opencv-python
+
+cd feature_extraction
+python extract_tma_image_features.py path/to/QuPathProjectsDirectory ../features
+```
+
+**Optional: Counting immune cells**
+
+The intratumoral density of CD3- and CD8-positive cells was already computed and is provided in the dataset folder
+"TMA_CellDensityMeasurements". However, if you would like to reproduce these measurements, you can perform the following steps:
+
+Copy the pixel classifier from this repository to your project:
+```
+cd path/to/your_qupath_project/classifiers
+mkdir pixel_classifiers
+cp qupath_scripts/tissueDetection.json pixel_classifiers
+``` 
+Next, run `detect_tissue_in_tma_cores.groovy`. 
+ 
+To improve the subsequent counting of positive cells, you can manually remove possible artifacts from the 
+resulting detection objects, for example using the brush tool while holding down the `ALT` key. However, this is optional.
+
+Run `tma_measure_positive_cells.groovy`. This script first makes sure that the grid labels and object hierarchy
+are correct, in case the objects were manually adjusted (e.g. for artifact removal). Next, it runs QuPath's
+plugin for positive cell detection and imports TMA maps to match cores to patient IDs. Finally, the cell counts
+and other measurements are exported as CSV files to the directory `path/to/your_qupath_project/tma_measurements`.
+Hint: The QuPath script will prompt you to select the directory containing the TMA maps. To avoid the prompt showing 
+for every single TMA, you can set the variable `tma_map_dir` in the script.
+
+Next, run `summarize_tma_measurements.py` to create a single file by merging all TMA measurement files from step 4.
 
 
 # Reference

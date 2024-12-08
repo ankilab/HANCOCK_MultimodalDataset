@@ -1,5 +1,7 @@
 from argparse import ArgumentParser
 import os
+from random import Random
+
 import numpy as np
 import pandas as pd
 from pathlib import Path
@@ -10,8 +12,84 @@ from matplotlib import rcParams
 import matplotlib.pyplot as plt
 import seaborn as sns
 import sys
-sys.path.append(str(Path(__file__).parents[1]))
+sys.path.append(str(Path(__file__).parents[2]))
 from data_exploration.umap_embedding import setup_preprocessing_pipeline, get_umap_embedding
+
+
+def return_optimal_random_forest(
+        target: str = 'recurrence', random_state: np.random.RandomState = np.random.RandomState(42),
+        data_split: str = 'In distribution'
+) -> RandomForestClassifier:
+    """
+    Returns the optimal random forest classifier that is hyperparameter tuned with random search on 100 iterations
+    with the evaluation metric F1-Score.
+
+    Args:
+        target (str, optional): The target that should be predicted. Available are ['recurrence', 'survival_status'].
+            Defaults to 'recurrence'.
+        random_state (np.random.RandomState, optional): The random state used for the random forest classifier.
+            Defaults to np.random.RandomState(42).
+        data_split (str, optional): The type of data split that will be used for determining the test and training split.
+            Available are ["In distribution", "Out of distribution", "Oropharynx"]. Defaults to 'In'.
+
+    Raises:
+        KeyError: When either the target or the data_split is not supported
+
+        "In distribution"
+        "Out of distribution"
+        "Oropharynx"
+    """
+    if target == 'recurrence':
+        if data_split == "In distribution":
+            return RandomForestClassifier(
+                n_estimators=1600, min_samples_split=2,
+                min_samples_leaf=1, max_leaf_nodes=1000,
+                max_features='log2', max_depth=30,
+                criterion='gini',
+                random_state=random_state
+            )
+        elif data_split == "Oropharynx":
+            return RandomForestClassifier(
+                n_estimators=1200, min_samples_split=2,
+                min_samples_leaf=1, max_leaf_nodes=1000,
+                max_features='sqrt', max_depth=20,
+                criterion='gini',
+                random_state=random_state
+            )
+        elif data_split == "Out of distribution":
+            return RandomForestClassifier(
+                n_estimators=800, min_samples_split=2,
+                min_samples_leaf=1, max_leaf_nodes=100,
+                max_features='sqrt', max_depth=80,
+                criterion='log_loss',
+                random_state=random_state
+            )
+    elif target == 'survival_status':
+        if data_split == "In distribution":
+            return RandomForestClassifier(
+                n_estimators=1000, min_samples_split=5,
+                min_samples_leaf=1, max_leaf_nodes=1000,
+                max_features='log2', # max_depth=null,
+                criterion='entropy',
+                random_state=random_state
+            )
+        elif data_split == "Oropharynx":
+            return RandomForestClassifier(
+                n_estimators=1200, min_samples_split=2,
+                min_samples_leaf=1, max_leaf_nodes=1000,
+                max_features='sqrt', max_depth=20,
+                criterion='gini',
+                random_state=random_state
+            )
+        elif data_split == "Out of distribution":
+            return RandomForestClassifier(
+                n_estimators=1200, min_samples_split=2,
+                min_samples_leaf=1, max_leaf_nodes=1000,
+                max_features='sqrt', max_depth=20,
+                criterion='gini',
+                random_state=random_state
+            )
+    raise KeyError(f'Target {target} or data split {data_split} not recognized')
 
 
 if __name__ == "__main__":
@@ -114,7 +192,7 @@ if __name__ == "__main__":
             X_train, y_train = smote.fit_resample(X_train, y_train)
 
             # Fit ML model
-            model = RandomForestClassifier(n_estimators=500, random_state=rng)
+            model = return_optimal_random_forest(target=target, data_split=data_split_labels[i])
             model.fit(X_train, y_train)
 
             # Get predictions for test dataset

@@ -8,6 +8,7 @@ from .data_reader import (
     WSILymphNodeDataFrameReader,
     TMACellDensityDataFrameReader,
     TextDataReportsDataFrameReader,
+    SurgeryReportsEnglishMergedDataFrameReader,
     FeatureClinicalDataFrameReader,
     FeaturePathologicalDataFrameReader,
     FeatureBloodDataFrameReader,
@@ -48,6 +49,7 @@ class DataReaderTypes:
         self.wsi_lymph_node = 'WSI_LymphNode'
         self.tma_cell_density = 'TMA_CellDensityMeasurement'
         self.text_reports = 'TextData_reports'
+        self.text_reports_merged_english = 'TextData reports merged english'
 
         # ---- Features ----
         self.clinical_feature = 'Clinical Feature'
@@ -165,6 +167,8 @@ class DataFrameReaderFactory:
             data_reader = TextDataReportsDataFrameReader
         elif data_type == self.data_reader_types.tabular_merged_feature:
             data_reader = FeatureTabularMergedDataFrameReader
+        elif data_type == self.data_reader_types.text_reports_merged_english:
+            data_reader = SurgeryReportsEnglishMergedDataFrameReader
 
         return data_reader
 
