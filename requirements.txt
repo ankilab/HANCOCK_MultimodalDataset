@@ -22,15 +22,3 @@ numpy==2.0.2
 umap-learn==0.5.6
 matplotlib==3.9.2
 seaborn==0.13.2
-chromadb==0.5.18
-
-# For the sentence transformers that are used as encoders we need torch
-# but then we can not anymore use tensorflow
-# torch==2.5.1
-# torchvision==0.20.1
-# torchaudio==2.5.1
-# transformers==4.46.1
-# nltk==3.9.1
-# openai==1.53.0
-
-
