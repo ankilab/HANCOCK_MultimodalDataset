@@ -265,9 +265,6 @@ For example, click <kbd>Create Project</kbd>, select the directory "TMA_CD3" and
 
 
 **Step 2: TMA dearraying**
-
-![Receiver Operating Curve Recurrence](./images/roc_testsets_recurrence.svg)![Receiver Operating Curve Status](./images/roc_testsets_survival_status.svg)
-
 Next, open `import_tma_map.groovy` in the script editor and click <kbd>Run for project</kbd> to import the TMA maps. 
 When prompted, select the folder "TMA_Maps" provided in our dataset. The patient ID can then be found as "Case ID" in QuPath.
 
