@@ -126,7 +126,7 @@ if __name__ == "__main__":
     x_linspace = np.linspace(0, 1, 100)
     rcParams.update({"font.size": 6})
     rcParams["svg.fonttype"] = "none"
-    umap_embeddings = get_umap_embedding(data_dir, umap_min_dist=0.2, umap_n_neighbors=15)
+    umap_embeddings = get_umap_embedding(data_dir, umap_min_dist=0.1, umap_n_neighbors=15)
 
     data_split_paths = [
         split_dir/"dataset_split_in.json",
